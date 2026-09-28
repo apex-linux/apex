@@ -59,7 +59,7 @@ Non-goals:
 
  Builder VM on the laptop: just publish (S1d)         Upstream inputs, each with a pinned key
  ┌──────────────────────────────────────────────────┐  registry.fedoraproject.org/fedora-bootc:45@digest
- │ GNOME lane (S1a) rebuild.sh: gnome-shell         │  Fedora 45 repos, signed SRPMs, Koji (mutter pin)
+ │ GNOME lane (S1a) apex-lane: gnome-shell          │  Fedora 45 repos, signed SRPMs, Koji (mutter pin)
  │   (+ desktop/shell), mutter pinned, libadwaita,  │  COPR kernel-cachyos SRPM, CachyOS signed tag
  │   gnome-control-center, nautilus, libfprint      │  negativo17 nvidia-kmod SRPM and userspace
  │ kernel lane (S1c): kernel-cachyos + kmod-nvidia, │                  │
@@ -134,7 +134,7 @@ Ubuntu is removed. `just check`, `just deny`, `just image-test`, `just layer-tes
 | Step | What it does | Output |
 |---|---|---|
 | `ci.yml` | on every pull request and every push to `main`: fmt, clippy `-D warnings`, `cargo test`, `cargo deny`, the RPM `License:` check, shellcheck and actionlint, the script self-tests, `image/tests/run.sh`, the Apex layer's safety net in gjs (`tests/layer/run.sh`), the privacy guard. To come: ESLint on `desktop/shell/js/` and sassc on the Apex SCSS (S1a), blueprint-compiler (S2c), and nextest with the wall-clock tests in a slow profile (no slice yet) | pass or fail |
-| packages | `packaging/rebuild.sh <pkg>` for each directory in `packaging/pkgs/` (§4.1), and the kernel pair job (§4.2) | signed RPMs stored by content key; `rpms.lock.next` in the builder VM's store |
+| packages | `apex-lane build <pkg>` for each directory in `packaging/pkgs/` (§4.1), and the kernel pair job (§4.2) | signed RPMs stored by content key; `rpms.lock.next` in the builder VM's store |
 | image | `image.sh context --lane-lock` → `build-rootfs` → build checks (G1) → headless shell (G2) → rechunk with `--previous-build` → push under a unique tag → cosign sign → move `:45` | `ghcr.io/sekirokenjii/apex:45`, and a public source artifact per digest (§4.2, S1d) |
 
 Rules:
@@ -161,27 +161,32 @@ Rules:
 
 ### 4.1 Rebuild lane (S1a)
 
-- `packaging/rebuild.sh <pkg>` generalises `packaging/libfprint/build.sh`. Each package
+- `apex-lane build <pkg>` generalises `packaging/libfprint/build.sh`. `apex-lane`
+  (`crates/apex-lane`, §9) is a dev tool: `tools/builder-vm/lane.sh` builds it in the
+  builder VM from `HEAD` with Fedora's rust, and it is never shipped. Each package
   has `packaging/pkgs/<pkg>/` with `pkg.env`, `series` and `patches/`. `pkg.env` names
   the source (`fedora-srpm`, `copr-srpm`, or `git` plus a commit), the failure policy
   (`on_fail=hold` or `on_fail=degrade`) and the hold family.
 - Kept from the libfprint build: the SRPM signature check against a pinned key, a fresh
   digest-pinned `fedora:45` container per build, and the content key. The key is the
-  source NVR plus a hash of the series, the patches and the script.
+  source NVR plus a hash of the series, the patches and the lane itself: its source
+  and the crates compiled into it.
 - Added: patches apply with fuzz 0. The release suffix is `.apexN`, where N is
   `git rev-list --count` over every committed input the lane archives or runs: the
-  package directory, its Source1 directory (`desktop/shell/` for gnome-shell) and
-  `rebuild.sh`. A content key can also change without a commit, when a Fedora update
-  moves only the pin (a mutter-only update): each later key of the same Fedora build at
+  package directory, its Source1 directory (`desktop/shell/` for gnome-shell), the
+  lane's source (`crates/apex-lane/src` and its `Cargo.toml`), and
+  `packaging/rebuild.sh`, the Bash lane apex-lane replaced, whose history keeps N from
+  dropping. A content key can also change without a commit, when a Fedora update moves
+  only the pin (a mutter-only update): each later key of the same Fedora build at
   `.apexN` is `.apexN.M`, M one above the highest stored, so two builds never share a
   NEVRA. `rpmsign` uses the Apex RPM key once it exists; until then the lane signs
-  nothing and `[apex]` keeps `gpgcheck=0` (packaging/README.md, Signing). `includepkgs`
-  for `[apex]` and `excludepkgs` for the Fedora repos are generated from the lock's
-  names, together with libfprint's own exclude.
+  nothing and `[apex]` keeps `gpgcheck=0` (packaging/README.md, Signing). The
+  Containerfile's repos stage generates `includepkgs` for `[apex]` and `excludepkgs` for
+  the Fedora repos from the lock's names, together with libfprint's own exclude.
 - The built set of each package is stored by its content key. `rpms.lock` names the
   set each image uses. It lives in the builder VM's store, `~/apex-store/`, next to the
   builds, and is not committed: the S1d timers absorb Fedora updates without a commit,
-  and `builder-vm.sh sync` replaces the checkout. `rebuild.sh build` writes the
+  and `builder-vm.sh sync` replaces the checkout. `apex-lane build` writes the
   candidate, `rpms.lock.next`, which the image build takes (`image.sh context
   --lane-lock`, which fails without it); `just pkg-promote` makes it `rpms.lock`, the
   last good set a hold keeps, once the image built from it passed its gates. Every image
@@ -829,6 +834,7 @@ glyphs (MIT).
 | `apex-updated` | Rust | System bus service: one operation queue, polkit (system-bus-name subject), hardened unit |
 | `apex-session-agent` (S1b) | Rust | User unit: writes `apex.css` for the window radius and the Ptyxis accent palette, offers to turn the Apex desktop back on after the crash guard trips, posts update notifications (S2d) |
 | `apexctl` | Rust | CLI: `status` (degraded and held packages, the kernel pair and its hold clock, S2d), `update …`, `hw report`, `major-upgrade` (S6) |
+| `apex-lane` | Rust | The rebuild lane (§4.1): the `pkg.env`, `series` and `spec-edit` parsers, the content key, the `.apexN.M` release rule, the store and the locks, the hold policy; a dev tool built and run in the builder VM, never shipped |
 | Apex layer (S1a–S3c) | GJS, C | `desktop/shell/`: shell behaviour, ApexDock, the glass manager; the `ShellBlurEffect` patch |
 | GNOME series (S1a–S2d) | C, Blueprint | `packaging/pkgs/{gnome-shell,libadwaita,gnome-control-center,nautilus}/` |
 | Kernel and NVIDIA lane (S1c) | Bash, spec patches | `packaging/pkgs/kernel/`: the pair job, its gates and the bump report |
@@ -862,7 +868,7 @@ Rules:
 
 ```
 Cargo.toml  Makefile  Justfile  rust-toolchain.toml  deny.toml
-crates/       apex-bootc apex-update apex-boot apex-dbus apex-updated apexctl
+crates/       apex-bootc apex-update apex-boot apex-dbus apex-updated apexctl apex-lane
               apex-session-agent (S1b)
 desktop/      shell/ (js/ui/apex/, data/theme/apex/, apex.gresource.xml; S1a)
               schemas/ systemd/ (S1a); icons/ plymouth/ wallpaper/ fontconfig/ ptyxis/ (S1b)
@@ -870,7 +876,7 @@ design/       mockup/ (the mockup, support.js, icons/), SPEC.md,
               renders/ (generated by `just design-render`, not committed)
 hardware/     m7400qc/profile.toml, m7400qc/monitors.xml
 image/        Containerfile, packages/*.txt, system_files/ (rootfs overlay), checks/, audit/
-packaging/    apex.spec, apex-desktop.spec (S1a), rebuild.sh, hold.txt,
+packaging/    apex.spec, apex-desktop.spec (S1a), hold.txt,
               pkgs/<pkg>/ (gnome-shell, libadwaita, gnome-control-center, nautilus,
               kernel, libfprint if kept), keys/apex-sb.der (W3); rpms.lock is builder
               state in ~/apex-store/ (§4.1), not a committed file

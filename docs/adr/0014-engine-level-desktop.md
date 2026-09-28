@@ -149,7 +149,7 @@ Dev loop:
 |---|---|---|
 | Apex JS, SCSS, and the hunks in upstream JS | A nested `gnome-shell --devkit` in the desktop VM with `G_RESOURCE_OVERLAYS` pointing `/org/gnome/shell/ui` and `/org/gnome/shell/theme` at the prepared tree and the sassc output (https://docs.gtk.org/gio/struct.Resource.html) | seconds |
 | C | Incremental ninja in an F45 toolbox, then `bootc usroverlay` | 1 to 3 min |
-| The RPM through the lane | `packaging/rebuild.sh gnome-shell` | 10 to 15 min |
+| The RPM through the lane | `just pkg-build gnome-shell` (apex-lane) | 10 to 15 min |
 
 A G1 check fails if `G_RESOURCE_OVERLAYS` or `--unsafe-mode` appears in the image's
 environment or unit files.

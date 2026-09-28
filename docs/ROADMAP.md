@@ -217,7 +217,7 @@ There is little to see in S1a. The price of answer 1 is that the lane, the loade
 the safety net come before the first Apex pixel.
 
 - The generic rebuild lane (ARCHITECTURE §4.1), with gnome-shell as its first customer:
-  - `packaging/rebuild.sh` and `packaging/pkgs/<pkg>/`: fuzz 0, `.apexN`, generated
+  - `apex-lane` (`crates/apex-lane`) and `packaging/pkgs/<pkg>/`: fuzz 0, `.apexN`, generated
     `includepkgs` and `excludepkgs`, `rpms.lock`, content keys;
   - `packaging/pkgs/gnome-shell/`: `pkg.env` with `on_fail=hold` and the hold family
     gnome-shell and mutter; the anchored `spec-edit` (the spec uses `%autorelease`);
@@ -361,7 +361,7 @@ The slice (ADR 0015):
 - `packaging/pkgs/kernel/`: `kernel.env` (COPR SRPM NEVR, sha256, COPR key, CachyOS tag
   key), `nvidia.env` (nvidia-kmod SRPM and the userspace NEVRs, negativo17 key),
   `kernel-spec.patch`, the kmod build, `series`, `patches/`, README.
-- `packaging/rebuild.sh kernel` runs the pair job:
+- `apex-lane build kernel` runs the pair job, as a package kind of its own:
   - verify and mirror every SRPM and third-party binary at first sight (the COPR keeps
     5 builds, negativo17 the last 2 builds of each package);
   - one per-build module key in a tmpfs, built into that kernel and used for the NVIDIA
