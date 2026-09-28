@@ -441,13 +441,13 @@ git send-email --to=tiwai@suse.com --cc=perex@perex.cz \
 - Copy the final patch back into `packaging/pkgs/kernel/patches/` so the repository matches
   what was sent.
 
-## 7. CI canary and removal of the firmware file
+## 7. Upstream quirk check and removal of the firmware file
 
-The weekly canary (`.github/workflows/canaries.yml`, probe `canaries.sh audio`)
-downloads Fedora 45's current `kernel-modules` RPM and looks for the quirk's SSID bytes
-in `snd-hda-codec-alc269.ko`. `SND_PCI_QUIRK(0x1043, 0x1ab2, ...)` is stored
-little-endian, so the bytes are `43 10 b2 1a`. The same check by hand, on an installed
-system:
+A kernel quirk for this codec shows as its SSID bytes in `snd-hda-codec-alc269.ko`. No
+workflow looks for them: GitHub runs only `ci.yml` (ARCHITECTURE §4). From S1c, the
+kernel lane's bump report checks for the SSID (ADR 0015 §8).
+`SND_PCI_QUIRK(0x1043, 0x1ab2, ...)` is stored little-endian, so the bytes are
+`43 10 b2 1a`. The check by hand, on an installed system:
 
 ```sh
 KVER=$(ls /usr/lib/modules | sort -V | tail -1)
@@ -459,10 +459,10 @@ case $p in *.xz) xz -dc "$p" ;; *.zst) zstd -dc "$p" ;; *) cat "$p" ;; esac |
 `0` means no quirk. On the Ubuntu 7.0.0-31 module today: `1043:1ab2` = 0,
 `1043:1b11` (UX431DA) = 1.
 
-When the count becomes non-zero the job **opens an issue; it never removes the file**.
-The bytes prove that an entry exists, not that it applies the bit-10 fix (upstream could
-map the SSID to `ALC294_FIXUP_ASUS_HPE` alone), and four bytes can also match by
-chance. Without `[model]` lines the firmware file and a kernel quirk coexist safely.
+A non-zero count **never removes the file on its own**. The bytes prove that an entry
+exists, not that it applies the bit-10 fix (upstream could map the SSID to
+`ALC294_FIXUP_ASUS_HPE` alone), and four bytes can also match by chance. Without
+`[model]` lines the firmware file and a kernel quirk coexist safely.
 
 Removing the file is a manual change, after this test on Apex:
 

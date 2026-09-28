@@ -38,10 +38,11 @@ passes. This page is the procedure for getting there without leaking biometric d
 
 ## 2. The patch series
 
-`libfprint.yml` rebuilds the SRPM Fedora ships, after `rpmkeys -K` verifies it, with the
-patches listed in `packaging/libfprint/series`, and publishes it with the release
-suffix `.apex1`. If a listed patch stops applying, the image ships stock libfprint,
-is labelled `degraded=fingerprint`, and CI opens an issue; OS updates never block on it.
+The builder VM rebuilds the SRPM Fedora ships (`.github/scripts/libfprint.sh build`),
+after `rpmkeys -K` verifies it, with the patches listed in `packaging/libfprint/series`.
+The rebuild carries the release suffix `.apex1`. If a listed patch stops applying, the
+image ships stock libfprint and is labelled `degraded=fingerprint`; OS updates never
+block on it.
 
 | Patch | State | Effect on 0x0c6e |
 |---|---|---|
@@ -95,7 +96,7 @@ page and to anything an agent does with its output.
    (`*.ioctl`, `*.umockdev`; they contain images), usbmon captures (`*.pcap`,
    `*.pcapng`), any log line of 400 characters or more, or any hex-dump line longer
    than 4 bytes, however short the line. The CI privacy guard (ADR 0006) runs on pull
-   requests and on pushes to the main branches. It rejects these file types, anything
+   requests and on pushes to `main`. It rejects these file types, anything
    under `var/lib/fprint`, and lines longer than 400 characters that hold a long run of
    hex bytes. It does not replace your own check: it runs only after a push, when the
    branch may already be public, and it does not look for short hex-dump lines such as
