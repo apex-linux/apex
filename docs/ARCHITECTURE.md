@@ -128,14 +128,14 @@ While the repository is private, GitHub runs one workflow, `ci.yml`. Packages an
 images are built in the builder VM ([`tools/builder-vm/`](../tools/builder-vm/)) and
 published from it with `just publish` (S1d), by hand or from a daily host timer on AC
 power. The builder VM runs on the laptop: under Ubuntu today, and under Apex once
-Ubuntu is removed. `just check`, `just deny`, `just image-test` and `just privacy` run
-`ci.yml`'s commands locally.
+Ubuntu is removed. `just check`, `just deny`, `just image-test`, `just layer-test` and
+`just privacy` run `ci.yml`'s commands locally.
 
 | Step | What it does | Output |
 |---|---|---|
-| `ci.yml` | on every pull request and every push to `main`: fmt, clippy `-D warnings`, `cargo test`, `cargo deny`, the RPM `License:` check, shellcheck and actionlint, the script self-tests, `image/tests/run.sh`, the privacy guard. To come: ESLint on `desktop/shell/js/` and sassc on the Apex SCSS (S1a), blueprint-compiler (S2c), and nextest with the wall-clock tests in a slow profile (no slice yet) | pass or fail |
-| packages | `packaging/rebuild.sh <pkg>` for each directory in `packaging/pkgs/` (§4.1), and the kernel pair job (§4.2) | signed RPMs stored by content key; `packaging/rpms.lock` |
-| image | `build-rootfs` → build checks (G1) → headless shell (G2) → rechunk with `--previous-build` → push under a unique tag → cosign sign → move `:45` | `ghcr.io/sekirokenjii/apex:45`, and a public source artifact per digest (§4.2, S1d) |
+| `ci.yml` | on every pull request and every push to `main`: fmt, clippy `-D warnings`, `cargo test`, `cargo deny`, the RPM `License:` check, shellcheck and actionlint, the script self-tests, `image/tests/run.sh`, the Apex layer's safety net in gjs (`tests/layer/run.sh`), the privacy guard. To come: ESLint on `desktop/shell/js/` and sassc on the Apex SCSS (S1a), blueprint-compiler (S2c), and nextest with the wall-clock tests in a slow profile (no slice yet) | pass or fail |
+| packages | `packaging/rebuild.sh <pkg>` for each directory in `packaging/pkgs/` (§4.1), and the kernel pair job (§4.2) | signed RPMs stored by content key; `rpms.lock.next` in the builder VM's store |
+| image | `image.sh context --lane-lock` → `build-rootfs` → build checks (G1) → headless shell (G2) → rechunk with `--previous-build` → push under a unique tag → cosign sign → move `:45` | `ghcr.io/sekirokenjii/apex:45`, and a public source artifact per digest (§4.2, S1d) |
 
 Rules:
 
@@ -151,7 +151,8 @@ Rules:
   G1 and G2 pass. A change to `crates/apex-*`, the kargs, GRUB, the gnome-shell,
   mutter or gdm NVR, or the kernel pair is published only after a G4 run (§11).
 - **Visible state.** The image labels `io.github.sekirokenjii.apex.degraded` and
-  `io.github.sekirokenjii.apex.held` list what is degraded or held. `apexctl status`
+  `io.github.sekirokenjii.apex.held` list what is degraded or held; they copy the
+  `degraded` and `held` fields of the image's manifest (contract §3). `apexctl status`
   and Settings > System > Software Updates show both (S2d). Nothing opens issues.
   `just publish` refuses an image whose degraded set grew, unless the owner passes an
   explicit override (S1d).
@@ -168,11 +169,24 @@ Rules:
   digest-pinned `fedora:45` container per build, and the content key. The key is the
   source NVR plus a hash of the series, the patches and the script.
 - Added: patches apply with fuzz 0. The release suffix is `.apexN`, where N is
-  `git rev-list --count` over the package directory. `rpmsign` uses the Apex RPM key,
-  so `[apex]` drops `gpgcheck=0`. `includepkgs` for `[apex]` and `excludepkgs` for the
-  Fedora repos are generated from the built RPM names.
-- The built set of each package is stored by its content key. `packaging/rpms.lock`
-  names the set each image uses. Third-party inputs (the COPR and negativo17 SRPMs and
+  `git rev-list --count` over every committed input the lane archives or runs: the
+  package directory, its Source1 directory (`desktop/shell/` for gnome-shell) and
+  `rebuild.sh`. A content key can also change without a commit, when a Fedora update
+  moves only the pin (a mutter-only update): each later key of the same Fedora build at
+  `.apexN` is `.apexN.M`, M one above the highest stored, so two builds never share a
+  NEVRA. `rpmsign` uses the Apex RPM key once it exists; until then the lane signs
+  nothing and `[apex]` keeps `gpgcheck=0` (packaging/README.md, Signing). `includepkgs`
+  for `[apex]` and `excludepkgs` for the Fedora repos are generated from the lock's
+  names, together with libfprint's own exclude.
+- The built set of each package is stored by its content key. `rpms.lock` names the
+  set each image uses. It lives in the builder VM's store, `~/apex-store/`, next to the
+  builds, and is not committed: the S1d timers absorb Fedora updates without a commit,
+  and `builder-vm.sh sync` replaces the checkout. `rebuild.sh build` writes the
+  candidate, `rpms.lock.next`, which the image build takes (`image.sh context
+  --lane-lock`, which fails without it); `just pkg-promote` makes it `rpms.lock`, the
+  last good set a hold keeps, once the image built from it passed its gates. Every image
+  carries the lock it was built from at `/usr/share/apex/rpms.lock`. `hold.txt`, the
+  owner's pins, stays committed. Third-party inputs (the COPR and negativo17 SRPMs and
   the negativo17 binaries) are stored at first sight: the COPR keeps 5 builds per
   package and negativo17 the last two builds of each package.
 
@@ -675,12 +689,25 @@ and mirrored unmodified into `[apex]` (§3).
   `APEX_SHELL_SAFE=1` (no layer, upstream's sheets, the stock colour scheme); the
   per-user `layer-enabled` key; `disabled-features`; Reduce Transparency, for glass.
   `APEX_SHELL_TEST=1` turns on the test hook G2 uses.
-- Crash guard: the layer creates `%t/apex-shell-starting` at enable and removes it
-  after 60 s. The drop-in `org.gnome.Shell@.service.d/50-apex.conf` adds
-  `OnFailure=apex-shell-safe.service`, gated on that file; the service sets
-  `layer-enabled=false`. A second shell failure on the same deployment trips it too.
-  `apex-session-agent` then offers to turn the Apex desktop back on. The unit counts
-  exit status 1 as success, so G2 must catch an import error.
+- Fault injection: `APEX_SHELL_TEST_FAULT=configure`, `enable` or `abort-after-enable`
+  adds the `fault` feature (`js/ui/apex/fault/feature.js`), enabled after every real
+  feature, which throws in that phase or aborts the shell 5 s after enable. It proves the
+  per-feature `try/catch` and the crash guard on the shipped build (ROADMAP S1a exit);
+  `tests/layer/run.sh` runs it in gjs on every push, and G1 fails an image that sets the
+  variable anywhere.
+- Crash guard, shipped by `apex-desktop`: the layer creates `%t/apex-shell-starting`
+  at enable and removes it after 60 s or at shutdown. The drop-in
+  `org.gnome.Shell@.service.d/50-apex.conf` adds `OnFailure=apex-shell-safe.service`
+  to upstream's list. That oneshot has `DefaultDependencies=no`,
+  `Before=gnome-session-restart-dbus.service` (the same list restarts the session bus,
+  and `gsettings` exits 0 when its write is lost) and
+  `ConditionPathExists=%t/apex-shell-starting`: it runs
+  `gsettings set io.github.sekirokenjii.Apex.Desktop layer-enabled false`, leaves
+  `$XDG_STATE_HOME/apex/shell-guard-tripped` for `apex-session-agent`, which then
+  offers to turn the Apex desktop back on (S1b; until then `gsettings`), and removes the
+  layer's file. ADR 0014's second trigger, a second shell failure on the same
+  deployment, needs a counter keyed by the deployment and is not built yet. The unit
+  counts exit status 1 as success, so G2 must catch an import error.
 - A shell that cannot start in any mode never keeps the greeter active for 20 s, so the
   counted boot rolls it back (§5.3).
 - Apex ships no shell extensions. Extensions the user installs are unsupported against
@@ -750,8 +777,10 @@ Updates row opens the Apex updates page. "Apex Tweaks" is a `.desktop` entry tha
 **apex-desktop** (noarch, built from `desktop/` except `desktop/shell/`) holds the
 `Apex` icon theme from a pinned Colloid commit (`Inherits=Adwaita,hicolor`), the Apex
 Aurora wallpapers, both Plymouth themes, fontconfig `ss03`, the terminal prompt snippet
-and Ptyxis profile default, the gschema override, the Apex schemas, `60-apex.xml`, and a
-tmpfiles entry that creates the system Flatpak override. It is separate from the Rust
+and Ptyxis profile default, the gschema override, the Apex schemas, the crash guard's
+user units, `60-apex.xml`, and a tmpfiles entry that creates the system Flatpak
+override. S1a ships the schema and the crash guard; `rpms.sh build` builds it next to
+the `apex` RPM, under its own content key. It is separate from the Rust
 `apex` RPM, so an asset change never rebuilds cargo. Its `License:` tag covers Apex's
 own files (GPL-3.0-or-later), Colloid (GPL-3.0) and, from S5, the Hugeicons-derived
 glyphs (MIT).
@@ -825,7 +854,8 @@ Rules:
   There are no extension UUIDs.
 - **Packaging.** Two RPMs come from this repository: `apex` (Rust binaries and units,
   built with `cargo auditable`) and `apex-desktop` (noarch assets; a first build in S1a
-  carries only the Apex schema, S1b fills it), so an asset change never rebuilds cargo.
+  carries the Apex schema and the shell's crash guard, S1b fills it), so an asset change
+  never rebuilds cargo.
   The shell code ships inside the rebuilt gnome-shell. Release is derived from git.
 
 ## 10. Repository layout
@@ -835,15 +865,17 @@ Cargo.toml  Makefile  Justfile  rust-toolchain.toml  deny.toml
 crates/       apex-bootc apex-update apex-boot apex-dbus apex-updated apexctl
               apex-session-agent (S1b)
 desktop/      shell/ (js/ui/apex/, data/theme/apex/, apex.gresource.xml; S1a)
-              schemas/ (S1a); icons/ plymouth/ wallpaper/ fontconfig/ ptyxis/ (S1b)
+              schemas/ systemd/ (S1a); icons/ plymouth/ wallpaper/ fontconfig/ ptyxis/ (S1b)
 design/       mockup/ (the mockup, support.js, icons/), SPEC.md,
               renders/ (generated by `just design-render`, not committed)
 hardware/     m7400qc/profile.toml, m7400qc/monitors.xml
 image/        Containerfile, packages/*.txt, system_files/ (rootfs overlay), checks/, audit/
-packaging/    apex.spec, apex-desktop.spec (S1a), rebuild.sh, rpms.lock, hold.txt,
+packaging/    apex.spec, apex-desktop.spec (S1a), rebuild.sh, hold.txt,
               pkgs/<pkg>/ (gnome-shell, libadwaita, gnome-control-center, nautilus,
-              kernel, libfprint if kept), keys/apex-sb.der (W3)
-tests/shots/  headless harness, metric assertions, approved goldens (S1a)
+              kernel, libfprint if kept), keys/apex-sb.der (W3); rpms.lock is builder
+              state in ~/apex-store/ (§4.1), not a committed file
+tests/        layer/ (the layer's safety net in gjs; S1a), shots/ (headless harness,
+              metric assertions, approved goldens; S1a)
 tools/        builder-vm/, design/render-mockup.cjs
 .github/      workflows/ci.yml
 docs/         ARCHITECTURE, THREAT-MODEL, ROADMAP, INSTALL, RECOVERY, adr/, hardware/,
@@ -854,7 +886,7 @@ docs/         ARCHITECTURE, THREAT-MODEL, ROADMAP, INSTALL, RECOVERY, adr/, hard
 
 | Gate | When | Checks |
 |---|---|---|
-| G1 build checks | every image build | `bootc container lint --fatal-warnings` (skips justified in a file that can only shrink; it is empty); the legacy gate; firmware files; one kernel, and an initramfs with amdgpu and its green_sardine firmware, the microcode and the LUKS2 modules, and without snd-hda-intel, nouveau or nova; no keys or secrets in any layer; rpm signature enforcement untouched; the overlay's units, udev rules and tmpfiles validate; UEFI only; `glib-compile-schemas --strict` on the override; composefs on. Desktop (S1a): gnome-shell, and each GNOME package rebuilt later, is an `.apexN` build signed with the Apex RPM key; gnome-shell's `Requires: mutter =` matches the installed mutter, which carries Fedora's signature; the Apex marker is in the light and dark sheets and the structure marker in the high-contrast sheet, upstream's sheets are under `/org/gnome/shell/theme/stock/`, and `rpm -V gnome-shell` is clean; no shell extension in `/usr/share/gnome-shell/extensions/`; every `.desktop` `Icon=` resolves; no `G_RESOURCE_OVERLAYS` or `--unsafe-mode` in `/usr` or `/etc`. Plymouth (S1d): the default theme is `apex`, `DeviceScale=2` is set, and `apex-twostep` is installed. From S1b: no two default keybindings share a combination across `wm.keybindings`, mutter, the shell, media keys and the Apex schema. Kernel pair (S1c): the kernel is named `*-cachyos*.apex*`; config assertions (`SCHED_CLASS_EXT`, `DEBUG_INFO_BTF`, `X86_AMD_PSTATE` mode 3, `AMD_PMC`, `ASUS_WMI`, the HDA patch loader, `RECONFIG`, `HWDEP` and ALC269, `MODULE_SIG`, `IMA_ARCH_POLICY`, `EROFS`, `OVERLAY`, `DM_CRYPT`, selinux in `CONFIG_LSM`, `X86_64_VERSION` at most 3); every module signed by the one key built into this kernel, whose certificate matches `manifest.json`; NVIDIA vermagic equals the kernel; one NVIDIA version across the kmod, `nvidia-driver`, `nvidia-kmod-common` and the GSP firmware; the initramfs also holds erofs, overlay and `aesni_intel` (a module on CachyOS), and no nvidia module; no `/usr/src/kernels`, akmods, dkms, `xorg-x11-nvidia` or `nvidia-settings`; the effective modprobe options; `nvidia-persistenced` disabled; `/etc/kernel/cmdline` and `/etc/default/grub` untouched; the NVIDIA licence present. From W3: `sbverify` of `vmlinuz` against the Apex MOK. |
+| G1 build checks | every image build | `bootc container lint --fatal-warnings` (skips justified in a file that can only shrink; it is empty); the legacy gate; firmware files; one kernel, and an initramfs with amdgpu and its green_sardine firmware, the microcode and the LUKS2 modules, and without snd-hda-intel, nouveau or nova; no keys or secrets in any layer; rpm signature enforcement untouched; the overlay's units, udev rules and tmpfiles validate; UEFI only; `glib-compile-schemas --strict` on the override; composefs on. Desktop (S1a, `image/checks/desktop.sh`): every RPM of the lane's lock (`/usr/share/apex/rpms.lock`) is installed at its locked NEVRA; gnome-shell, and each GNOME package rebuilt later, is an `.apexN` (or `.apexN.M`) build, signed with the Apex RPM key once it exists, or Fedora's signed build when the owner chose stock (`degraded=shell`); gnome-shell's `Requires: mutter =` matches the installed mutter, which carries Fedora's signature; the Apex marker is in the light and dark sheets and the structure marker in the high-contrast sheet (`grep -a` on `gnome-shell-theme.gresource`, which stores its CSS uncompressed), and `rpm -V gnome-shell` is clean, mtimes aside; upstream's sheets under `/org/gnome/shell/theme/stock/` sit in libshell's resource, which only `gresource` (not in the image) lists, so the lane's check and G2 prove them; no shell extension in `/usr/share/gnome-shell/extensions/`; no text file in `/usr` or `/etc`, documentation aside, names `G_RESOURCE_OVERLAYS`, `--unsafe-mode` or `APEX_SHELL_TEST_FAULT`; the Apex schema compiles with `--strict`; the crash guard is installed and verifies (`systemd-analyze --user`). From S1b, with the icon theme: every `.desktop` `Icon=` resolves. Plymouth (S1d): the default theme is `apex`, `DeviceScale=2` is set, and `apex-twostep` is installed. From S1b: no two default keybindings share a combination across `wm.keybindings`, mutter, the shell, media keys and the Apex schema. Kernel pair (S1c): the kernel is named `*-cachyos*.apex*`; config assertions (`SCHED_CLASS_EXT`, `DEBUG_INFO_BTF`, `X86_AMD_PSTATE` mode 3, `AMD_PMC`, `ASUS_WMI`, the HDA patch loader, `RECONFIG`, `HWDEP` and ALC269, `MODULE_SIG`, `IMA_ARCH_POLICY`, `EROFS`, `OVERLAY`, `DM_CRYPT`, selinux in `CONFIG_LSM`, `X86_64_VERSION` at most 3); every module signed by the one key built into this kernel, whose certificate matches `manifest.json`; NVIDIA vermagic equals the kernel; one NVIDIA version across the kmod, `nvidia-driver`, `nvidia-kmod-common` and the GSP firmware; the initramfs also holds erofs, overlay and `aesni_intel` (a module on CachyOS), and no nvidia module; no `/usr/src/kernels`, akmods, dkms, `xorg-x11-nvidia` or `nvidia-settings`; the effective modprobe options; `nvidia-persistenced` disabled; `/etc/kernel/cmdline` and `/etc/default/grub` untouched; the NVIDIA licence present. From W3: `sbverify` of `vmlinuz` against the Apex MOK. |
 | G2 headless shell (S1a) | every image build, about 3 minutes | the built image runs `gnome-shell --headless --virtual-monitor 2880x1800` at scale 2, in light and dark, with python-dbusmock fixtures and a fixed clock; the whole static import graph loads, and no `JS ERROR`. It runs twice. With the layer: a few metric assertions where a regression is likely (bar height, dock position and size, launcher columns, window radius), approved goldens with per-scene masks, and from S2b a glass pixel test (a known pattern under glass with partial damage, against a CPU reference blur, within a tolerance that its first run fixes, starting at 3/255 maximum and 1/255 mean per channel; [design/SPEC.md](../design/SPEC.md) §7.2). With `APEX_SHELL_SAFE=1`: stock values, such as thumbnail scale 0.05 and the stock sheet path. |
 | G3 contact sheet (S1b) | on demand; not a gate | mockup render, shell capture and their difference for each screen; the owner approves goldens from it |
 | Lane (S1a) | every package build | the SRPM signature verifies; patches apply with fuzz 0; the build succeeds; the Apex marker is present; for the kernel pair, the gates in §4.2 |

@@ -80,12 +80,15 @@ Gates stay proportionate for one owner. ARCHITECTURE §11 has the details.
 - **G1, build checks,** on every image build.
   - Kept: legacy, firmware, keys, secrets, signing, overlay, UEFI only, `--strict`
     schemas, `bootc container lint --fatal-warnings`.
-  - From S1a: composefs is on; gnome-shell is `.apexN` and signed with the Apex RPM
-    key; the Apex marker is in the light and dark sheets; upstream's sheets exist under
-    `/org/gnome/shell/theme/stock/`; no `G_RESOURCE_OVERLAYS` or `--unsafe-mode` in
-    `/usr` or `/etc`; every `.desktop` `Icon=` resolves.
-  - From S1b: no two default bindings share a combo across `wm.keybindings`, mutter,
-    the shell, media keys and the Apex schema.
+  - From S1a: composefs is on; gnome-shell is `.apexN` at the NEVRA the lane locked,
+    and signed with the Apex RPM key once it exists; the Apex marker is in the light
+    and dark sheets (`grep -a` on the theme resource); upstream's sheets exist under
+    `/org/gnome/shell/theme/stock/` (the lane and G2 check them); no
+    `G_RESOURCE_OVERLAYS`, `--unsafe-mode` or `APEX_SHELL_TEST_FAULT` in `/usr` or
+    `/etc`; the Apex schema compiles with `--strict`; the crash guard is installed.
+  - From S1b: every `.desktop` `Icon=` resolves (with the Colloid icon theme); no two
+    default bindings share a combo across `wm.keybindings`, mutter, the shell, media
+    keys and the Apex schema.
   - From S1c (ADR 0015): exactly one kernel and one `kmod-nvidia` for it; every module
     signed by that build's key; NVIDIA `vermagic` equals the kernel; the kernel config
     assertions; one NVIDIA version across the modules, the userspace and the GSP
@@ -224,10 +227,10 @@ the safety net come before the first Apex pixel.
 - Series 0001-build and 0002-loader with an empty layer: `hooks.js`, the configure and
   enable phases, a `try/catch` per feature.
 - The safety net (ADR 0014): `apex.safe=1` and `APEX_SHELL_SAFE=1`; the `layer-enabled`
-  and `disabled-features` keys, in the Apex schema, shipped by a first `apex-desktop`
-  build that holds only the schema (S1b fills the RPM); the crash guard (a user-unit
-  drop-in with `OnFailure=apex-shell-safe.service`). Until the agent's offer in S1b,
-  the owner turns the layer back on with `gsettings`.
+  and `disabled-features` keys, in the Apex schema; the crash guard (a user-unit
+  drop-in with `OnFailure=apex-shell-safe.service`). A first `apex-desktop` build
+  ships the schema and the crash guard's units (S1b fills the RPM). Until the agent's
+  offer in S1b, the owner turns the layer back on with `gsettings`.
 - The `sessionMode.js` hook: `'default'` draws a light shell. The override sets no
   `color-scheme`.
 - The dev loop, printed by `just --list`:
@@ -248,10 +251,12 @@ the safety net come before the first Apex pixel.
     `mutter = <EVR>`;
   - with the empty layer, G2 captures equal Fedora's stock shell outside the masks;
   - the safe G2 run asserts the stock values;
-  - in a test build, a feature that throws at enable is off for that session while the
-    rest of the layer runs, and a shell that aborts within 60 s of enable sets
-    `layer-enabled=false`, so the next login in the VM runs stock JS and CSS (ADR 0014,
-    crash guard);
+  - on the shipped build, with `APEX_SHELL_TEST_FAULT=enable` in the shell's
+    environment, a feature that throws at enable is off for that session while the rest
+    of the layer runs; with `APEX_SHELL_TEST_FAULT=abort-after-enable`, a shell that
+    aborts within 60 s of enable sets `layer-enabled=false`, so the next login in the VM
+    runs stock JS and CSS (ADR 0014, crash guard). G1 keeps the variable out of the
+    image;
   - turning Dark Style off in Quick Settings gives a light shell with `color-scheme`
     `'default'`, and no agent runs;
   - an SCSS or JS change shows in the devkit shell within 15 s;

@@ -229,7 +229,8 @@ ADR 0005's objections, checked again:
 
 ### 4. The pair, the hold and the latency limit
 
-- **The pair is the unit.** `packaging/rpms.lock` names one kernel NVR K, one NVIDIA
+- **The pair is the unit.** The lane lock (`~/apex-store/rpms.lock` in the builder VM,
+  installed as `/usr/share/apex/rpms.lock`) names one kernel NVR K, one NVIDIA
   driver set D (negativo17 NEVRs with sha256) and `kmod-nvidia-K` built from D.
   `manifest.json` records K, D, the kmod NEVR, the GSP firmware version and the
   fingerprint of the pair's module certificate.
