@@ -71,6 +71,13 @@ entry 1, the previous deployment. Early failures count too:
   contract §2). To keep that shell for a diagnosis, run
   `systemctl stop apex-emergency-reboot.timer` in it; the boot has still used one of
   the three attempts. Emergency and rescue mode outside a counted boot are unchanged.
+- to turn the watchdog off on this machine, link
+  `/etc/systemd/system/emergency.service.d/50-apex-bootcount.conf` and the same name
+  under `rescue.service.d/` to `/dev/null`;
+- to skip the boot assessment for one boot, add
+  `systemd.mask=apex-boot-assess.service` to the kernel command line from the GRUB menu
+  (`e`); that boot is never confirmed, so on a counted boot it uses one of the three
+  attempts.
 
 On the fourth boot the boot assessment does two things, in this order:
 

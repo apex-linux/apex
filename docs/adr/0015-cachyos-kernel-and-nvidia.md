@@ -163,9 +163,9 @@ ADR 0005's objections, checked again:
   - `module.sig_enforce=1`: every module must carry a signature the kernel trusts,
     with Secure Boot off too (§3);
   - `zswap.enabled=0`: the CachyOS config turns zswap on, and Apex uses Fedora's zram
-    (`image/packages/base.txt:41`);
+    (`zram-generator-defaults` in `image/packages/base.txt`);
   - `module_blacklist=nouveau,nova_core` replaces `modprobe.blacklist=` and
-    `rd.driver.blacklist=` (`image/system_files/usr/lib/bootc/kargs.d/10-apex.toml:39-40`).
+    `rd.driver.blacklist=` in `image/system_files/usr/lib/bootc/kargs.d/10-apex.toml`.
 - CachyOS defaults that differ from Fedora stay unless a measurement says otherwise
   (K3): full preemption (`preempt=lazy` restores Fedora's), BORE (`kernel.sched_bore=0`
   turns it off at runtime), THP always, split-lock mitigation off. RCU lazy is built but
