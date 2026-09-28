@@ -392,7 +392,7 @@ initramfs, before `/lib/firmware` is reachable, and the fix is not applied. Then
 
 ## 6. Upstream submission
 
-The kernel patch is `packaging/kernel/patches/0001-ALSA-hda-realtek-Fix-speaker-output-on-ASUS-M7400QC.patch`.
+The kernel patch is `packaging/pkgs/kernel/patches/0001-ALSA-hda-realtek-Fix-speaker-output-on-ASUS-M7400QC.patch`.
 It adds `ALC294_FIXUP_ASUS_COEF_1B_BIT10` (a read-modify-write of bit 10 of COEF 0x1b at
 every init, chained to `ALC294_FIXUP_ASUS_HPE`) and the quirk
 `SND_PCI_QUIRK(0x1043, 0x1ab2, "ASUS M7400QC", ...)`. It applies to v7.3-rc4,
@@ -438,7 +438,7 @@ git send-email --to=tiwai@suse.com --cc=perex@perex.cz \
   to the Cc list automatically. That is how the fix reaches Fedora's 7.2.y and 7.3.y.
 - Before sending, search lore for an existing patch in a browser (it has a bot check):
   `https://lore.kernel.org/linux-sound/?q=1ab2`.
-- Copy the final patch back into `packaging/kernel/patches/` so the repository matches
+- Copy the final patch back into `packaging/pkgs/kernel/patches/` so the repository matches
   what was sent.
 
 ## 7. CI canary and removal of the firmware file

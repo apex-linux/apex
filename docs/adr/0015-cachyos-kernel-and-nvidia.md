@@ -408,10 +408,9 @@ ADR 0005's objections, checked again:
   dropped when the CachyOS tree has it. A quirk table changes often near any entry, so
   a carried patch may need a refresh on a kernel bump; that is why the drop-in comes
   first.
-- The disabled patch
-  `packaging/kernel/patches/0001-ALSA-hda-realtek-Fix-speaker-output-on-ASUS-M7400QC.patch`
-  moves to `packaging/pkgs/kernel/patches/`, still out of `series` (its context fails on
-  v7.3-rc4, review C12).
+- The disabled patch is
+  `packaging/pkgs/kernel/patches/0001-ALSA-hda-realtek-Fix-speaker-output-on-ASUS-M7400QC.patch`,
+  out of `series` (its context fails on v7.3-rc4, review C12).
 
 ### 9. Build cost
 
