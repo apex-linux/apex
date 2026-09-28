@@ -1,6 +1,7 @@
 # ADR 0009: Apex boot assessment replaces greenboot-rs
 
-Status: accepted (2026-09-24)
+Status: accepted (2026-09-24); amended 2026-09-28: `panic=10` only, the initramfs keeps
+dracut's rescue shell
 
 ## Context
 
@@ -41,8 +42,9 @@ and changes the policy.
     deployment);
   - set and save `apex_ok=0` at every boot, after the counting, so userspace has to
     confirm each boot again.
-- **Kernel arguments** (`/usr/lib/bootc/kargs.d`): `panic=10 rd.shell=0
-  rd.emergency=reboot`. Early failures reboot, and the counter moves.
+- **Kernel arguments** (`/usr/lib/bootc/kargs.d`): `panic=10`. A kernel panic reboots,
+  and the counter moves. An initramfs failure waits at the dracut rescue shell until a
+  forced power-off, which also moves the counter.
 - **Required checks,** each with a 30 s timeout:
   - a greeter or user session has been active for at least 20 s;
   - NetworkManager and systemd-logind are active;

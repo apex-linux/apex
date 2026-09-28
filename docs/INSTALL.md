@@ -331,8 +331,8 @@ What each option does (bootc-install-to-filesystem(8), bootc 1.16):
   system would stay pinned to the digest used for the install.
 - `--karg rd.luks.uuid=…`: the initramfs opens the LUKS root. bootc adds
   `root=UUID=<btrfs>`, `rootflags=subvol=/root` and `boot=UUID=<boot>` itself, plus the
-  image's kargs from `/usr/lib/bootc/kargs.d/10-apex.toml` (`rhgb quiet panic=10
-  rd.shell=0 rd.emergency=reboot`, the dGPU blacklist, `systemd.ssh_auto=no`).
+  image's kargs from `/usr/lib/bootc/kargs.d/10-apex.toml` (`rhgb quiet panic=10`, the
+  dGPU blacklist, `systemd.ssh_auto=no`).
 - `--skip-finalize`: bootc would otherwise remount the target read-only and freeze it;
   §8 still has to write to it.
 - Do **not** set `CONTAINERS_POLICY_JSON` and do **not** pass `--run-fetch-check`:

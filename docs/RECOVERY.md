@@ -63,8 +63,9 @@ unsets the variable.
 fails to reach a green boot assessment gets exactly three boots; the fourth boot is
 entry 1, the previous deployment. Early failures count too:
 
-- a kernel panic or an initramfs failure reboots, because the image boots with
-  `panic=10 rd.shell=0 rd.emergency=reboot`;
+- a kernel panic reboots, because the image boots with `panic=10`;
+- an initramfs failure waits at the dracut rescue shell; power off with the button, and
+  the next boot counts;
 - a counted boot that stops in emergency or rescue mode reboots by itself after a delay
   that the console announces (drop-ins for `emergency.service` and `rescue.service`, M1
   contract §2). To keep that shell for a diagnosis, run
