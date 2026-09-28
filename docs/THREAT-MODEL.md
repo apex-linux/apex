@@ -7,16 +7,24 @@ are named by the document that implements them.
 
 - The owner's data on the laptop.
 - The integrity of the operating system and the boot chain on the laptop.
-- The signing keys: the release key, the CI key and the offline backup key. From M2, a
-  MOK if one is ever introduced.
-- The GitHub account and the ghcr.io packages it owns. The Fedora (FAS) account, once
-  COPR is used.
+- The signing keys: the release key, the CI key and the offline backup key. From step
+  W3, the Apex Secure Boot key, if the owner turns Secure Boot on (ADR 0015 §7). No
+  module-signing key persists: each kernel build makes its own and shreds it (S1c,
+  ADR 0015 §3).
+- The GitHub account and the ghcr.io packages it owns.
 - Biometric data: fingerprint images and templates. A leaked fingerprint cannot be
   revoked.
 
 ## Trusted roots
 
 - Fedora infrastructure and its package and signing keys.
+- From S1c (ADR 0015), three third-party kernel and NVIDIA sources, each with a pinned
+  key (fingerprints in ARCHITECTURE §5.1):
+  - CachyOS: the signed kernel source tag;
+  - the COPR `bieszczaders/kernel-cachyos`: the SRPM Apex rebuilds, including the
+    kernel config and the BORE patch it fetches from unpinned URLs;
+  - negativo17: the `nvidia-kmod` SRPM and the NVIDIA userspace. The userspace is
+    NVIDIA's own binaries, which Apex does not rebuild, so NVIDIA is trusted too.
 - The owner's GitHub account, protected with hardware-key 2FA.
 - The laptop's UEFI firmware.
 
@@ -26,7 +34,7 @@ are named by the document that implements them.
 |---|---|---|
 | T1 | Theft or loss of the powered-off laptop | LUKS2 with a passphrase and a recovery key (ADR 0010) |
 | T2 | Code running as the desktop user (browser, npm, an agent) tries to escalate through apex-updated, polkit or sudo | The polkit action table; the daemon reads no user files and exposes no writable properties; bootc argv comes from enums only; fingerprint is kept out of `system-auth` (ADR 0006, ADR 0008) |
-| T3 | Compromise of one upstream input (a crate, an npm package, a GitHub Action or a third-party repository) that tries to steal CI secrets or persist | Actions pinned by SHA; no third-party actions in jobs that hold secrets; build jobs hold no secrets; M1 has no third-party RPM repositories; `cargo deny`; a CI scan of image layers for private keys; build-provenance attestations on cached RPM artifacts, verified before reuse |
+| T3 | Compromise of one upstream input (a crate, an npm package, a GitHub Action, the CachyOS source, the COPR SRPM or negativo17's packages) that tries to steal secrets or signing keys, or persist | GitHub runs only `ci.yml`: actions pinned by SHA, a read-only token, and no secret in any job; `cargo deny`; every image build scans its root filesystem for private keys (`image/checks/secrets.sh`). The kernel and NVIDIA inputs (S1c, ADR 0015 §2 to §5): the COPR SRPM and negativo17's SRPM and binaries are checked against their pinned keys, locked by NEVR and sha256, and mirrored at first sight, so the compose never contacts negativo17.org; the CachyOS tag passes `git verify-tag` and must match the SRPM's Source0; the kernel is rebuilt from the signed SRPM, so COPR's build hosts leave the chain; each bump writes a report with the config and BORE-patch diffs, and a config change, a new kernel line or a new driver waits for the owner; the per-build module key lives on a tmpfs and is shredded with its job; from W3, the Apex Secure Boot key reaches only an isolated step that signs `vmlinuz` |
 | T4 | A compromised GitHub token or workflow tries to push, sign or retag images | Separate testing and release repositories and keys; the `release` environment requires manual approval; versions must increase; a staleness warning; the offline backup key for recovery (ADR 0012) |
 | T5 | An attacker on the network or at the registry | Signature enforcement through a strict policy file under `/usr` (ADR 0012) |
 | T6 | Leakage of biometric data during diagnostics | Diagnostics only in tmpfs; a CI guard against image and template files; redaction of hardware dumps (ADR 0006) |
@@ -35,7 +43,16 @@ are named by the document that implements them.
 
 - **An attacker with repeated physical access** (evil maid). ostree with GRUB does not
   verify the initramfs, the kernel arguments or `/usr`. This needs the composefs and
-  sealed-UKI track, which is future work.
+  sealed-UKI track, which is future work. Secure Boot stays off until the optional
+  step W3 (ADR 0015 §7), and even then it covers only shim, GRUB and the kernel.
+- **Kernel security latency** (S1c). The CachyOS kernel leaves Fedora's signature and
+  Bodhi's gating. In August and September 2026 the COPR built a kernel.org release
+  13 to 103 h after it came out, and a release it skipped waited up to about 138 h for
+  the next build. Whether CachyOS receives embargoed fixes is unverified. After 72 h
+  the owner chooses between waiting and the break-glass image with Fedora's kernel
+  (ADR 0015 §4).
+- **A compromised negativo17 key** (S1c). Its NVIDIA binaries are not rebuilt, so only
+  the owner's review of a lock bump would catch a malicious build.
 - **Firmware or hardware implants.**
 - **GitHub and ghcr.io seeing daily update checks.**
 - **Fedora infrastructure compromise.**
@@ -47,5 +64,7 @@ These live in `docs/RECOVERY.md` and cover:
 - a leaked CI or release key: rotate, and sign an emergency image with the offline
   backup key;
 - a compromised GitHub account or token: audit the tags, rotate the secrets;
-- a compromised COPR account (M2);
-- a leaked MOK (only if one is introduced).
+- a suspect kernel or NVIDIA input: hold the pair, or replace the running kernel with
+  the break-glass image (S1c);
+- a leaked Apex Secure Boot key: enrol a successor, then revoke the old key with
+  `mokutil --mokx` (W3).

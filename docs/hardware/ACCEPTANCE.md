@@ -1,11 +1,11 @@
 # Hardware acceptance (M7400QC)
 
 Every hardware item Apex claims has a command and a numeric pass criterion here. M1 is
-done when every numbered item passes on the laptop (ROADMAP M1 exit). Two items are
-different: 8.4 runs in the qualification VM, never on the laptop, and 6.5 is recorded
-at M1 but only gates fingerprint unlock (M2). Run the items on an installed Apex,
-logged in to GNOME as the owner, on AC power unless an item says otherwise. Commands
-that need root carry `sudo`.
+done when every numbered item passes on the laptop (ROADMAP M1 exit). Three things are
+different: 8.4 runs in the qualification VM, never on the laptop; 6.5 is recorded at
+M1 but only gates fingerprint unlock (M2); and §4 names the slice that needs each of
+its rows. Run the items on an installed Apex, logged in to GNOME as the owner, on AC
+power unless an item says otherwise. Commands that need root carry `sudo`.
 
 Machine facts come from [hardware/m7400qc/profile.toml](../../hardware/m7400qc/profile.toml).
 Details and background: [AUDIO.md](AUDIO.md), [FINGERPRINT.md](FINGERPRINT.md),
@@ -82,48 +82,106 @@ correct side and the tones are steady, with no dropout, crackle or gating.
 | 3.3 | After a reboot | reboot, the same two commands | `b true` twice; `80` |
 | 3.4 | Default-on state file | `sudo cat /var/lib/upower/charging-threshold-status; echo` | `1` (unless you turned the limit off in Settings > Power, which must stick) |
 
-## 4. dGPU runtime power management (M1: no driver)
+## 4. dGPU: NVIDIA driver, runtime power and offload (S1c)
 
-At M1 no driver binds the RTX 3050 (`0000:01:00.0`, `10de:25a2`); a udev rule sets
-`power/control=auto` so the root port can cut its power.
+The RTX 3050 (`0000:01:00.0`, `10de:25a2`) has one PCI function and no MUX. It runs
+NVIDIA's open kernel modules, built and signed for exactly the image's kernel. The AMD
+iGPU drives the panel and HDMI and runs the shell. Apps use the dGPU only on request,
+and it idles in D3cold otherwise
+([ARCHITECTURE §6.4](../ARCHITECTURE.md#64-gpu-and-power),
+[ADR 0015 §6](../adr/0015-cachyos-kernel-and-nvidia.md#6-hybrid-graphics-and-power)).
+
+- S1d needs 4.1 to 4.5, 4.7 and 4.8.
+- 4.6 and 4.9 are measured in S4. 4.6 also runs in the kernel A/B (K3, S1d).
+- Each NVIDIA release and each new kernel line runs this section on the laptop before
+  it publishes (ARCHITECTURE §4.3).
+
+Setup for 4.x:
+
+```sh
+dev=/sys/bus/pci/devices/0000:01:00.0
+gpu=/proc/driver/nvidia/gpus/0000:01:00.0
+d3cold_within() {  # d3cold_within SECONDS: polls sysfs only, which never wakes the GPU
+    local s
+    for ((s = 0; s <= $1; s++)); do
+        [ "$(<"$dev/power_state")" = D3cold ] && { echo "D3cold after $s s"; return 0; }
+        sleep 1
+    done
+    echo "FAIL: $(<"$dev/power_state") after $1 s"
+    return 1
+}
+```
+
+4.4 needs `vulkaninfo`, `eglinfo` and `glxinfo`, which the image does not ship. Install
+them into a transient `/usr` overlay, which the next boot discards:
+`sudo bootc usroverlay`, then `sudo dnf install vulkan-tools egl-utils glx-utils`.
 
 | # | Check | Command | Pass |
 |---|---|---|---|
-| 4.1 | No driver, runtime PM allowed | `readlink /sys/bus/pci/devices/0000:01:00.0/driver; cat /sys/bus/pci/devices/0000:01:00.0/power/control` | no driver link; `auto` |
-| 4.2 | Idle share | the script below, 10 minutes idle | suspended share ≥ 95.0 % |
-| 4.3 | Power state after idle | printed by the script | `runtime_status=suspended`, `power_state=D3cold` |
+| 4.1 | Driver bound, fine-grained RTD3, modules signed by this kernel's key | `readlink $dev/driver; cat $dev/power/control`<br>`grep 'Runtime D3 status' $gpu/power`<br>`grep '^DynamicPowerManagement:' /proc/driver/nvidia/params`<br>`lsmod \| grep -cE '^(nouveau\|nova_core) '`<br>`modinfo -F signer nvidia amdgpu; cat /sys/module/module/parameters/sig_enforce` | path ends in `/nvidia`; `auto`; `Enabled (fine-grained)`; `DynamicPowerManagement: 2`; `0`; two equal lines, `Apex kernel <uname -r> <content key>`, then `Y`. On the break-glass image the two signers differ (`amdgpu` carries Fedora's) and `sig_enforce` is `N`; record that ([RECOVERY §8.2](../RECOVERY.md#82-the-break-glass-image-fedoras-kernel-s1c)) |
+| 4.2 | Idle share | `bash dgpu-idle.sh 600` under the idle conditions below | suspended share ≥ 95.0 % |
+| 4.3 | Power state and video memory after idle | printed by the script; then `grep 'Video Memory' $gpu/power` | `runtime_status=suspended`, `power_state=D3cold`; `Video Memory: Off` |
+| 4.4 | Offload: Vulkan, EGL and GLX, and the GNOME menu | `switcherooctl list`<br>`switcherooctl launch vulkaninfo --summary \| grep deviceName`<br>`switcherooctl launch eglinfo -B \| grep -c 'RTX 3050'`<br>`switcherooctl launch glxinfo -B \| grep -c 'RTX 3050'`<br>`d3cold_within 30`<br>then right-click Text Editor in the app grid, "Launch using Discrete Graphics Card"; `nvidia-smi`; close Text Editor; `d3cold_within 30` | two devices, the NVIDIA one with `Default: no`; one `deviceName`, the RTX 3050; both counts ≥ 1; D3cold within 30 s; `nvidia-smi` lists a `gnome-text-editor` process; D3cold within 30 s after it closes |
+| 4.5 | HDMI hotplug stays on the iGPU | `udevadm info -q property /dev/dri/by-path/pci-0000:01:00.0-card \| grep -c mutter-device-ignore`<br>`journalctl -b -o cat _COMM=gnome-shell \| grep -E 'selected as primary\|Added device'`<br>plug in an HDMI display and wait until it shows the desktop; `d3cold_within 60`; unplug it; `d3cold_within 60` | ≥ 1; the primary GPU is the card whose `Added device` line names `amdgpu`, and no line names the NVIDIA card; D3cold within 60 s after the plug and after the unplug |
+| 4.6 | s2idle with the driver bound | `grep -E '^(UseKernelSuspendNotifiers\|EnableS0ixPowerManagement\|PreserveVideoMemoryAllocations):' /proc/driver/nvidia/params`<br>`systemctl list-unit-files 'nvidia-suspend*' 'nvidia-resume*' 'nvidia-hibernate*'`<br>`d3cold_within 60`; close the lid for at least 5 minutes, open it and unlock; `d3cold_within 60`; the `glxinfo` line of 4.4 | three lines ending in `: 1`; `0 unit files listed.`; D3cold before the lid closes; D3cold within 60 s after resume; `glxinfo` still counts ≥ 1 |
+| 4.7 | A Flatpak app on the dGPU | `v=$(tr . - </sys/module/nvidia/version)`<br>`flatpak list --runtime --columns=application \| grep '^org.freedesktop.Platform.GL.nvidia-'`<br>right-click Bazaar in the app grid, "Launch using Discrete Graphics Card"; `nvidia-smi`; close Bazaar; `d3cold_within 30` | exactly one line, `org.freedesktop.Platform.GL.nvidia-$v`; `nvidia-smi` lists a `bazaar` process; D3cold within 30 s after it closes |
+| 4.8 | `nvidia-smi` and one driver version | `nvidia-smi -L`<br>`nvidia-smi --query-gpu=driver_version --format=csv,noheader; cat /sys/module/nvidia/version`<br>`rpm -q --qf '%{VERSION}\n' nvidia-driver nvidia-kmod-common kmod-nvidia-$(uname -r)`<br>`d3cold_within 30` | `GPU 0: NVIDIA GeForce RTX 3050 …`; the five versions are equal; D3cold within 30 s |
+| 4.9 | Dynamic Boost costs no idle power | on battery: `systemctl is-active nvidia-powerd`; `bash dgpu-idle.sh 600`<br>then `sudo systemctl stop nvidia-powerd`; `bash dgpu-idle.sh 600`; `sudo systemctl start nvidia-powerd`<br>after each run: `grep . /sys/devices/system/cpu/cpufreq/policy*/{scaling,cpuinfo}_max_freq` | `active`; both runs pass 4.2; the mean battery power with `nvidia-powerd` is at most 0.1 W above the run without it; after each run, every `scaling_max_freq` equals its `cpuinfo_max_freq`. If a criterion fails, `nvidia-powerd` is turned off (ADR 0015 §6) |
 
 Idle conditions: logged in, one Ptyxis window and one Nautilus window open, nothing
 else started, laptop not touched during the window (the screen may blank). Wait 60 s
 after opening the windows, then run the script. **Do not** run `nvidia-smi`, `nvtop`,
-`vulkaninfo`, `lspci -v` (config-space reads wake the device) or read
-`/proc/driver/nvidia` during the window; with a driver loaded later (M2), the same
-rules apply.
+`vulkaninfo` or `lspci -v` (config-space reads wake the device) during the window, and
+read nothing under `/proc/driver/nvidia`. Read `$gpu/power` only before and after it.
 
 ```bash
 #!/usr/bin/env bash
-# dgpu-idle.sh [SECONDS]: runtime-suspended share of the dGPU over an idle window.
-# Reads only sysfs PM counters (milliseconds); nothing here wakes the GPU.
+# dgpu-idle.sh [SECONDS]: the dGPU's runtime-suspended share over an idle window, the
+# wakes seen and the mean battery power. Reads only sysfs; nothing here wakes the GPU.
 set -euo pipefail
 dev=/sys/bus/pci/devices/0000:01:00.0
+bat=/sys/class/power_supply/BAT0
 secs=${1:-600}
 read_pm() { printf '%s %s\n' "$(<"$dev/power/runtime_active_time")" "$(<"$dev/power/runtime_suspended_time")"; }
+read_uw() {  # battery power in µW; meaningful on battery only
+    if [ -r "$bat/power_now" ]; then cat "$bat/power_now"
+    else echo $(($(<"$bat/current_now") * $(<"$bat/voltage_now") / 1000000)); fi
+}
 printf 'control=%s driver=%s\n' "$(<"$dev/power/control")" "$(basename "$(readlink "$dev/driver" 2>/dev/null || echo none)")"
 read -r a0 s0 < <(read_pm)
-sleep "$secs"
+wakes=0 uw=0 n=0 prev=$(<"$dev/power/runtime_status")
+for ((t = 1; t <= secs; t++)); do
+    sleep 1
+    cur=$(<"$dev/power/runtime_status")
+    [[ $prev == suspended && $cur != suspended ]] && wakes=$((wakes + 1))
+    prev=$cur
+    if ((t % 10 == 0)); then uw=$((uw + $(read_uw))) n=$((n + 1)); fi
+done
 read -r a1 s1 < <(read_pm)
 da=$((a1 - a0)) ds=$((s1 - s0)) total=$((da + ds))
 ((total > 0)) || { echo "FAIL: no runtime PM accounting (is power/control 'auto'?)"; exit 1; }
 share=$((ds * 1000 / total))
 printf 'window %d s: active %d ms, suspended %d ms, suspended share %d.%d %%\n' \
     "$secs" "$da" "$ds" $((share / 10)) $((share % 10))
+printf 'wakes seen (1 s sampling): %d, %d per hour\n' "$wakes" $((wakes * 3600 / secs))
+((n == 0)) || printf 'battery (%s): %d mW mean\n' "$(<"$bat/status")" $((uw / n / 1000))
 printf 'now: runtime_status=%s power_state=%s\n' "$(<"$dev/power/runtime_status")" "$(<"$dev/power_state")"
 if ((share >= 950)); then echo PASS; else echo "FAIL: below 95.0 %"; exit 1; fi
 ```
 
-Run it as `bash dgpu-idle.sh 600` (no root needed). For the record, also note the
-counters' growth when Text Editor is started and closed five times
-(informative, no criterion at M1).
+Run it as `bash dgpu-idle.sh 600` (no root needed). The wake count is informative:
+record it per idle hour, with `nvidia-powerd` on and off, in S4 (ROADMAP N10). A wake
+shorter than 1 s can fall between two samples; the active time still counts it.
+
+**No driver bound.** No driver binds the GPU on images before the pair ships (S1c),
+in the S1d fallback on Fedora's kernel, with `degraded=nvidia`, and on the break-glass
+image with Secure Boot on (ADR 0015 §4). A udev rule still sets `power/control=auto`,
+so the GPU reaches D3cold unbound. Record 4.1 and 4.4 to 4.9 as "degraded" (§0), and
+check instead:
+
+- `readlink $dev/driver` prints nothing, and `cat $dev/power/control` prints `auto`;
+- 4.2 passes;
+- 4.3 passes without the `Video Memory` line.
 
 ## 5. Display
 
@@ -178,7 +236,8 @@ want the debug log; otherwise the stock service is fine for 6.1.
 | 8.3 | Apply, reboot, green | `apexctl update download` (restages from cache), `apexctl update changes`, `apexctl update apply` (prints "Reboot to finish the update."), `findmnt -no OPTIONS /boot`, reboot from the GNOME menu, log in, wait 2 min; `apexctl status`; `sudo grub2-editenv /boot/grub2/grubenv list`; `findmnt -no OPTIONS /boot`; `systemctl status apex-boot-assess.service`; `sudo grep -c '^# apex-bootcount v1' /boot/grub2/grub.cfg` (bootupd writes grub.cfg with mode 0600) | booted digest = the applied one and state `up-to-date`; grubenv has `apex_ok=1` and no `apex_target` or `apex_counter` (Apex ignores Fedora's `boot_success`); both `findmnt` outputs start with `ro` (grubenv is written in a private mount namespace); the service ended successfully; marker count 1 |
 | 8.4 | Injected failing check → counted rollback | **in the qualification VM (KVM, OVMF, real GRUB), never on the laptop** | see below |
 
-8.4: `qualify.yml` does this on every candidate. To run it by hand in the VM: install
+8.4: `.github/scripts/qualify.sh red` does this in the builder VM (`just qualify-local`
+prints the commands); GitHub does not run it. To run it by hand in the VM: install
 the current stable, then download and apply a candidate built with a test-only unit
 that is on the required-unit list and always fails. Do not log in. Pass:
 
@@ -195,18 +254,36 @@ that is on the required-unit list and always fails. Do not log in. Pass:
   `sudo grub2-editenv /boot/grub2/grubenv list` shows no `apex_target` or `apex_counter`;
 - `apexctl update check` does not offer the denylisted digest again.
 
-## 9. Secure Boot state (recorded, no pass/fail at M1)
+## 9. Secure Boot and lockdown (recorded, no pass/fail)
 
 ```sh
 mokutil --sb-state 2>/dev/null ||
     od -An -t u1 /sys/firmware/efi/efivars/SecureBoot-8be4df61-93ca-11d2-aa0d-00e098032b8c | awk '{print "SecureBoot=" $NF}'
 cat /sys/kernel/security/lockdown
+cat /sys/module/module/parameters/sig_enforce
+mokutil --list-enrolled 2>/dev/null | grep -E 'SHA1 Fingerprint|Subject:'
 ```
 
-Record the output. At M1 Apex has no Secure Boot keys of its own: the stock
-Fedora-signed shim, GRUB and kernel boot with Secure Boot on or off. On this laptop it
-was off on 2026-09-23. Turning it on is a separate decision (ADR 0012); Windows
-BitLocker may then ask for its recovery key once.
+Record the output. What to expect:
+
+| State | Secure Boot | `lockdown` | Apex Secure Boot key |
+|---|---|---|---|
+| Until step W3 | `SecureBoot disabled` | `[none] integrity confidentiality` | not enrolled |
+| From W3, if the owner turns it on | `SecureBoot enabled` | `none [integrity] confidentiality` | enrolled |
+| After W3, turned off again ([RECOVERY §8.3](../RECOVERY.md#83-back-from-secure-boot-w3)) | `SecureBoot disabled` | `none [integrity] confidentiality` | enrolled |
+
+- Secure Boot was off on this laptop on 2026-09-28.
+- `sig_enforce` is `Y` on the pair whether Secure Boot is on or off. Each kernel trusts
+  only the module key built into it (S1c, ADR 0015 §3).
+- Turning Secure Boot on is the optional step W3, after Windows is removed. It follows
+  [ADR 0015 §7](../adr/0015-cachyos-kernel-and-nvidia.md#7-secure-boot-when-and-how).
+  From S1c until W3 the CachyOS kernel is not signed for Secure Boot, so turning it on
+  stops Apex from booting.
+- From W3, `integrity` comes from the `lockdown=integrity` kernel argument, which stays
+  when Secure Boot is turned off again. CachyOS lacks Fedora's patch that turns
+  lockdown on with Secure Boot.
+- When the key is enrolled, one `SHA1 Fingerprint` equals, ignoring case, the output
+  of `openssl x509 -inform DER -in /usr/share/apex/keys/apex-sb.der -noout -fingerprint -sha1`.
 
 ## Acceptance record template
 
@@ -214,15 +291,16 @@ BitLocker may then ask for its recovery key once.
 Date:            YYYY-MM-DD
 Image:           ghcr.io/sekirokenjii/apex@sha256:…   version 45.YYYYMMDD.N
 Kernel / BIOS:   … / M7400QC.…
-Secure Boot:     enabled|disabled, lockdown: …
-Degraded:        none | audio | fingerprint
+NVIDIA:          /sys/module/nvidia/version, or "not bound"
+Secure Boot:     enabled|disabled, lockdown: …, sig_enforce: Y|N
+Degraded:        none | audio | fingerprint | nvidia
 
 1.1 … 1.6   pass/fail   notes
 2.1 … 2.7   pass/fail   COEF 0x0f/0x1b/0x40 after E: …  after C: …
 3.1 … 3.4   pass/fail
-4.1 … 4.3   pass/fail   suspended share: …. %
+4.1 … 4.9   pass/fail/degraded   suspended share: …. %; wakes per idle hour: …; nvidia-powerd: +… mW
 5.1 … 5.3   pass/fail
 6.1 … 6.5   pass/fail   soak: worst lift-to-end … ms; score test: genuine …/30, impostor …/60, max impostor score …
 7.1 … 7.3   pass/fail
-8.1 … 8.4   pass/fail   applied digest: …   (8.4: qualify run URL)
+8.1 … 8.4   pass/fail   applied digest: …   (8.4: _build/qualify/results.md)
 ```

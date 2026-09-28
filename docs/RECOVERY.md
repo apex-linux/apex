@@ -2,9 +2,11 @@
 
 Runbooks for when an update, the boot chain or a signing key goes wrong. They follow
 [ADR 0009](adr/0009-boot-assessment.md) (boot assessment),
-[ADR 0010](adr/0010-install-and-bootstrap.md) (install and recovery) and
-[ADR 0012](adr/0012-trust-and-keys.md) (keys), and implement the incident runbooks the
-[threat model](THREAT-MODEL.md) names. Device names are placeholders in `<…>`.
+[ADR 0010](adr/0010-install-and-bootstrap.md) (install and recovery),
+[ADR 0012](adr/0012-trust-and-keys.md) (keys) and
+[ADR 0015](adr/0015-cachyos-kernel-and-nvidia.md) (the kernel pair and Secure Boot),
+and implement the incident runbooks the [threat model](THREAT-MODEL.md) names. Device
+names are placeholders in `<…>`.
 
 | Symptom | Go to |
 |---|---|
@@ -17,6 +19,9 @@ Runbooks for when an update, the boot chain or a signing key goes wrong. They fo
 | You applied an update and want to cancel it before the restart | §7.1 |
 | Follow the testing channel, or go back to stable | §7.2 |
 | You want to see the boot messages behind the splash | §1, "Watch a boot in text mode" |
+| A new kernel or NVIDIA driver misbehaves | §8.1 |
+| A kernel hold passed its 72 h limit, or Fedora has a kernel fix that CachyOS lacks | §8.2 |
+| With Secure Boot on, a kernel does not boot, or you want Secure Boot off again | §8.3 |
 
 ## 1. The boot menu and the previous deployment
 
@@ -478,6 +483,14 @@ Keys (ADR 0012, `image/system_files/usr/share/apex/keys/README.md`):
 | offline backup | emergencies only | encrypted, on two offline media | `/usr/share/apex/keys/release-backup.pub` |
 | CI | `ghcr.io/sekirokenjii/apex-testing` | GitHub environment `testing` | `/usr/share/apex/keys/ci.pub` |
 
+Two more keys come with the kernel pair (ADR 0015 §3):
+
+- the module key (S1c): each kernel build makes one on a tmpfs, builds it into that
+  kernel, signs the kernel's own modules and the NVIDIA modules with it, and shreds
+  it. Nothing is left to rotate or revoke;
+- the Apex Secure Boot key (W3), only if the owner turns Secure Boot on. It signs
+  `vmlinuz` and nothing else. Its rotation and revocation are in §6.6.
+
 Rules for every procedure below:
 
 - The policy that verifies an update is the one in the **booted** image. A new key
@@ -624,12 +637,54 @@ freshly generated pair of keys.
    an older image even if a tag points at one; the staleness warning shows a frozen tag.
 6. Re-enable the workflows and the timer when done.
 
-### 6.6 Not applicable at M1
+### 6.6 Apex Secure Boot key: rotation and revocation (W3)
 
-- **Leaked MOK:** Apex has no Secure Boot keys of its own at M1. The runbook
-  (`mokutil --mokx --import`, then `mokutil --delete`) comes with the M2 decision that
-  introduces a MOK.
-- **Compromised COPR or Fedora account:** M1 uses no COPR (the kernel fork is M2).
+This key exists only after step W3 (ADR 0015 §7). Until then Secure Boot is off, and
+nothing is enrolled.
+
+Impact of a leak: someone can sign a kernel that shim boots with Secure Boot on. The
+private half lives in the builder VM next to the cosign and RPM keys, so treat those as
+exposed too.
+
+shim boots the CachyOS kernel only when an enrolled key signed it. The new key is
+therefore enrolled before any kernel is signed with it, and the old key goes only when
+both deployments carry the new signature:
+
+1. Generate the new key offline, as ADR 0015 §3 describes. Copy its public DER to the
+   laptop as `apex-sb-new.der`, and keep the old one:
+   `cp /usr/share/apex/keys/apex-sb.der ~/apex-sb-old.der`.
+2. Enrol the new key next to the old one. `sudo mokutil --import apex-sb-new.der` asks
+   for a one-time password. Restart, choose "Enroll MOK" in MokManager at the console,
+   and type that password. `mokutil --list-enrolled` then shows both keys.
+3. Commit the new DER as `packaging/keys/apex-sb.der`. From then on the lane signs
+   `vmlinuz` with the new key. Apply two such images, so that the booted and the
+   rollback deployment both carry it (`apexctl status` shows both versions).
+4. Revoke the old key: `sudo mokutil --mokx --import ~/apex-sb-old.der` and
+   `sudo mokutil --delete ~/apex-sb-old.der`. Each asks for a one-time password.
+   Restart and confirm both requests in MokManager.
+5. Check: `mokutil --list-enrolled` shows only the new key,
+   `mokutil --mokx --list-enrolled` shows the old one, and both deployments boot with
+   Secure Boot on.
+
+- If the old key is known to be in use by someone else, do step 4 as soon as the first
+  image signed with the new key has booted. Until the second one, the rollback
+  deployment then boots only with Secure Boot off (§8.3).
+- A planned rotation, with no leak, is steps 1 to 3, then step 4 without the `--mokx`
+  command.
+
+### 6.7 A suspect kernel or NVIDIA input (S1c)
+
+Apex has no COPR or Fedora account of its own. The CachyOS tag, the COPR SRPM and
+negativo17's SRPM and binaries are third-party inputs, each pinned by key and sha256
+(ARCHITECTURE §5.1). When one is suspect:
+
+- In the builder VM, pin the last pair built before it in `packaging/hold.txt`, so the
+  lane publishes nothing new from it (ARCHITECTURE §4.3).
+- If the running kernel must go, publish the break-glass image (§8.2). If only
+  negativo17 is suspect, the owner may instead publish the held kernel without the
+  NVIDIA set (`degraded=nvidia`, through the override of `just publish`).
+- Pin a replacement key only after its owner has published it, and check its
+  fingerprint against a second source (ADR 0015 §5).
 
 ## 7. Cancelling an applied update, changing the channel
 
@@ -699,3 +754,75 @@ apexctl update apply               # then restart
 - Testing images are signed with the CI key and are not qualified for stable. To go
   back, run `apexctl update channel stable`, then `apexctl update apply`, then restart
   (§6.2 step 1 explains what that installs).
+
+## 8. The kernel pair and Secure Boot
+
+From S1c, every image carries one kernel, `kernel-cachyos`, with the NVIDIA modules
+built and signed for exactly that kernel (ADR 0015, ARCHITECTURE §4.2). Secure Boot is
+off. Turning it on is the optional step W3, after Windows is removed (ADR 0015 §7).
+
+### 8.1 A kernel or NVIDIA driver that misbehaves (S1c)
+
+- Each deployment's `/usr` carries its own kernel, modules and NVIDIA set, so the pair
+  rolls back as one, like any update. A kernel that panics or never reaches a green
+  boot falls back through the boot count (§1). A pair that boots but misbehaves goes
+  back with `apexctl update rollback --mark-bad` (§2).
+- Then, in the builder VM, pin the last good pair by content key in
+  `packaging/hold.txt`, so the lane does not publish the bad one again
+  (ARCHITECTURE §4.3).
+- A kernel that breaks KVM, suspend or storage also stops the builder VM that would
+  build the fix. Roll back first, then build.
+- `degraded=nvidia` in `apexctl status` is not a fault. The owner published a kernel
+  without the NVIDIA set because the kmod could not follow it. The dGPU stays unbound
+  in D3cold until a later image brings the set back (ARCHITECTURE §4.3).
+
+### 8.2 The break-glass image: Fedora's kernel (S1c)
+
+The break-glass image is the same image with Fedora's signed kernel and the NVIDIA
+modules built for it, without `module.sig_enforce=1` (ADR 0015 §4). It is built once in
+S1c to prove that it boots. Nothing publishes it automatically: the owner chooses it
+over waiting, for example when
+
+- a kernel hold passes its 72 h limit (ARCHITECTURE §4.3);
+- a public, severe kernel issue is fixed in Fedora and not yet in CachyOS;
+- a CachyOS or COPR input is suspect (§6.7).
+
+Steps:
+
+1. In the builder VM, build it with `just image KERNEL=fedora`, and publish it by hand.
+2. On the laptop it is an ordinary update: `apexctl update check`,
+   `apexctl update download`, `apexctl update apply`, then restart. The boot count
+   protects its first boot (§1).
+3. Check: `uname -r` ends in `.fc45.x86_64` and does not contain `cachyos`.
+
+NVIDIA on this image depends on Secure Boot:
+
+| Secure Boot | NVIDIA |
+|---|---|
+| off | The modules load with the unsigned-module taint (`E`, bit 8192 of `/proc/sys/kernel/tainted`). |
+| on (W3) | Fedora's kernel enforces module signatures and does not trust the pair's per-build key. NVIDIA does not load, and the dGPU stays unbound in D3cold. |
+
+The way back is the next pair image. It arrives as an ordinary, newer update, and
+nothing on the laptop needs to be undone.
+
+### 8.3 Back from Secure Boot (W3)
+
+With Secure Boot on, shim boots the CachyOS kernel only when the enrolled Apex key
+signed it. Turn Secure Boot off again when
+
+- a deployment's kernel does not boot: GRUB prints `bad shim signature`. An armed
+  update falls through to entry 1 by itself (`fallback=1`, M1 contract §5);
+- the Apex key must go before a successor is enrolled (§6.6);
+- the owner changes their mind.
+
+Steps:
+
+1. Open the firmware setup: F2 at the ASUS logo, or the GRUB entry "UEFI Firmware
+   Settings" (§1).
+2. Turn Secure Boot off, save and restart.
+3. Check: `mokutil --sb-state` prints `SecureBoot disabled`, and
+   `readlink /sys/bus/pci/devices/0000:01:00.0/driver` ends in `/nvidia`.
+
+Nothing else changes. Each kernel still enforces module signatures with its built-in
+key and `module.sig_enforce=1`. The `lockdown=integrity` argument stays, and the Apex
+key stays enrolled for a later return. The break-glass image loads NVIDIA again (§8.2).

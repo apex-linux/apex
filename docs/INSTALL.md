@@ -155,7 +155,9 @@ for the SSD (§10 removes it).
 2. Write it to the stick with Fedora Media Writer or GNOME Disks ("Restore Disk
    Image").
 3. Boot it: Esc at the ASUS logo, pick the stick's UEFI entry, "Try Fedora". Leave
-   Secure Boot as it is.
+   Secure Boot off, as it was on 2026-09-28. Apex's CachyOS kernel (S1c) is signed for
+   Secure Boot only from the optional step W3, so with Secure Boot on it would not
+   boot. The install enrols no MOK (ADR 0015 §7).
 4. Connect to Wi-Fi, open a terminal and become root: `sudo -i`.
 5. Tools: `cryptsetup --version; btrfs --version; podman --version; sgdisk --version;
    skopeo --version; cosign version`. Install what is missing with
@@ -164,7 +166,8 @@ for the SSD (§10 removes it).
    v3.1.x release on github.com/sigstore/cosign and check it against that release's
    `cosign_checksums.txt` before use.
 6. Check SELinux is on: `getenforce` prints `Enforcing` (the `/var` step in §8 relies
-   on it).
+   on it). Check Secure Boot is off: `mokutil --sb-state` prints `SecureBoot disabled`
+   (`dnf install mokutil` if it is missing).
 
 ## 5. Partitions and filesystems
 
