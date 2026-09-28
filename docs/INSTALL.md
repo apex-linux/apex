@@ -53,8 +53,8 @@ not made here.
 
 Prerequisites:
 
-- A promoted, signed image: `ghcr.io/sekirokenjii/apex:45` exists and its digest is
-  listed in the promotion run of `qualify.yml`.
+- A published, signed image: `ghcr.io/sekirokenjii/apex:45` exists, and its digest is
+  the one `just publish` printed in the builder VM (S1d).
 - The real signing keys are committed: in your checkout,
   `grep -rlx APEX-PLACEHOLDER-NOT-A-KEY image/system_files/usr/share/apex/keys` prints
   nothing, and the pull requests that added the keys state their fingerprints.
@@ -278,17 +278,17 @@ The strict policy is now the live system's policy. Prove it rejects foreign imag
 podman pull quay.io/fedora/fedora:45          # must FAIL: rejected by policy
 ```
 
-Choose the digest. Take it from the promotion run of `qualify.yml` (the release
-record), then confirm the registry agrees and the version is the one you expect:
+Choose the digest. Take it from the output of `just publish` in the builder VM (S1d),
+then confirm the registry agrees and the version is the one you expect:
 
 ```sh
 IMG=ghcr.io/sekirokenjii/apex
-DIGEST=sha256:<digest from the promotion run>
+DIGEST=sha256:<digest from just publish>
 skopeo inspect --format '{{.Digest}} {{index .Labels "org.opencontainers.image.version"}}' docker://$IMG:45
 cosign verify --key /usr/share/apex/keys/release.pub "$IMG@$DIGEST"
 ```
 
-Expect `skopeo` to print the same digest (it may be newer if a promotion happened since;
+Expect `skopeo` to print the same digest (it may be newer if `just publish` ran since;
 then use the newer one and repeat). `cosign verify` must exit 0 and report that the
 claims were validated and the signature was verified against the specified public key.
 An image signed in an emergency with the backup key verifies with

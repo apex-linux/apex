@@ -1,6 +1,8 @@
 # ADR 0006: Fix the ELAN 04f3:0c6e by rebuilding Fedora's libfprint with bounded quirk patches
 
-Status: accepted (2026-09-24, revised after design review)
+Status: accepted (2026-09-24, revised after design review); amended 2026-09-28: the
+builder VM runs the rebuild, no OCI artifact is published, and nothing opens an issue
+for a degraded build; the label and `apexctl status` show it (ARCHITECTURE §4)
 
 ## Context
 

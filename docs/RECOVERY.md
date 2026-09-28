@@ -476,6 +476,13 @@ bootupd never regenerates the static `/boot/grub2/grub.cfg`; if it is lost or la
 
 ## 6. Key and account compromise
 
+Note (2026-09-28): this section still follows the key model of ADR 0012, with signing
+in GitHub Actions and keys in the GitHub environments `release` and `testing`. GitHub
+now runs only `ci.yml`, which holds no secret and signs nothing. ARCHITECTURE §5.1
+replaces the model with one cosign key and its offline backup, kept in the builder VM
+(S1d). The steps below that name those environments, the CI key or `apex-testing`
+apply only to images signed under the old model.
+
 Keys (ADR 0012, `image/system_files/usr/share/apex/keys/README.md`):
 
 | Key | Signs | Private half | Trusted by the laptop through |
@@ -554,13 +561,14 @@ channel trusts them.
 Impact: someone can sign images the laptop accepts as stable. Act before the laptop
 downloads anything.
 
-1. **Contain.** On the laptop: `sudo systemctl disable --now apex-update-auto.timer`.
+1. **Contain.** On the laptop: `sudo systemctl disable --now apex-update-auto.timer`,
+   and stop the daily `just publish` timer (S1d).
    On GitHub: `gh secret delete COSIGN_PRIVATE_KEY --env release`,
-   `gh secret delete COSIGN_PASSWORD --env release`, `gh workflow disable qualify.yml`.
+   `gh secret delete COSIGN_PASSWORD --env release`.
    If the leak came through the GitHub account, do §6.5 first.
 2. **Find what was signed.** `rekor-cli search --public-key release.pub --pki-format x509`
    lists every signature made with the key; `rekor-cli get --uuid <uuid>` shows each.
-   Compare with the promotion runs of `qualify.yml`. Check where `:45` points:
+   Compare with the digests that `just publish` pushed (S1d). Check where `:45` points:
    `skopeo inspect --format '{{.Digest}} {{index .Labels "org.opencontainers.image.version"}}' docker://ghcr.io/sekirokenjii/apex:45`.
 3. **New backup key**, offline: `cosign generate-key-pair --output-key-prefix apex-release-backup-2`.
    Keep `apex-release-backup-2.key` encrypted on two offline media.
@@ -622,8 +630,8 @@ freshly generated pair of keys.
 1. **Lock the account:** change the password, check that 2FA is the hardware key only,
    and revoke sessions, personal access tokens, SSH and deploy keys, and OAuth and
    GitHub App authorisations (GitHub settings).
-2. **Freeze:** `gh workflow disable image.yml`, `gh workflow disable qualify.yml`, and on
-   the laptop `sudo systemctl disable --now apex-update-auto.timer`.
+2. **Freeze:** stop the daily `just publish` timer (S1d), and on the laptop
+   `sudo systemctl disable --now apex-update-auto.timer`.
 3. **Audit:** recent commits and workflow changes on `main`
    (`git log --since=<date> -- .github/`), Actions runs and every approval of the
    `release` environment, branch protection and environment settings,
@@ -631,12 +639,12 @@ freshly generated pair of keys.
    repositories (`skopeo list-tags docker://ghcr.io/sekirokenjii/apex`).
 4. **Rotate:** if any unexpected run could read the `testing` environment, do §6.2; if
    any could read `release` (an approval you did not give), do §6.3.
-5. **Retag:** if `:45` points at a digest that no legitimate promotion produced, move it
+5. **Retag:** if `:45` points at a digest that `just publish` did not push, move it
    back to the newest legitimate one with
    `skopeo copy --preserve-digests docker://ghcr.io/sekirokenjii/apex@<digest> docker://ghcr.io/sekirokenjii/apex:45`,
    and delete unknown package versions. The laptop's monotonic version check refuses
    an older image even if a tag points at one; the staleness warning shows a frozen tag.
-6. Re-enable the workflows and the timer when done.
+6. Re-enable both timers when done.
 
 ### 6.6 Apex Secure Boot key: rotation and revocation (W3)
 

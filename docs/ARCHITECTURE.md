@@ -128,11 +128,12 @@ While the repository is private, GitHub runs one workflow, `ci.yml`. Packages an
 images are built in the builder VM ([`tools/builder-vm/`](../tools/builder-vm/)) and
 published from it with `just publish` (S1d), by hand or from a daily host timer on AC
 power. The builder VM runs on the laptop: under Ubuntu today, and under Apex once
-Ubuntu is removed. The same `just` recipes run in the builder VM and in `ci.yml`.
+Ubuntu is removed. `just check`, `just deny`, `just image-test` and `just privacy` run
+`ci.yml`'s commands locally.
 
 | Step | What it does | Output |
 |---|---|---|
-| `ci.yml` | on every push: fmt, clippy `-D warnings`, nextest (wall-clock tests in a slow profile), `cargo deny`, ESLint on `desktop/shell/js/`, sassc on the Apex SCSS, blueprint-compiler, shellcheck, privacy guard | pass or fail |
+| `ci.yml` | on every pull request and every push to `main`: fmt, clippy `-D warnings`, `cargo test`, `cargo deny`, the RPM `License:` check, shellcheck and actionlint, the script self-tests, `image/tests/run.sh`, the privacy guard. To come: ESLint on `desktop/shell/js/` and sassc on the Apex SCSS (S1a), blueprint-compiler (S2c), and nextest with the wall-clock tests in a slow profile (no slice yet) | pass or fail |
 | packages | `packaging/rebuild.sh <pkg>` for each directory in `packaging/pkgs/` (§4.1), and the kernel pair job (§4.2) | signed RPMs stored by content key; `packaging/rpms.lock` |
 | image | `build-rootfs` → build checks (G1) → headless shell (G2) → rechunk with `--previous-build` → push under a unique tag → cosign sign → move `:45` | `ghcr.io/sekirokenjii/apex:45`, and a public source artifact per digest (§4.2, S1d) |
 
@@ -860,7 +861,8 @@ docs/         ARCHITECTURE, THREAT-MODEL, ROADMAP, INSTALL, RECOVERY, adr/, hard
 | G4 VM check | weekly, and before publishing a change to `crates/apex-*`, the kargs, GRUB, the gnome-shell, mutter or gdm NVR, or the kernel pair | in the builder VM (`-cpu host`): install, upgrade and counted rollback; boot to GDM, log in, lock and unlock (S1a); no failed system or user units; the runtime assertions moved out of `system.sh` and `power.sh` (journal persistence, one NTP client, the tuned profile). From S1c: `module.sig_enforce` holds, and SELinux is enforcing with no module-load denials. From S3b: the lock matrix (right and wrong password, Esc, blank and wake, suspend and resume while locked, Reduce Motion, `apex.safe=1` giving the stock two-stage lock, `loginctl unlock-session`); greeter and lock goldens once approved |
 | Hardware | per slice, on the laptop | [hardware/ACCEPTANCE.md](hardware/ACCEPTANCE.md); each fix has a numeric pass criterion. The G4 VM exercises neither NVIDIA nor s2idle, so each new kernel line and each NVIDIA release runs ACCEPTANCE §4 and the s2idle rows. The glass rows run in S2b and S3a, and again after a blur change. |
 
-`ci.yml` checks the code on every push (§4). The ADR 0014 patch budgets are a review
-rule, not a gate. Chromium renders of the mockup are never a gate: they use another
-renderer, web fonts and CSS blur, so no threshold would pass.
+`ci.yml` checks the code on every pull request and every push to `main` (§4). The
+ADR 0014 patch budgets are a review rule, not a gate. Chromium renders of the mockup
+are never a gate: they use another renderer, web fonts and CSS blur, so no threshold
+would pass.
 

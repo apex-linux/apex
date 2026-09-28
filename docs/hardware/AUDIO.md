@@ -469,7 +469,7 @@ Removing the file is a manual change, after this test on Apex:
 1. Read the upstream quirk and note which fixup it maps to.
 2. Disable the patch file for one boot by shadowing the image's modprobe file (a file
    in `/etc/modprobe.d` with the same name overrides the one in `/usr/lib/modprobe.d`):
-   `echo '# disabled for the canary test' | sudo tee /etc/modprobe.d/apex-audio.conf`
+   `echo '# disabled for the quirk test' | sudo tee /etc/modprobe.d/apex-audio.conf`
 3. Power off, then run phases B and C of the acceptance test with no fix loaded
    (`init_verbs` empty). If the speakers work after a Windows warm reboot and after a
    cold boot, send a PR that removes the firmware file and the modprobe file from the

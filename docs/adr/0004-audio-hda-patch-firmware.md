@@ -2,7 +2,9 @@
 
 Status: accepted (2026-09-24, revised after design review); amended by ADR 0015 (2026-09-28): a
 `model=` alias is tried first (ARCHITECTURE §6.2), and a kernel quirk ships through the
-kernel pair lane only if the alias fails
+kernel pair lane only if the alias fails; amended 2026-09-28: decision 6 has no CI
+canary and opens no issue; from S1c the kernel lane's bump report checks for the SSID
+(ADR 0015 §8)
 
 ## Context
 

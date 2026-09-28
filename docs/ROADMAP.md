@@ -153,19 +153,21 @@ CachyOS tag and the spec at its git commit, without waiting for the COPR SRPM
 
 State on 2026-09-28:
 
-- The local repository has commit a08a3eb ("chore: import baseline tree",
-  2026-09-28 16:44 +0700), the tag `baseline-2026-09-28` on it, and `main` tracks
-  `origin/main` on `github.com/SekiroKenjii/apex-fedora`, where `origin/main` is the
-  same commit.
-- The five proposal files are untracked.
-- The owner answered the decision sheet the same day (review §5.3).
+- The baseline is commit a08a3eb ("chore: import baseline tree",
+  2026-09-28 16:44 +0700), with the tag `baseline-2026-09-28` on it. The S0 commits on
+  top of it, starting with the proposal documents, are pushed to `origin/main` on
+  `github.com/SekiroKenjii/apex-fedora`.
+- The owner answered the decision sheet the same day (review §5.3). ADR 0014 and
+  ADR 0015 were accepted on 2026-09-28.
+- The 12 workflows are one, `ci.yml`.
+- `privacy-guard.sh` passes on the tree, with its `design/mockup/` exemption.
 
 Remaining steps, in this order:
 
 1. On GitHub, confirm that the repository is private, that the tag is there, and that
-   no workflow ran on the push. If one ran, cancel it and turn Actions off. The tree
-   holds 12 workflows; `image.yml` calls a build of up to 330 minutes, and
-   `privacy-guard.yml` fails on the mockup.
+   no workflow ran on the push. If one ran, cancel it and turn Actions off. The
+   baseline held 12 workflows: one called a build of up to 330 minutes, and the
+   privacy guard failed on the mockup.
 2. Run `just privacy` and a private-key scan over the tree. On 2026-09-28 the key scan
    found only the test fixture in `image/tests/t-secrets.sh`. The privacy guard
    reported 76 findings, all in `design/mockup/`: C2PA manifests and long lines.
