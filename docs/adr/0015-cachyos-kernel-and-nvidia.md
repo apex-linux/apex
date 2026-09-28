@@ -1,9 +1,9 @@
 # ADR 0015: CachyOS kernel and NVIDIA open modules, built as one pair
 
-Status: proposed (2026-09-28). It records the owner's answer to decision 22
-(`docs/reviews/2026-09-28-review.md` §5.3), given on 2026-09-28. When accepted, it
-supersedes ADR 0005, and amends ADR 0012 (Secure Boot keys and third-party sources) and
-ADR 0004 (where a kernel quirk is carried).
+Status: accepted (2026-09-28). It records the owner's answer to decision 22
+(`docs/reviews/2026-09-28-review.md` §5.3). It supersedes ADR 0005, and amends ADR 0012
+(Secure Boot keys and third-party sources) and ADR 0004 (where a kernel quirk is
+carried).
 
 ## Context
 

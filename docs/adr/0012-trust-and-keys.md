@@ -1,6 +1,9 @@
 # ADR 0012: Trust, keys and repositories
 
-Status: accepted (2026-09-24). The threat model is in `docs/THREAT-MODEL.md`.
+Status: superseded by ARCHITECTURE §4 and §5.1 (2026-09-28), and amended by
+[ADR 0015](0015-cachyos-kernel-and-nvidia.md): its Secure Boot keys and third-party
+repositories clauses are replaced by ADR 0015 §3, §5 and §7. The threat model is in
+`docs/THREAT-MODEL.md`.
 
 ## Decision
 

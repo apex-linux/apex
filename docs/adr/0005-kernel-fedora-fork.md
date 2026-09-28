@@ -1,6 +1,6 @@
 # ADR 0005: Machine-tuned kernel as a thin fork of Fedora's kernel (M2, gated)
 
-Status: accepted, deferred to M2 (2026-09-24, revised after design review)
+Status: superseded by [ADR 0015](0015-cachyos-kernel-and-nvidia.md) (2026-09-28)
 
 ## Context
 

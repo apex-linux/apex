@@ -1,6 +1,7 @@
 # ADR 0008: Updates download in the background; the user decides when to reboot
 
-Status: accepted (2026-09-24, revised after design review)
+Status: accepted (2026-09-24, revised after design review); amended 2026-09-28: major upgrades
+follow ARCHITECTURE §5.4
 
 ## Context
 
@@ -29,8 +30,8 @@ downloaded are locked, and a reboot discards them.
   reboots: the user's session calls `org.gnome.SessionManager.Reboot`.
 - **Cancel** re-locks the stage. It never calls `bootc rollback`.
 - **Rollback, channel switch and downgrade** are explicit polkit-authenticated actions.
-- **Soft reboot and automated major upgrades are deferred.** Major upgrades follow a
-  manual runbook until Fedora 46 branches.
+- **Soft reboot is deferred.** Major upgrades are the `apexctl major-upgrade` operation
+  in ARCHITECTURE §5.4 (roadmap S6).
 
 ## Consequences
 

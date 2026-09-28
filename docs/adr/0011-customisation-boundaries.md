@@ -1,6 +1,6 @@
 # ADR 0011: Customisation boundaries
 
-Status: accepted (2026-09-24)
+Status: superseded by [ADR 0014](0014-engine-level-desktop.md) (2026-09-28)
 
 ## Context
 

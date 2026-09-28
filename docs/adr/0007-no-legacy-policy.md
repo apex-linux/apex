@@ -1,6 +1,6 @@
 # ADR 0007: No legacy components, enforced by the build
 
-Status: accepted (2026-09-24, revised after design review)
+Status: accepted (2026-09-24, revised after design review); amended by ADR 0014
 
 ## Context
 
@@ -22,11 +22,13 @@ and Qt5. Even a minimal GNOME 51 install reaches `libgtk-3` through several pack
   the set of packages that require `libgtk-3.so.0()(64bit)` or the X server, or that are
   banned by name, and compares it with `image/audit/legacy-allowlist.txt` as a set
   difference. It uses rpm's own resolution, not a home-grown dependency parser.
-- **Allowlist entries.** Each entry names its reason and the milestone that removes it.
+- **Allowlist entries.** Each entry names its reason and the condition that removes it.
   The list can only shrink.
-- **No private forks for zero GTK3.** Apex does not fork network- or input-facing
-  libraries (evolution-data-server, ibus) just to reach zero GTK3; that would take on
-  their security updates. Allowlisted packages go away when upstream drops GTK3.
+- **No rebuilds of network- or input-facing libraries for zero GTK3.** Apex does not
+  rebuild evolution-data-server, ibus or similar libraries just to drop GTK3; that would
+  take on their security updates. A spec-only rebuild through the ADR 0014 lane (no
+  source patches, for example gdm `--without x11`) is allowed after the desktop slices
+  ship. It takes that package off Fedora's signature.
 
 ## Consequences
 

@@ -1,6 +1,6 @@
 # ADR 0013: Build pipeline on GitHub-hosted runners
 
-Status: accepted (2026-09-24). The build-rootfs spike is still pending.
+Status: superseded by ARCHITECTURE §4 (2026-09-28).
 
 ## Context
 

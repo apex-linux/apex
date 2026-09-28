@@ -1,6 +1,8 @@
 # ADR 0004: ALC294 speaker fix through measured HDA patch firmware, then an upstream quirk
 
-Status: accepted (2026-09-24, revised after design review)
+Status: accepted (2026-09-24, revised after design review); amended by ADR 0015 (2026-09-28): a
+`model=` alias is tried first (ARCHITECTURE §6.2), and a kernel quirk ships through the
+kernel pair lane only if the alias fails
 
 ## Context
 

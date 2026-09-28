@@ -1,6 +1,7 @@
 # ADR 0010: First install and bootstrap on the only laptop
 
-Status: proposed (2026-09-24). The partition plan needs the owner's decision.
+Status: proposed (2026-09-24). The partition plan needs the owner's decision. Amended by
+ADR 0015 (2026-09-28): MOK enrolment moved to its Secure Boot runbook.
 
 ## Context
 
@@ -27,7 +28,8 @@ bootc's built-in `tpm2-luks` option drops passphrase slots and has no recovery k
   2. Verify the key fingerprint against this git repository.
   3. Install by digest after `cosign verify`, with `--enforce-container-sigpolicy`.
 - **Before the internal install:** back up `/home` and the Windows recovery key.
-  Enrolling a MOK is not needed at M1, because there are no Apex Secure Boot keys.
+  No MOK is enrolled at install: Secure Boot stays off until Windows is removed, and
+  enrolment is part of the Secure Boot runbook (ADR 0015 §7).
 - **Recovery** (`docs/RECOVERY.md`):
   - reaching the rollback entry despite the static GRUB menu's 1 s timeout;
   - `bootc rollback` from a live USB;
