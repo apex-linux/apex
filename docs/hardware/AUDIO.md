@@ -125,8 +125,9 @@ what their authors intended (0x7f4b, see above), and one M7400QC owner needed
 - Writing the whole value 0x4e4b is exactly what broke **cold boot** on the UX461FN
   (bugzilla 219415). This unit's cold value may differ from Realtek's default in other
   bits.
-- COEF 0x0f and 0x40 may or may not matter here. They are written only if the dump of
-  the failing state shows they differ.
+- COEF 0x0f (the EAPD coefficient `ALC294_FIXUP_ASUS_HPE` uses) and 0x40 (the one
+  `ALC294_FIXUP_ASUS_SPK` writes) may or may not matter here. They are written only if
+  the dump of the failing state shows they differ.
 
 ## 2. The first test: no fix, no Windows
 
@@ -252,9 +253,10 @@ patch firmware file rendered from **values measured on this laptop**. Until
 `hardware/m7400qc/profile.toml` holds those measurements, `apexctl profile render`
 produces no firmware file and the image carries `degraded=audio`.
 
-The renderer writes `cold_value | 0x0400` for COEF 0x1b (profile.toml
-`[audio.fix].rules`), plus the cold values of any index in `restore_if_windows_differs`
-that changed in the failing state, and nothing without a measured cold value.
+For each profile.toml `[audio.fix].rules` entry the renderer writes
+`(cold_value & !clear) | set`, today `cold_value | 0x0400` for COEF 0x1b, plus the cold
+values of any index in `restore_if_windows_differs` that changed in the failing state,
+and nothing without a measured cold value.
 
 - `hardware/m7400qc/generated/alc294-m7400qc.fw` has a `[codec]` line
   `0x10ec0294 0x10431ab2 0` and `[verb]` lines on NID 0x20. It has no `[model]` or
@@ -392,9 +394,8 @@ This is also how to read COEFs on Apex, where alsa-tools is not installed.
 
 ## 6. Filling `profile.toml`
 
-1. Replace the commented `# [audio.measurements]` block with the fragment from the
-   phase-A report (the `[audio.measurements]` header, `date`, `bios`, `kernel` and
-   `cold_boot`).
+1. Paste the fragment from the phase-A report after the `[audio.fix]` table (the
+   `[audio.measurements]` header, `date`, `bios`, `kernel` and `cold_boot`).
 2. Add the `after_windows = [...]` line from the phase-B report under it; it holds the
    failing state, whatever caused it. Both are needed: `restore_if_windows_differs`
    lists 0x0f and 0x40, so the renderer refuses to render without the phase-B dump.

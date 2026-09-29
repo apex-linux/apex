@@ -49,7 +49,11 @@ and changes the policy.
   - a greeter or user session has been active for at least 20 s;
   - NetworkManager and systemd-logind are active;
   - `apex-updated` answers `Ping`;
-  - none of an explicit list of units has failed;
+  - none of an explicit list of units has failed. The list leaves out
+    `ostree-boot-complete` (it fails for a failed stage, not for this deployment), units
+    that need the network, `systemd-tmpfiles-setup` (it fails for any bad package line),
+    the D-Bus-activated `apex-updated` (the `Ping` check covers it) and hardware services
+    (reported checks);
   - `/boot/grub2/grub.cfg` contains the Apex snippet marker.
 - **Reported checks** (never a rollback): audio `init_verbs`, charge threshold, dGPU
   runtime PM, the fingerprint device, the image-source check (booted image is a registry
@@ -87,12 +91,42 @@ unconfirmed deployment would make it the only fallback, with the last good one p
 adds a failing required check `forced-red`, so the KVM qualification can drive the whole
 counted-rollback path. When the file is absent or names another digest, nothing changes.
 
+**The unit** (`apex-boot-assess.service`):
+- It starts `After=graphical.target`, with no `Before=` and nothing ordered after it. The
+  assessment takes minutes and must never delay `boot-complete.target`, the greeter or a
+  login. The binary waits for a greeter or user session itself, because a
+  session is not a unit state.
+- `RemainAfterExit=yes` gives one verdict per boot, also when `graphical.target` is
+  reached again.
+- `/boot` gets no `ReadWritePaths=`. grubenv is written only in the writer's private mount
+  namespace, and a writable bind mount would not help, because `/boot` itself is
+  read-only.
+- `PrivateTmp=yes` is required: bootc writes a temporary copy of itself to `/tmp` for its
+  SELinux re-exec.
+- `CAP_SYS_ADMIN` covers the writer's `unshare` and `/boot` remount and ostree's remounts
+  for the sysroot lock, and bootc refuses to start without it. `CAP_SYS_PTRACE` is needed
+  because bootc reads `/proc/1/ns/mnt`, a ptrace access check once PID 1 holds
+  capabilities this unit does not.
+- `NoNewPrivileges=yes` also keeps bootc, mount and `grub2-editenv` in the unit's SELinux
+  domain.
+- `SystemCallFilter=` adds `@mount` for those remounts. With `SystemCallErrorNumber=EPERM`,
+  a helper that meets a refused call fails with a message instead of dying on `SIGSYS`.
+- Deliberately unset:
+  - `PrivateIPC=`: bootc would then join the host IPC namespace with `setns`, which
+    `RestrictNamespaces=mnt` forbids, and `bootc status` fails;
+  - `PrivateDevices=`, `DevicePolicy=` and `ProtectClock=`: they close the block devices
+    that `grub2-editenv`, bootc and ostree probe;
+  - `PrivateUsers=`: it locks the inherited mounts read-only;
+  - `ProcSubset=pid`: it hides `/proc/asound`, which the audio check reads.
+
 ## Consequences
 
 - **Early-boot failures.** A failure that drops the real root into `emergency.target`
   (after switch-root) does not reboot by itself. Drop-ins for `emergency.service` and
   `rescue.service` reboot after a short delay while an armed boot is being counted, so
-  the counter still moves.
+  the counter still moves. The two drop-ins are identical and hold only the watchdog's
+  `ExecStartPre=-`. A condition would skip the shell, an empty `ExecStartPre=` would drop
+  the shell's plymouth line, and the `-` keeps any exit status from failing the shell.
 - **Boot counting follows the static config installed at `bootc install`.** bootupd does
   not regenerate it later, so the marker check makes a missing snippet visible, and
   `apexctl boot repair-grub` (M2) can reinstall it.

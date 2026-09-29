@@ -418,9 +418,9 @@ third-party clauses.
   - unconfirmed or failed: the menu shows for 5 s;
   - `menu_show_once_timeout` still works ([RECOVERY.md](RECOVERY.md) §1).
 - This needs every green boot confirmed in grubenv (§5.2). The counter snippet already
-  resets `apex_ok=0` at every boot (`08_apex-bootcount.cfg:101-103`), and its marker
-  does not change.
-- bootupd copies static configs only at `bootc install` (`08_apex-bootcount.cfg:12-16`).
+  resets `apex_ok=0` at every boot (its last two lines), and its marker does not change.
+- bootupd copies static configs only at `bootc install`, so `08_apex-bootcount.cfg`
+  bumps its marker on any change in behaviour.
   The snippet therefore ships in the image before the internal-disk install (S4). The
   USB SSD keeps the 1 s menu unless it is reinstalled.
 - **The disk after Windows.** The owner deleted Windows on 2026-09-29 (ROADMAP W1):
@@ -624,7 +624,8 @@ vendor profile (S4). The sensor is in the power key, so
   Fedora kernel (`X86_AMD_PSTATE_DEFAULT_MODE=3`). CachyOS's `epp_boost` stays off.
   tuned-ppd with an `apex-performance` profile that drops the server VM tunables.
   Acceptance: EPP is writable and follows the power mode, on both kernels (S1d).
-- **Battery:** UPower's default hwdb already sets an 80 % end threshold, but it never
+- **Battery:** the kernel exposes only an end threshold (no start), which it resets to
+  100 at boot. UPower's default hwdb already sets an 80 % end threshold, but it never
   sees this laptop's threshold attribute, because asus-wmi adds it after BAT0 appears
   and sends no uevent. Apex ships three things:
   - a udev rule that re-triggers BAT0 when `asus-nb-wmi` binds;
