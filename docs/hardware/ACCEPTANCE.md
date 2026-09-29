@@ -58,10 +58,15 @@ coefs() {  # root; the kernel's own read-only COEF dump
 }
 ```
 
-The **speaker test** is [AUDIO.md §3.7](AUDIO.md#37-speaker-test-bypasses-pipewire-low-volume):
-PipeWire stopped, Master at 30 %, `speaker-test -t wav` then a 30 s 440 Hz sine and a
-10 s sine after a runtime suspend. It passes when both channels are heard from the
-correct side and the tones are steady, with no dropout, crackle or gating.
+The **speaker test** is [AUDIO.md §2.2](AUDIO.md#22-speaker-test-bypasses-pipewire-low-volume):
+PipeWire stopped, Master at 30 %, `speaker-test -t wav` then a 30 s 440 Hz sine, then
+the voice and a 10 s sine, each after a runtime suspend. It passes when both channels
+are heard from the correct side, the voice starts with the whole first word, and the
+tones are steady, with no dropout, crackle or gating.
+
+The rows below assume the patch firmware (ADR 0004). ROADMAP W5 rewrites them from the
+result of [AUDIO.md §2](AUDIO.md#2-the-first-test-no-fix-no-windows): with no fix, 2.1
+and the COEF values go; with a `model=` drop-in, 2.1 checks its `picked fixup` line.
 
 | # | Check | Command | Pass |
 |---|---|---|---|
@@ -70,8 +75,6 @@ correct side and the tones are steady, with no dropout, crackle or gating.
 | 2.3 | Cold boot (phase E) | shut down, unplug AC, wait 30 s, power on, log in; `coefs`; speaker test | 0x1b has bit 0x0400 set and equals the rendered value; speaker test passes |
 | 2.4 | Runtime resume | inside the speaker test: `cat /sys/bus/hdaudio/devices/hdaudioC${card}D${addr}/power/runtime_status` after 5 s idle, then play again | `suspended`; the tone after it plays cleanly |
 | 2.5 | Suspend and resume (phase D) | `systemctl suspend`, wake, wait 5 s; `coefs`; speaker test; `diff` of 2.1 again | values as in 2.3; speaker test passes; `init_verbs` unchanged |
-| 2.6 | Windows round trip (phase C) | firmware boot menu (Esc at the ASUS logo), Windows, play sound 10 s, **Restart** into Apex (no power-off); `coefs`; speaker test | bit 0x0400 of 0x1b set; speaker test passes |
-| 2.7 | Phases A and B on record | `grep -A4 '^\[audio.measurements\]' hardware/m7400qc/profile.toml` in the repository | `cold_boot` and `after_windows` present (measured on Ubuntu in M0.5, AUDIO.md §3) |
 
 ## 3. Battery charge limit
 
@@ -272,10 +275,11 @@ Record the output. What to expect:
 | From W3, if the owner turns it on | `SecureBoot enabled` | `none [integrity] confidentiality` | enrolled |
 | After W3, turned off again ([RECOVERY §8.3](../RECOVERY.md#83-back-from-secure-boot-w3)) | `SecureBoot disabled` | `none [integrity] confidentiality` | enrolled |
 
-- Secure Boot was off on this laptop on 2026-09-28.
+- Secure Boot was off on this laptop on 2026-09-28, and still on 2026-09-29.
 - `sig_enforce` is `Y` on the pair whether Secure Boot is on or off. Each kernel trusts
   only the module key built into it (S1c, ADR 0015 §3).
-- Turning Secure Boot on is the optional step W3, after Windows is removed. It follows
+- Turning Secure Boot on is the optional step W3. Windows, deleted on 2026-09-29, no
+  longer blocks it. It follows
   [ADR 0015 §7](../adr/0015-cachyos-kernel-and-nvidia.md#7-secure-boot-when-and-how).
   From S1c until W3 the CachyOS kernel is not signed for Secure Boot, so turning it on
   stops Apex from booting.
@@ -296,7 +300,7 @@ Secure Boot:     enabled|disabled, lockdown: …, sig_enforce: Y|N
 Degraded:        none | audio | fingerprint | nvidia
 
 1.1 … 1.6   pass/fail   notes
-2.1 … 2.7   pass/fail   COEF 0x0f/0x1b/0x40 after E: …  after C: …
+2.1 … 2.5   pass/fail   COEF 0x0f/0x1b/0x40 after E: …
 3.1 … 3.4   pass/fail
 4.1 … 4.9   pass/fail/degraded   suspended share: …. %; wakes per idle hour: …; nvidia-powerd: +… mW
 5.1 … 5.3   pass/fail

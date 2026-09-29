@@ -27,7 +27,7 @@ Related documents:
 | 1, 2: a rebuilt gnome-shell is the primary mechanism; the SCSS enters the package through an `@import` hook | The rebuild lane comes first (S1a), with gnome-shell as its first customer. The Apex layer lives in the package, with a stock fallback per hook. The `shelltheme` stage, the extensions and Dash to Dock are not built. The dock is Apex's own (S2a). |
 | 6: Super+Space opens Spotlight | Input switching moves to Super+Alt+Space (S1b). Until Spotlight exists (S3a), Super+Space opens the stock overview search. |
 | 14: dynamic glass everywhere | A patched `ShellBlurEffect` and a glass manager (S2b). A first performance run on the laptop in S2b; the full exit in S3a. Reduce Transparency stays the off switch. |
-| 17: recommended boot handoff; Windows deleted later | Dual boot stays in S4. Step W removes the dual-boot parts when the owner deletes Windows. |
+| 17: recommended boot handoff; Windows deleted later | The owner deleted Windows on 2026-09-29, before S4 (step W). S4 installs next to Ubuntu, with none of the Windows parts. |
 | 22: CachyOS GCC kernel; NVIDIA modules built for exactly that kernel | A new slice, S1c, before the first laptop boot. The dGPU is used. |
 | 26: build the §8 items now | Each item has a slice and a size ("Where the SPEC §8 items land"). |
 
@@ -66,7 +66,7 @@ answers: about 11 weeks of owner time.
 | S3c | Notifications, Quick Settings, motion, shadows | 29–30, during S4's use | Apr 19 – Apr 30 | L |
 | S6 | Fedora 46 and GNOME 52 | 31–34 | May 3 – May 28, 2027 | L |
 | S5 | Apex glyphs, if confirmed | 2 weeks after S6 | about June 2027 | L |
-| W | Windows removal | when the owner triggers it | see W | S to M |
+| W | Windows removal | owner-triggered; started 2026-09-29 | W1 and W4 done 2026-09-29; W2 in S4; W5 after the owner's speaker test | S to M |
 
 S3c runs during S4's two weeks of use, so its changes reach the daily driver as
 ordinary updates. The owner can move S4 earlier, to right after S2d (target
@@ -192,7 +192,8 @@ Remaining steps, in this order:
 
 In parallel, about 4 owner-hours on the current Ubuntu install (hardware track):
 
-- the speaker experiment with `model=` aliases;
+- the speaker test with no fix loaded (`docs/hardware/AUDIO.md` §2), and the `model=`
+  alias experiment only if a row fails;
 - the elanpress genuine and impostor score test;
 - an s2idle baseline;
 - the dGPU baseline measured on 2026-09-28 (595.91.07 open, RTD3 fine-grained, 95.9 %
@@ -413,8 +414,9 @@ The slice (ADR 0015):
   (answer 17), the 160×3 bar with round ends, @2x assets, and its own LUKS prompt. The
   two-step theme stays as the fallback.
 - Install on the external USB SSD, with LUKS2 (ADR 0010).
-- The audio drop-in, if S0 found a winner. CachyOS carries realtek quirks for other
-  ASUS models, so the winner is checked again on this kernel.
+- The audio drop-in, if the S0 test failed a row and a `model=` alias won. CachyOS
+  carries Realtek quirks for other ASUS models, so the winner is checked again on this
+  kernel.
 - ACCEPTANCE §4 rewritten for the NVIDIA driver: rows 4.1 to 4.9 and the wake counter
   (ADR 0015).
 - The Flatpak GL.nvidia sync step in `apex-flatpak-update`.
@@ -440,7 +442,7 @@ The slice (ADR 0015):
     the owner decides with the numbers;
   - Super and Alt sit next to each other on this keyboard, so Super+Alt+Space is one
     hand;
-  - the speakers pass their rows if a fix was found.
+  - the speakers pass their rows, with no fix or with the drop-in.
 - **Owner sees:** the Apex splash and desktop on the laptop, the CachyOS kernel, apps
   that run on the RTX 3050 on request, and updates from the signed image.
 
@@ -614,14 +616,15 @@ Series 0015-lock carries the review label "unlock path".
 ## S4: Daily driver (weeks 27–28, Apr 5 – Apr 16, L; then two weeks of use to Apr 30)
 
 - The internal install (ADR 0010): LUKS2 with a recovery key, `/var` as its own btrfs
-  subvolume. Where the space comes from depends on W:
-  - W done: Apex goes into the freed Windows space (429.9 GiB, `nvme0n1p3` on
-    2026-09-28). Ubuntu stays untouched as the fallback and builder host until Apex has
-    passed its two weeks. The ESP is shared with Ubuntu only.
-  - W not done: Apex shares the ESP with Windows. The space comes from shrinking Ubuntu
-    or removing it (`docs/INSTALL.md` §1). If Ubuntu goes, the builder VM and its keys
-    move to Apex first (qemu-kvm from a toolbox), and one `just publish` from there
-    succeeds before Ubuntu is removed.
+  subvolume, into the space Windows left (W2): sectors 1435648 to 903051263 of
+  `nvme0n1`, 901615616 sectors or 429.9 GiB, between the ESP and Ubuntu's partition
+  (measured 2026-09-29, `docs/INSTALL.md` §1 and §5.2). Nothing is shrunk. The ESP is
+  shared with Ubuntu only.
+- Ubuntu stays untouched as the fallback and builder host until Apex has passed its two
+  weeks. When the owner removes it later, the builder VM and its keys move to Apex
+  first (qemu-kvm from a toolbox), and one `just publish` from there succeeds before
+  Ubuntu goes. Its partition starts right after Apex's, so the Apex root can then grow
+  into it.
 - The GRUB menu hidden unless the last boot failed (answer 17, a spike): the static
   `07_apex-menu.cfg`, and `apex-boot-assess` confirming every green boot in grubenv
   (`apex_ok=1`), not only armed ones (ARCHITECTURE §5.2, §5.5). Both ship in the image
@@ -638,8 +641,10 @@ Series 0015-lock carries the review label "unlock path".
   additions (hardware track).
 - **Exit:**
   - `docs/hardware/ACCEPTANCE.md` passes, including s2idle and §4.6;
-  - if Windows is still installed, it starts from the firmware boot menu (Esc at the
-    ASUS logo); GRUB has no Windows entry (`docs/INSTALL.md:420-423`);
+  - the firmware boots Apex first, and the firmware's "Ubuntu" entry still starts
+    Ubuntu;
+  - `bootloader-update.service` is enabled and ran without failing (`docs/INSTALL.md`
+    §9);
   - pin before arm fixes a failed build forward with one reboot, once, in the G4 VM;
   - one update is applied from Settings, and one `bootc rollback` is exercised;
   - at least one kernel point bump and one GNOME update were absorbed without owner
@@ -670,39 +675,55 @@ It runs during S4's two weeks of use and ships as updates.
 - **Owner sees:** notifications and Quick Settings as drawn, the drawn easing, and the
   two-layer shadows.
 
-## W: Windows removal (owner-triggered)
+## W: Windows removal (owner-triggered, 2026-09-29)
 
-The owner will delete Windows permanently (answer 17). Nothing in Apex tooling runs a
-destructive step; `docs/INSTALL.md` gets the runbook, and the owner types every command.
+The owner deleted Windows on 2026-09-29 (answer 17), before S4. Nothing in Apex tooling
+runs a destructive step; `docs/INSTALL.md` holds the runbook, and the owner types every
+command.
 
-Preconditions:
+The state on 2026-09-29, read without changing anything:
 
-- anything the owner needs from Windows is copied off;
-- the S0 speaker experiment has run, or the owner skips it. The speaker fault needs a
-  warm reboot from Windows; a cold boot into Linux works
-  (`docs/hardware/AUDIO.md:58-59`);
-- the BIOS setup offers a firmware update from a USB stick (ASUS EZ Flash), so BIOS
-  updates no longer need Windows. Check this in the setup screen first;
-- the ESP, GPT and `efibootmgr` backups from `docs/INSTALL.md` §2 are fresh.
+- `nvme0n1p2` (Microsoft reserved) and `p3` (Windows) are gone. The free space is
+  sectors 1435648 to 903051263 (901615616 sectors, 429.9 GiB), between the ESP and
+  Ubuntu's `p4` (`docs/INSTALL.md` §1).
+- The ESP holds `EFI/ubuntu/` and `EFI/Boot/` (Ubuntu's shim as `bootx64.efi`, with
+  `fbx64.efi`, `mmx64.efi` and two ia32 leftovers). `EFI/Microsoft/` is gone.
+- The firmware entries: deleting Windows left a stale "Boot0000* Windows Boot Manager"
+  in `BootOrder` 0002,0000,0003,0001,0004,0005. The owner removed it the same morning
+  with `sudo efibootmgr -b 0000 -B`; `BootOrder` is now 0002,0003,0001,0004,0005.
+- Secure Boot is disabled (`mokutil --sb-state`).
+- No speaker fix is active on Ubuntu (`docs/hardware/AUDIO.md` §2).
 
-Best timing: before S4, so S4 installs into the freed space and Ubuntu stays the
-fallback. Any later time works too.
+The preconditions, as they stood:
+
+- anything the owner needs from Windows is copied off: the owner's own check;
+- the S0 speaker experiment: not run before W1. The fault's trigger went with Windows,
+  and W5's test replaces it;
+- BIOS updates without Windows: ASUS publishes EZ Flash files for this model and LVFS
+  has none (`docs/INSTALL.md` §11, checked 2026-09-29). Whether this unit's setup
+  screen shows the EZ Flash item is still to be checked on the laptop;
+- the backups of `docs/INSTALL.md` §2: not checked here; they are taken fresh before S4
+  anyway.
 
 Steps:
 
-| Step | Work | Size |
-|---|---|---|
-| W1 | Delete `nvme0n1p2` (Microsoft reserved) and `p3` (Windows). Delete `EFI/Microsoft/` from the ESP and the "Windows Boot Manager" entry (`efibootmgr -b <n> -B`). | S |
-| W2 | Use the space. Before S4: S4 installs there. After S4: the space lies before Apex's partition and cannot extend it, so it becomes a second LUKS2 btrfs volume, unlocked with a keyfile from the encrypted root, for the builder VM and container storage. | S–M |
-| W3 | Optional, an owner decision: Secure Boot. A third key (the Apex Secure Boot key, RSA-2048, private in the builder VM with an offline backup), one `mokutil --import` and MokManager enrolment, an `sbsign` step for `vmlinuz` in the pair lane, and the karg `lockdown=integrity`. Modules stay verified by the per-build key built into each kernel, so `mokutil --trust-mok` is not needed. Secure Boot goes on only when both deployments carry signed kernels. The break-glass image then boots without NVIDIA, because the Fedora kernel does not trust the per-build key. | M |
-| W4 | Remove what Windows needed: ACCEPTANCE rows 2.6 and 2.7; the Windows parts of `docs/INSTALL.md` (RTC in UTC, the BitLocker key, the Windows boot manager) and of `docs/RECOVERY.md` §5 (lines 417-449); the Windows sentences in `80-apex.preset:37-43`; ADR 0010's shared-ESP clause. Enable `bootloader-update.service` (ARCHITECTURE §5.5): the ESP then holds only shim and GRUB (and Ubuntu's files while Ubuntu stays), and the ESP backups of `docs/INSTALL.md` §2 and §9 stay the way back from a bad bootloader update. | S |
-| W5 | Audio. If a cold boot, s2idle and a runtime resume pass the speaker test with no fix loaded, delete the speaker drop-in, the patch-firmware path (ADR 0004 superseded) and the audio code still left from review §4. The headset-mic item stays. | S |
+| Step | Work | Size | Status |
+|---|---|---|---|
+| W1 | Delete `nvme0n1p2` (Microsoft reserved) and `p3` (Windows). Delete `EFI/Microsoft/` from the ESP and the "Windows Boot Manager" entry, found by its label (`docs/INSTALL.md` §2). | S | Done 2026-09-29 by the owner, including the stale entry; the §2 check confirms it again before S4 |
+| W2 | Use the space: S4 installs Apex there, and Ubuntu stays as the fallback and builder host until Apex has passed its two weeks. W came before S4, so the plan for a second LUKS2 volume after S4 is dropped. | S–M | Planned in S4 |
+| W3 | Optional, an owner decision: Secure Boot. A third key (the Apex Secure Boot key, RSA-2048, private in the builder VM with an offline backup), one `mokutil --import` and MokManager enrolment, an `sbsign` step for `vmlinuz` in the pair lane, and the karg `lockdown=integrity`. Modules stay verified by the per-build key built into each kernel, so `mokutil --trust-mok` is not needed. Secure Boot goes on only when both deployments carry signed kernels. The break-glass image then boots without NVIDIA, because the Fedora kernel does not trust the per-build key. | M | Optional, not started. Windows no longer blocks it; it waits for the owner and for signed kernels in both deployments |
+| W4 | Remove what Windows needed: ACCEPTANCE rows 2.6 and 2.7; the Windows parts of `docs/INSTALL.md` (RTC in UTC, the BitLocker key, the Windows boot manager) and of `docs/RECOVERY.md` §5; the Windows sentences in `80-apex.preset`; ADR 0010's shared-ESP clause (a dated status line). Enable `bootloader-update.service` (ARCHITECTURE §5.5); the ESP backups of `docs/INSTALL.md` §2 and §9 stay the way back from a bad bootloader update. | S | Done 2026-09-29 in the repository; the service runs from the first image built with it |
+| W5 | Audio. The owner runs `docs/hardware/AUDIO.md` §2 on Ubuntu: the speakers with no fix after a cold boot, a warm reboot from Linux, s2idle and a runtime resume, and the headset mic. All pass: delete the speaker drop-in (never built), the patch-firmware path (ADR 0004 superseded), the audio code still left from review §4, the Containerfile's audio step and `degraded=audio`. Any fails: the `model=` experiment (AUDIO.md §3). The headset-mic item (pin 0x19) stays. | S | Waits on the owner's test |
 
 - **Exit:**
-  - `efibootmgr` lists no Windows entry, and the firmware boots Apex first;
-  - `bootloader-update.service` is enabled, and one boot after it ran is green;
-  - the speaker rows pass after a cold boot with the fix state W5 chose;
-  - no runbook step in `docs/` needs Windows;
+  - `efibootmgr` lists no Windows entry (met 2026-09-29), and the firmware
+    boots Apex first (open until S4);
+  - `bootloader-update.service` is enabled, and one boot after it ran is green (open
+    until an image with it boots);
+  - the speaker rows pass after a cold boot with the fix state W5 chose (open, waits on
+    AUDIO.md §2);
+  - no runbook step in `docs/` needs Windows (met; what still names Windows is record:
+    ADR status lines, `docs/reviews/`, AUDIO.md §1, and the audio tools W5 deletes);
   - with W3: `mokutil --sb-state` reports enabled, the booted and rollback deployments
     both boot, NVIDIA loads, `amd-s2idle test` runs under lockdown, and
     `docs/RECOVERY.md` has the `mokutil --mokx` runbook.
@@ -814,9 +835,9 @@ here:
 
 | When | Item | Exit |
 |---|---|---|
-| S0 | Speakers, on Ubuntu: record a test after a cold boot and after a Windows restart. Try `options snd-hda-intel model=1043:10d3,1043:10d3`, then `1043:194e`, then `1043:1b11`. Each value is given twice because the HDMI controller probes first. | `picked fixup` in dmesg; speakers work after a cold boot, after Windows and after s2idle; the headset mic records |
-| S1d | Ship the winner as one line in `/usr/lib/modprobe.d/apex-audio.conf`, checked again on the CachyOS kernel. Only if none survives the Windows restart: the COEF `0x1b` bit-10 patch firmware (ADR 0004), until W. | as above |
-| S1–S2 | Send upstream a one-line `SND_PCI_QUIRK(0x1043, 0x1ab2, …)` to the working fixup, against tiwai/sound for-next, with the owner's Tested-by. If the drop-in fails its rows, carry it as an Apex kernel patch made against the CachyOS tag tree (K5). | patch posted; link in `docs/hardware/AUDIO.md` |
+| S0 | Speakers, on Ubuntu, with no fix loaded (Windows is gone, so its warm-reboot fault cannot recur): a cold boot, a warm reboot from Linux, s2idle, and a runtime resume (sound that starts after more than 1 s of silence, `power_save=1`); the headset mic (`docs/hardware/AUDIO.md` §2). All pass: W5. Any fails: try `options snd-hda-intel model=1043:10d3,1043:10d3`, then `1043:194e`, then `1043:1b11` (AUDIO.md §3). Each value is given twice because the HDMI controller probes first. | the rows of AUDIO.md §2.3 recorded in §2.4; with an alias, `picked fixup … for alias SSID` in the kernel log and the same rows passing |
+| S1d | Only if S0 failed a row and an alias won: ship it as one line in `/usr/lib/modprobe.d/apex-audio.conf`, checked again on the CachyOS kernel. If the speakers failed and no alias passes: the patch firmware (ADR 0004) with COEFs measured in the failing state (AUDIO.md §4 to §6). If S0 passed every row: nothing ships, and W5 deletes the audio code. | the rows of AUDIO.md §2.3 on Apex |
+| S1–S2 | If an alias won: send upstream a one-line `SND_PCI_QUIRK(0x1043, 0x1ab2, …)` to the working fixup, against tiwai/sound for-next, with the owner's Tested-by. If the drop-in fails its rows, carry it as an Apex kernel patch made against the CachyOS tag tree (K5). | patch posted; link in `docs/hardware/AUDIO.md` |
 | S0 | Fingerprint, on Ubuntu: build filip-rs/libfprint `elanpress` at a pinned commit and run the genuine and impostor score test (FINGERPRINT.md §5). Never lower the threshold. | a recorded verdict |
 | S2c–S4 | Pass: elanpress through the lane (`on_fail=degrade`) in S2c, and unlock-only PAM in S4. Fail: Fedora's stock libfprint and no PAM; effort goes upstream (!530). | ACCEPTANCE 6.5 |
 | S0, S1d, S4 | s2idle: `amd-s2idle test` (`python-amd-debug-tools`); `last_hw_sleep` at least 90 % of a 30-minute lid-closed sleep; overnight drain at most 1 %/h; dGPU D3cold before and 60 s after resume; 20 lid cycles all wake. S0 on Ubuntu, S1d as K3 on both kernels, S4 during daily use. Fix only what fails. | ACCEPTANCE rows |
@@ -828,7 +849,8 @@ here:
 
 Each is independent and starts only when the owner asks.
 
-- W3, Secure Boot, after Windows is removed (M).
+- W3, Secure Boot (M). Windows no longer blocks it; it waits for a signed kernel in
+  both deployments (the pair lane's `sbsign` step).
 - Caps Lock as a one-key input toggle (`grp:caps_toggle`; Shift+Caps keeps Caps Lock)
   (S).
 - Building the kernel from the signed CachyOS tag without waiting for the COPR, if the

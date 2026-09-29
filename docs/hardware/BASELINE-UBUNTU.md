@@ -37,7 +37,8 @@ What it means for ADR 0015:
 
 | Item | Where it goes |
 |---|---|
-| Speakers: the `model=` alias experiment after a cold boot and after a Windows restart | `docs/hardware/AUDIO.md`, and the winning line for ROADMAP S1d |
+| Speakers with no fix loaded, after a cold boot, a warm reboot from Linux, s2idle and a runtime resume; the headset mic (Windows is gone since 2026-09-29) | `docs/hardware/AUDIO.md` §2.4; all pass: ROADMAP W5 |
+| Only if a row of that test fails: the `model=` alias experiment | `docs/hardware/AUDIO.md` §3, and the winning line for ROADMAP S1d |
 | Fingerprint: the elanpress genuine and impostor score test | `docs/hardware/FINGERPRINT.md` §5 |
 | s2idle: one 30-minute lid-closed run, drain and `last_hw_sleep` | this file |
 | dGPU: the two 30-minute lid-closed runs with `EnableS0ixPowerManagement=0` and `=1` | this file |

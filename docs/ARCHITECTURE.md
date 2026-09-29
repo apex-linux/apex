@@ -114,9 +114,9 @@ The OS is one OCI image, consumed by `bootc` ([ADR 0001](adr/0001-image-based-bo
   `/boot`. `build-rootfs` runs with `--no-initramfs`; the final stage runs `depmod` and
   generates the one initramfs.
 - **UEFI only.** The final stage removes bootupd's BIOS component metadata, so
-  `bootc install` never runs `grub2-install --target i386-pc` onto the disk the laptop
-  shares with Windows. `grub2-pc` itself stays installed, because the minimal manifest
-  requires `grub2`, which only it provides. An image check enforces this.
+  `bootc install` never runs `grub2-install --target i386-pc` onto the laptop's disk,
+  which Apex shares with Ubuntu. `grub2-pc` itself stays installed, because the minimal
+  manifest requires `grub2`, which only it provides. An image check enforces this.
 
 ## 4. Build and publish
 
@@ -405,7 +405,7 @@ third-party clauses.
   `/var` subvolume, switches with `--download-only` and applies at the next restart with
   the counter armed. The pinned F45 entry stays in GRUB until the owner unpins it.
 
-### 5.5 Boot loader, the ESP and Windows
+### 5.5 Boot loader and the ESP
 
 - **Boot handoff** (decision 17): the firmware logo, then GRUB with its menu hidden,
   then the black Plymouth `apex` splash with the wordmark (§7.4), then GDM.
@@ -423,33 +423,85 @@ third-party clauses.
 - bootupd copies static configs only at `bootc install` (`08_apex-bootcount.cfg:12-16`).
   The snippet therefore ships in the image before the internal-disk install (S4). The
   USB SSD keeps the 1 s menu unless it is reinstalled.
-- **While Windows is installed,** the ESP is shared (ADR 0010):
-  - GRUB has no Windows entry. A chainload from GRUB changes what the TPM measures, and
-    BitLocker would ask for its recovery key (`docs/INSTALL.md:420-423`). Windows
-    starts from the firmware boot menu (Esc at the ASUS logo);
-  - `bootloader-update.service` stays disabled (`80-apex.preset:37-44`). The owner runs
-    `sudo bootupctl update` by hand, on AC, after a green boot;
-  - Secure Boot stays off. With bootloader updates off, a Windows Update SBAT
-    revocation could stop the old shim or GRUB from booting. Turning it on also changes
-    PCR 7, so BitLocker would ask for its recovery key if Windows had turned it on (the
-    Windows volume is not encrypted on 2026-09-28).
-- **After the owner deletes Windows** (step W, owner-triggered):
-  1. The Microsoft reserved and Windows partitions, `EFI/Microsoft/` on the ESP and the
-     "Windows Boot Manager" firmware entry (`efibootmgr -b <n> -B`) go. The owner types
-     every command; `docs/INSTALL.md` has the runbook.
-  2. The space: before S4, Apex installs there, and Ubuntu stays as the fallback until
-     Apex has passed its two weeks. After S4, it lies before the Apex partitions and
-     cannot extend them, so it becomes a second LUKS2 btrfs volume, unlocked with a
-     keyfile from the encrypted root, for the builder VM and container storage.
-  3. Enable `bootloader-update.service`. The ESP then holds only shim and GRUB (and
-     Ubuntu's files while Ubuntu stays). bootupd's UEFI updates are safe against power
-     loss, Fedora Atomic Desktops run them by default, and with Secure Boot on an
-     outdated shim or GRUB is the larger risk (SBAT). A bad shim or GRUB still breaks
-     every deployment; the ESP backups of INSTALL.md §2 and §9 stay the recovery path.
-  4. Secure Boot becomes an owner choice, with bootloader updates on and no BitLocker
-     in the way (step W3, ADR 0015 §7).
-  5. INSTALL.md, RECOVERY.md §5, ADR 0010, the UEFI-only bullet in §3 and the
-     `80-apex.preset` comment drop their shared-ESP text.
+- **The disk after Windows.** The owner deleted Windows on 2026-09-29 (ROADMAP W1):
+  the Microsoft reserved and Windows partitions and `EFI/Microsoft/` are gone. The ESP
+  (`nvme0n1p1`) holds `EFI/ubuntu/` and the fallback directory `EFI/Boot/`. S4 installs
+  Apex into the freed space before Ubuntu's partition (W2, [INSTALL.md](INSTALL.md) §1),
+  and Ubuntu stays as the fallback and builder host until Apex has passed its two weeks.
+- **GRUB has no Ubuntu entry:** bootupd's static configuration runs no os-prober. Ubuntu
+  starts from the firmware boot menu (Esc at the ASUS logo, "Ubuntu").
+- **What bootupd writes.** The F45 image carries bootupd 0.2.35-3.fc45, shim-x64
+  16.1-7 and grub2-efi-x64 2.12-77.fc45 (the package list of an image build on
+  2026-09-29). Read in bootupd v0.2.35
+  ([`src/efi.rs`](https://github.com/coreos/bootupd/blob/v0.2.35/src/efi.rs),
+  [`src/filetree.rs`](https://github.com/coreos/bootupd/blob/v0.2.35/src/filetree.rs));
+  v0.3.2, rawhide's version, differs there only in choosing between GRUB and
+  systemd-boot. The payload is
+  every file Fedora's [`shim-x64`](https://mdapi.fedoraproject.org/rawhide/files/shim-x64)
+  and [`grub2-efi-x64`](https://mdapi.fedoraproject.org/rawhide/files/grub2-efi-x64)
+  ship for the ESP: `EFI/fedora/` (`shimx64.efi`, `shim.efi`, `mmx64.efi`,
+  `BOOTX64.CSV`, `grubx64.efi`) and the fallback loader, `EFI/BOOT/BOOTX64.EFI` with
+  `fbx64.efi`. The `grub.cfg` that `grub2-efi-x64` lists there is a `%ghost`
+  ([`grub.macros`](https://src.fedoraproject.org/rpms/grub2/blob/f45/f/grub.macros)), so
+  bootupd never copies one from the package; it writes its own static one.
+  - `bootc install` copies all of it, writes the static `grub.cfg`, deletes only the
+    firmware entries that carry the image's name (`/etc/system-release`) and creates one
+    with `efibootmgr --create`, which puts it first in `BootOrder`.
+  - `bootupctl update` writes only the files whose content differs between the version
+    it recorded at install and the booted image's. It copies each top-level directory it
+    changes (`fedora`, `BOOT`), replaces the files in the copy, and swaps the copy in
+    with `RENAME_EXCHANGE`, so other files in that directory stay. It creates no
+    firmware entry and leaves `BootOrder` alone.
+  - Neither ever writes `EFI/ubuntu/` or Ubuntu's firmware entry.
+- **What that means for Ubuntu.**
+  - Ubuntu's entry (`\EFI\UBUNTU\SHIMX64.EFI`, label "Ubuntu") keeps working and
+    becomes second in the boot order.
+  - **Ubuntu's shim and GRUB package updates put Ubuntu first again.** The
+    `shim-signed` and `grub-efi-amd64-signed` postinsts run `grub-multi-install`, which
+    runs `grub-install` without `--no-nvram`, so `grub2/update_nvram` in debconf does
+    not stop it. `grub-install` reuses Ubuntu's entry but first removes its number from
+    `BootOrder` and then puts it back at the front
+    ([`efivar.c`](https://git.launchpad.net/ubuntu/+source/grub2/tree/grub-core/osdep/unix/efivar.c?h=applied/ubuntu/resolute),
+    `grub_install_efivar_register_efi`). After such an update the laptop starts Ubuntu
+    until `sudo efibootmgr --bootorder <Apex>,<Ubuntu>,…` puts Apex back
+    ([INSTALL.md](INSTALL.md) §7).
+  - The fallback path is shared. `bootc install` replaces Ubuntu's
+    `EFI/Boot/bootx64.efi` and `fbx64.efi` with Fedora's; Ubuntu's `mmx64.efi` and the
+    ia32 leftovers stay. Ubuntu writes its own shim back there on the same package
+    updates: Ubuntu's `grub-install` writes the removable path unless it is given
+    `--no-extra-removable`, which those postinsts do not pass, so
+    `grub2/no_efi_extra_removable` (`false` here) does not stop it either (the files in
+    `EFI/Boot/` carry the same time as those in `EFI/ubuntu/`). `bootupctl validate`
+    then lists `BOOT/BOOTX64.EFI` and `BOOT/fbx64.efi` as changed, and the next Apex
+    image with a new shim writes Fedora's back.
+  - Either shim works there. The firmware uses the fallback path only when no boot
+    entry works, and shim's fallback, Fedora's or Ubuntu's, recreates an entry for every
+    `EFI/<dir>/BOOTX64.CSV` except `BOOT`, so for Apex and Ubuntu, then starts the first
+    one it created ([`fallback.c`](https://github.com/rhboot/shim/blob/16.1/fallback.c),
+    `find_boot_options`).
+- **Bootloader updates are on** (W4): `80-apex.preset` enables
+  `bootloader-update.service`, which runs `bootupctl update` at every boot and writes
+  only when the booted image carries a newer shim or GRUB.
+  - bootupd's UEFI updates are safe against power loss (the `RENAME_EXCHANGE` above;
+    [bootupd README](https://github.com/coreos/bootupd/blob/v0.2.35/README.md#status)),
+    and Fedora enables the same unit on its Atomic Desktops
+    ([`81-atomic-desktop.preset`](https://src.fedoraproject.org/rpms/redhat-systemd-presets/blob/f45/f/81-atomic-desktop.preset),
+    [Changes/AutomaticBootloaderUpdatesBootc](https://fedoraproject.org/wiki/Changes/AutomaticBootloaderUpdatesBootc)).
+    An outdated shim or GRUB is the larger risk once Secure Boot is on (SBAT).
+  - bootupd does not protect against an update that boots nothing (the README's
+    [issue #440](https://github.com/coreos/bootupd/issues/440)), and `bootc rollback`
+    cannot undo an ESP write: a bad shim or GRUB breaks every deployment. The ESP
+    backups of INSTALL.md §2 and §9 and [RECOVERY.md](RECOVERY.md) §5 are the way back.
+  - A failed run does not make the boot red, because the unit is not one of the boot
+    assessment's required units (`crates/apex-boot/src/checks/units.rs`).
+    `systemctl --failed` shows it (INSTALL.md §9).
+- **Secure Boot** stays off and remains an owner choice (W3, ADR 0015 §7). Windows no
+  longer blocks it. It still waits for the pair lane to sign `vmlinuz`, and goes on only
+  when the booted and the rollback deployments both carry a signed kernel.
+- **After Ubuntu.** Ubuntu's partition starts at the sector right after the space S4
+  fills, so once Ubuntu is removed the Apex root partition can grow into it. Before
+  that, the builder VM and its keys move to Apex, and one `just publish` from there
+  succeeds.
 
 ## 6. Hardware enablement (M7400QC)
 
@@ -469,6 +521,10 @@ Weak dependencies are off, so these firmware packages are listed explicitly:
 Image checks confirm the specific files exist, and that the amdgpu firmware and the
 microcode cpio are inside the initramfs.
 
+BIOS updates no longer come from Windows. They go through ASUS EZ Flash in the firmware
+setup, from a FAT32 stick; LVFS has no firmware for this model, so fwupd is not a path
+today ([INSTALL.md](INSTALL.md) §11).
+
 ### 6.2 Audio: Realtek ALC294, subsystem `1043:1ab2`
 
 ([ADR 0004](adr/0004-audio-hda-patch-firmware.md), amended by
@@ -478,23 +534,33 @@ No kernel tree has a quirk for this SSID. Upstream maps the similar ASUS K6500ZC
 existing `ALC294_FIXUP_ASUS_SPK`, which sets EAPD (COEF 0x0f) and COEF 0x40 and chains
 the headset-mic pin (commit 713f040cd222).
 
-1. On this laptop (S0), try `options snd-hda-intel model=1043:10d3,1043:10d3`, then
-   `1043:194e` and `1043:1b11`. `model=` is indexed by probe order, and the HDMI
-   controller probes first, so the value is given twice.
-2. Ship the winner as one line in `/usr/lib/modprobe.d/apex-audio.conf` (S1d), after
-   checking it again on the CachyOS kernel, which carries Realtek quirks for other ASUS
-   models. `snd-hda-intel` stays out of the initramfs, so the option applies at probe.
-3. Acceptance: `picked fixup` in dmesg; the speakers work after a cold boot, after a
-   Windows restart and after s2idle; the headset mic records.
-4. Only if no fixup survives a Windows restart: HDA patch firmware with the measured
-   COEF `0x1b` bit-10 write (ADR 0004). The CachyOS kernel keeps the patch loader,
-   `RECONFIG` and `HWDEP`, and G1 asserts them.
-5. Upstream: a one-line `SND_PCI_QUIRK(0x1043, 0x1ab2, …)` to the working fixup, with
+The documented fault needed a warm reboot from Windows, and Windows is gone
+(2026-09-29). No speaker fix is active on the Ubuntu host: no `model=` or `patch=`
+option, empty `init_verbs`, and only an `autoconfig for ALC294` line in the kernel log.
+
+1. First (S0, on Ubuntu, [AUDIO.md](hardware/AUDIO.md) §2): the speakers with no fix
+   after a cold boot, after a warm reboot from Linux, after s2idle and after a runtime
+   resume (sound that starts after more than 1 s of silence, with `power_save=1`),
+   and the headset mic.
+2. All pass: no audio fix ships. ROADMAP W5 deletes the planned drop-in, the
+   patch-firmware path (ADR 0004 superseded) and the audio code.
+3. Any fails: try `options snd-hda-intel model=1043:10d3,1043:10d3`, then `1043:194e`
+   and `1043:1b11`. `model=` is indexed by probe order, and the HDMI controller probes
+   first, so the value is given twice. Ship the winner as one line in
+   `/usr/lib/modprobe.d/apex-audio.conf` (S1d), after checking it again on the CachyOS
+   kernel, which carries Realtek quirks for other ASUS models. `snd-hda-intel` stays
+   out of the initramfs, so the option applies at probe.
+4. Acceptance: with a drop-in, `picked fixup` in the kernel log; the rows of step 1
+   pass.
+5. Only if no alias passes: HDA patch firmware with COEF values measured in the failing
+   state (ADR 0004). The CachyOS kernel keeps the patch loader, `RECONFIG` and `HWDEP`,
+   and G1 asserts them.
+6. Upstream, if an alias won: a one-line `SND_PCI_QUIRK(0x1043, 0x1ab2, …)` to it, with
    the owner's Tested-by. The kernel lane (§4.2) carries it only if the drop-in fails
    its rows, and drops it once the CachyOS tree has it. The drop-in goes when the
    running kernel has the quirk.
 
-Until a fix is measured, the image carries `degraded=audio`.
+Until step 2 or a fix lands, the image carries `degraded=audio`.
 
 ### 6.3 Fingerprint: ELAN `04f3:0c6e`
 

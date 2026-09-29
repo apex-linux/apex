@@ -3,7 +3,10 @@
 Status: accepted (2026-09-28). It records the owner's answer to decision 22
 (`docs/reviews/2026-09-28-review.md` §5.3). It supersedes ADR 0005, and amends ADR 0012
 (Secure Boot keys and third-party sources) and ADR 0004 (where a kernel quirk is
-carried).
+carried). Amended 2026-09-29: the owner deleted Windows (ROADMAP W1) and bootloader
+updates are on (W4), so §7's Windows conditions are gone. Secure Boot stays optional
+and owner-triggered (W3); it still waits for a signed `vmlinuz` in both the booted and
+the rollback deployment.
 
 ## Context
 

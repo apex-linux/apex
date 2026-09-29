@@ -1,7 +1,11 @@
 # ADR 0010: First install and bootstrap on the only laptop
 
 Status: proposed (2026-09-24). The partition plan needs the owner's decision. Amended by
-ADR 0015 (2026-09-28): MOK enrolment moved to its Secure Boot runbook.
+ADR 0015 (2026-09-28): MOK enrolment moved to its Secure Boot runbook. Amended
+2026-09-29: the owner deleted Windows (ROADMAP W1). "Keep Windows and share its ESP" and
+the Windows recovery key no longer apply: the ESP is shared with Ubuntu only, and Apex
+installs into the freed space before Ubuntu's partition (ROADMAP W2, `docs/INSTALL.md`
+§1). Secure Boot stays off until the owner chooses it (ROADMAP W3).
 
 ## Context
 

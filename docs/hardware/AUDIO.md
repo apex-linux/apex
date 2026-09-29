@@ -4,13 +4,20 @@ Decision: [ADR 0004](../adr/0004-audio-hda-patch-firmware.md). Architecture:
 [§6.2](../ARCHITECTURE.md#62-audio-realtek-alc294-subsystem-10431ab2). Acceptance:
 [ACCEPTANCE.md](ACCEPTANCE.md) §2.
 
-The fix is an HDA patch firmware file rendered from **values measured on this laptop**.
-Until `hardware/m7400qc/profile.toml` holds those measurements, `apexctl profile
-render` produces no firmware file and the image carries `degraded=audio`. This page
-explains why, and gives the exact procedure that produces the measurements.
+**2026-09-29: Windows is deleted** (ROADMAP W1). The fault this page was written for
+(§1) needs a warm reboot from Windows, so its trigger is gone. The first test is now
+the speakers and the headset mic with no fix loaded at all (§2):
+
+- every row passes: ROADMAP W5 deletes the planned speaker drop-in, the patch-firmware
+  path (ADR 0004 superseded) and the audio code;
+- a row fails: the `model=` experiment runs (§3).
+
+The patch-firmware material (§4 to §9) stays until then. Its phases B and C were
+written for a warm reboot from Windows and cannot run as written (§5).
 
 Facts were checked on 2026-09-23 and 2026-09-24 against the kernel trees named below
-and on this laptop (Ubuntu 26.04, kernel 7.0.0-31-generic, BIOS M7400QC.311).
+and on this laptop (Ubuntu 26.04, kernel 7.0.0-31-generic, BIOS M7400QC.311). The
+no-fix state of §2 was checked on 2026-09-29 (kernel 7.0.0-34-generic, same BIOS).
 
 ## 1. Findings
 
@@ -51,14 +58,17 @@ Pins, from `/sys/class/sound/hwC1D0/init_pin_configs`:
   speakers are driven by the ALC294's own amplifier on pin 0x14. Every CS35L41 or
   TAS2781 fixup is wrong for this laptop.
 - The headset-mic pin 0x19 is left unconfigured by the BIOS, so a TRRS headset mic
-  does not work out of the box. That is a separate item and not part of this fix.
+  does not work out of the box. That is a separate item: row M1 of §2 tests it.
 
 ### The fault and the leading hypothesis
 
-After a **warm reboot from Windows** the speakers are silent or crackle ("chewed tape")
-until the laptop is fully powered off. A cold boot straight into Linux works.
+After a **warm reboot from Windows** the speakers were silent or crackled ("chewed
+tape") until the laptop was fully powered off. A cold boot straight into Linux worked.
+Windows was deleted on 2026-09-29, so that trigger no longer exists. Whether Linux on
+its own can leave the codec in a bad state (a warm reboot, s2idle, a runtime resume)
+was never tested; §2 does that.
 
-The leading hypothesis, **not yet verified on this unit**: the Windows Realtek driver
+The leading hypothesis, **never verified on this unit**: the Windows Realtek driver
 clears bit 10 of COEF 0x1b (Realtek's default 0x4e4b becomes 0x4a4b), and the codec
 keeps that state across a warm reboot. The same pattern is documented for the ASUS
 UX431DA (kernel bugzilla 207553, also AMD with ALC294), UX461FN (219415) and UX333FA
@@ -115,14 +125,136 @@ what their authors intended (0x7f4b, see above), and one M7400QC owner needed
 - Writing the whole value 0x4e4b is exactly what broke **cold boot** on the UX461FN
   (bugzilla 219415). This unit's cold value may differ from Realtek's default in other
   bits.
-- COEF 0x0f and 0x40 may or may not matter here. They are written only if the
-  after-Windows dump shows they differ.
+- COEF 0x0f and 0x40 may or may not matter here. They are written only if the dump of
+  the failing state shows they differ.
 
-So the renderer writes `cold_value | 0x0400` for COEF 0x1b (profile.toml
+## 2. The first test: no fix, no Windows
+
+The state on the Ubuntu host on 2026-09-29: no speaker fix is active. Every
+`snd_hda_intel` `model=` and `patch=` entry is `(null)`, `power_save` is `1`, the
+ALC294's `init_verbs` is empty, no modprobe file sets an `snd-hda-intel` option, no
+unit runs `hda-verb`, `/lib/firmware/apex` does not exist, and the kernel log has only
+`autoconfig for ALC294` for the codec, with no `picked fixup` line.
+
+The commands below run on Ubuntu as your user. `journalctl -k` needs no `sudo` because
+your account is in the `adm` group; `systemctl --user` and `systemctl suspend` need none
+either. Unplug headphones first, except in row M1: auto-mute would silence the
+speakers.
+
+### 2.1 At every boot: find the codec, confirm no fix
+
+```sh
+hw=$(grep -lx 0x10431ab2 /sys/class/sound/hwC*D*/subsystem_id); hw=${hw%/subsystem_id}; hw=${hw##*/}
+card=${hw#hwC}; card=${card%D*}; addr=${hw##*D}; echo "ALC294 is card $card, codec $addr"
+rs=/sys/bus/hdaudio/devices/hdaudioC${card}D${addr}/power/runtime_status
+cat /sys/module/snd_hda_intel/parameters/power_save                   # 1
+tr ',' '\n' </sys/module/snd_hda_intel/parameters/model | sort -u    # (null) only
+tr ',' '\n' </sys/module/snd_hda_intel/parameters/patch | sort -u    # (null) only
+wc -c </sys/class/sound/$hw/init_verbs                                # 0
+journalctl -k -b | grep -E 'ALC294|picked fixup|patch firmware'       # one "autoconfig for ALC294" line, nothing else
+```
+
+If any of these differs, a fix is loaded: find it and remove it before testing.
+
+### 2.2 Speaker test (bypasses PipeWire, low volume)
+
+PipeWire and any effects chain can hide or cause artefacts, so play straight to the
+ALSA device. It needs `card`, `addr` and `rs` from §2.1.
+
+```sh
+systemctl --user stop pipewire.socket pipewire-pulse.socket pipewire.service pipewire-pulse.service wireplumber.service
+amixer -c "$card" sset Master 30% unmute
+amixer -c "$card" sset Speaker 100% unmute
+speaker-test -D "plughw:$card,0" -c 2 -r 48000 -t wav -l 1
+timeout 30 speaker-test -D "plughw:$card,0" -c 2 -r 48000 -t sine -f 440
+sleep 5; cat "$rs"                                                       # suspended
+speaker-test -D "plughw:$card,0" -c 2 -r 48000 -t wav -l 1               # after a runtime resume
+sleep 5; cat "$rs"                                                       # suspended
+timeout 10 speaker-test -D "plughw:$card,0" -c 2 -r 48000 -t sine -f 440  # after a runtime resume
+systemctl --user start pipewire.socket pipewire-pulse.socket wireplumber.service
+```
+
+Pass: "Front Left" from the left speaker and "Front Right" from the right; a steady
+440 Hz tone for 30 s with no dropouts, crackle or rhythmic gating; both `cat` lines
+print `suspended`; after each runtime resume the voice starts with the whole word
+"Front" and the tone is as clean as before.
+
+### 2.3 The rows
+
+| # | State | How to get there | Pass |
+|---|---|---|---|
+| S1 | Cold boot | Shut down, unplug the AC adapter, wait 30 s, power on into Ubuntu, log in. §2.1, then §2.2 | §2.2 passes |
+| S2 | Warm reboot from Linux | Right after S1, in the same boot: play anything through the speakers for 10 s, then Restart from the GNOME menu (no power-off). Log in. §2.1, then §2.2 | §2.2 passes |
+| S3 | s2idle | `systemctl suspend`, wait 1 min, wake and unlock, wait 5 s. `journalctl -k -b \| grep -E 'PM: suspend (entry\|exit)'` ends with `suspend entry (s2idle)` and `suspend exit`. §2.2 | §2.2 passes |
+| S4 | Runtime resume through PipeWire | PipeWire running, Settings > Sound > Output on the laptop speakers. Three times: `sleep 10; cat "$rs"; pw-play /usr/share/sounds/freedesktop/stereo/audio-channel-front-left.oga` | each `cat` prints `suspended`; "Front left" is heard whole, from the left speaker, with no click or cut-off start |
+| M1 | Headset mic | Plug a headset with a microphone (one 3.5 mm TRRS plug) into the jack. `amixer -c "$card" controls \| grep -i jack`. If a headset-mic jack is listed: `amixer -c "$card" cget name='<that name>'`; Settings > Sound > Input: pick the headset microphone and speak; `pw-record /tmp/apex-mic.wav` for 5 s (Ctrl+C), then `pw-play /tmp/apex-mic.wav` | a jack control for the headset mic besides `Headphone Jack` and `Mic Phantom Jack` (the internal mic), for example `Headset Mic Jack`, showing `values=on`; the input level moves; the recording plays back your voice |
+
+S4 waits 10 s because WirePlumber closes an idle device after about 5 s, and the codec
+suspends about 1 s later. M1 is expected to fail today: pin 0x19 is unconfigured, and
+with nothing plugged in the card lists only `Headphone Jack`, `Mic Phantom Jack` and
+`Speaker Phantom Jack` (2026-09-29).
+
+### 2.4 Record and decide
+
+Fill in one line per run: `pass`, or what you heard.
+
+| Date | Kernel | BIOS | S1 | S2 | S3 | S4 | M1 | Notes |
+|---|---|---|---|---|---|---|---|---|
+| | | | | | | | | |
+
+| S1 to S4 | M1 | Next |
+|---|---|---|
+| all pass | pass | ROADMAP W5: the speaker drop-in is not built, ADR 0004 is superseded, and the patch-firmware path and the audio code are deleted, with the Containerfile's audio step and `degraded=audio` |
+| all pass | fails | W5 as above for the speakers. The `model=` experiment (§3) runs for the mic: the ASUS fixups also configure the headset-mic pin |
+| one fails | either | Write down how it failed (silent, crackle, cut-off start), then the `model=` experiment (§3) |
+
+## 3. If a row fails: the `model=` experiment
+
+`model=` takes an SSID alias whose quirk the kernel then applies. It is indexed by
+probe order, and the HDMI controller probes first, so the value is given twice. Try the
+aliases in this order: `1043:10d3`, then `1043:194e`, then `1043:1b11`. For each one:
+
+```sh
+echo 'options snd-hda-intel model=1043:10d3,1043:10d3' | sudo tee /etc/modprobe.d/apex-audio-test.conf
+sudo lsinitramfs /boot/initrd.img-"$(uname -r)" | grep -c snd-hda-intel   # 0: the option applies at probe from the root
+```
+
+Then run every row of §2.3, starting with S1 (a cold boot). At each boot, §2.1 now
+differs in two lines, as it should:
+
+```sh
+cat /sys/module/snd_hda_intel/parameters/model        # 1043:10d3,1043:10d3,(null),…
+journalctl -k -b | grep 'picked fixup'                # ALC294: picked fixup … for alias SSID 1043:10d3
+```
+
+Afterwards remove the file and power off (a cold boot), so the next alias starts from a
+clean codec:
+
+```sh
+sudo rm /etc/modprobe.d/apex-audio-test.conf
+```
+
+The winner is the first alias that passes every row. If none does:
+
+- the speakers failed with no fix: the first alias that passes S1 to S4 wins, and the
+  mic stays an open item;
+- only M1 failed: no alias ships, and the mic stays an open item.
+
+The winner's line goes to `/usr/lib/modprobe.d/apex-audio.conf` in S1d (ROADMAP
+hardware track), where it is checked again on the CachyOS kernel. If the speakers
+failed and no alias passes S1 to S4, the patch-firmware path (§4) or the kernel patch
+(ADR 0015 §8, K5) comes next.
+
+## 4. Patch firmware (ADR 0004): how it works
+
+This path ships only if the speakers fail and §3 finds no alias. The fix is an HDA
+patch firmware file rendered from **values measured on this laptop**. Until
+`hardware/m7400qc/profile.toml` holds those measurements, `apexctl profile render`
+produces no firmware file and the image carries `degraded=audio`.
+
+The renderer writes `cold_value | 0x0400` for COEF 0x1b (profile.toml
 `[audio.fix].rules`), plus the cold values of any index in `restore_if_windows_differs`
-that changed after Windows, and nothing without a measured cold value.
-
-## 2. How the fix works
+that changed in the failing state, and nothing without a measured cold value.
 
 - `hardware/m7400qc/generated/alc294-m7400qc.fw` has a `[codec]` line
   `0x10ec0294 0x10431ab2 0` and `[verb]` lines on NID 0x20. It has no `[model]` or
@@ -143,10 +275,16 @@ that changed after Windows, and nothing without a measured cold value.
 - In the image the file is `/usr/lib/firmware/apex/alc294-m7400qc.fw`. An image check
   confirms `snd-hda-intel` is not in the initramfs, where the file would be missing.
 
-## 3. Measurement procedure (A–E)
+## 5. Measurement procedure (A–E)
 
-Runs on the Ubuntu install of this laptop today, and later on Apex. You need root,
-the repository checked out, and `hda-verb` (alsa-tools, already installed here).
+Runs on the Ubuntu install of this laptop, and later on Apex. You need root, the
+repository checked out, and `hda-verb` (alsa-tools, already installed here).
+
+> **Without Windows.** Phases B and C were written for a warm reboot from Windows,
+> which no longer exists. Use the failing row of §2 instead: B is that state with no
+> fix, C the same state with the fix loaded. The tools and the profile still name it
+> after Windows (`coef-dump.sh B`, the `after_windows` key,
+> `restore_if_windows_differs`) until W5 renames or deletes them.
 
 Tools, in `hardware/m7400qc/audio/`:
 
@@ -159,49 +297,45 @@ Tools, in `hardware/m7400qc/audio/`:
   `hardware/m7400qc/generated/alc294-m7400qc.fw`. See `coef-dump.sh --help`.
 - `try-fix.sh install|revert|status`: puts the rendered fix on the host or removes it;
   `status` compares the loaded `init_verbs` with the rendered file.
-- The speaker test in §3.7.
+- The speaker test in §2.2.
 
 Below, `$A` is `hardware/m7400qc/audio` in your checkout.
 
-> **Power-off means power-off.** "Shut down" in Linux or Windows, unplug the AC
-> adapter, wait 30 seconds, then power on. "Restart" is a warm reboot. Windows Fast
-> Startup does not matter for these steps: Restart never uses it, and phase A and E
-> start from a Linux shutdown.
+> **Power-off means power-off.** "Shut down", unplug the AC adapter, wait 30 seconds,
+> then power on. "Restart" is a warm reboot.
 
-### 3.1 Phase A: cold boot, no fix
+### 5.1 Phase A: cold boot, no fix
 
 ```sh
 sudo $A/try-fix.sh status        # both files "absent", init_verbs empty
 # If the fix is installed: sudo $A/try-fix.sh revert
-# Shut down, unplug AC, wait 30 s, power on, boot Ubuntu (not Windows), log in.
+# Shut down, unplug AC, wait 30 s, power on, boot Ubuntu, log in.
 sudo $A/coef-dump.sh A
 ```
 
-Then run the speaker test (§3.7). On a cold boot the speakers should work. Write
+Then run the speaker test (§2.2). On a cold boot the speakers should work. Write
 down the result.
 
-### 3.2 Phase B: warm reboot from Windows, no fix
+### 5.2 Phase B: the failing state, no fix
 
-1. Boot Windows (firmware boot menu: press Esc while the ASUS logo shows, then pick
-   Windows Boot Manager). Log in and play sound through the speakers for 10 s.
-2. Choose **Restart** and boot Ubuntu.
-3. Run the speaker test (§3.7) **first** and record what you hear: silent, crackling,
+1. Reproduce the row of §2 that failed.
+2. Run the speaker test (§2.2) **first** and record what you hear: silent, crackling,
    or fine.
-4. `sudo $A/coef-dump.sh B`. The report compares every index with the newest A report
+3. `sudo $A/coef-dump.sh B`. The report compares every index with the newest A report
    and names the changed bits.
 
 Interpretation:
 
 | Result | Meaning | Next step |
 |---|---|---|
-| Speakers fail and only 0x1b differs, in bit 10 | The hypothesis holds | Record A and B, render, continue with C |
-| 0x0f or 0x40 differ as well | Windows also changes those | They are already in `restore_if_windows_differs`; the renderer restores their cold values |
-| Speakers fail but A and B are identical | The hypothesis is wrong for this unit | Do not ship a fix. Dump more indexes (`--extra`, or all of them, §3.8) and investigate |
-| Speakers work after Windows | The fault did not reproduce | Repeat B once more (play longer in Windows). Do not render without a reproduced fault |
+| Speakers fail and only 0x1b differs, in bit 10 | The hypothesis holds for this state | Record A and B, render, continue with C |
+| 0x0f or 0x40 differ as well | The failing state also changes those | They are already in `restore_if_windows_differs`; the renderer restores their cold values |
+| Speakers fail but A and B are identical | The hypothesis is wrong for this state | Do not ship a fix. Dump more indexes (`--extra`, or all of them, §5.6) and investigate |
+| Speakers work | The fault did not reproduce | Repeat the failing row once more. Do not render without a reproduced fault |
 
-### 3.3 Record and render
+### 5.3 Record and render
 
-Paste the fragments into `hardware/m7400qc/profile.toml` (§4), render, and install the
+Paste the fragments into `hardware/m7400qc/profile.toml` (§6), render, and install the
 result on the host:
 
 ```sh
@@ -209,21 +343,21 @@ just render                       # or: cargo run -q -p apexctl -- profile rende
 sudo $A/try-fix.sh install        # validates, copies, checks the initramfs
 ```
 
-### 3.4 Phase C: fix loaded, warm reboot from Windows
+### 5.4 Phase C: fix loaded, the failing state again
 
-This is the test that matters: the fix must repair the after-Windows state **without a
+This is the test that matters: the fix must repair the failing state **without a
 power-off**.
 
-1. Boot Windows, play sound for 10 s, **Restart** into Ubuntu.
+1. Reproduce the same failing state, now with the fix installed.
 2. `sudo $A/try-fix.sh status` lists the ALC294's `init_verbs` and says
    `match: equal to the [verb] lines of ../generated/alc294-m7400qc.fw`, and
    `sudo journalctl -k -b | grep -E 'Applying patch firmware|Cannot load firmware'`
    shows `Applying patch firmware 'apex/alc294-m7400qc.fw'` and no `Cannot load`.
-3. `sudo $A/coef-dump.sh C`, then the speaker test (§3.7).
+3. `sudo $A/coef-dump.sh C`, then the speaker test (§2.2).
 
 Pass: COEF 0x1b has bit 10 set (the report says `SET`), and the speaker test passes.
 
-### 3.5 Phase D: after suspend, fix loaded
+### 5.5 Phase D: after suspend, fix loaded; Phase E: cold boot with the fix
 
 Right after C, in the same boot:
 
@@ -234,9 +368,7 @@ sudo $A/coef-dump.sh D
 
 Then the speaker test. Pass: same values as C, speaker test passes.
 
-### 3.6 Phase E: cold boot with the fix
-
-Shut down, unplug AC, wait 30 s, power on into Ubuntu, then:
+Then shut down, unplug AC, wait 30 s, power on into Ubuntu, and:
 
 ```sh
 sudo $A/coef-dump.sh E
@@ -245,29 +377,7 @@ sudo $A/coef-dump.sh E
 Then the speaker test. Pass: the speaker test passes (this is the UX461FN regression
 check), and COEF 0x1b equals the rendered value.
 
-### 3.7 Speaker test (bypasses PipeWire, low volume)
-
-PipeWire and any effects chain can hide or cause artefacts, so play straight to the
-ALSA device. Unplug headphones first (auto-mute would silence the speakers).
-
-```sh
-hw=$(grep -lx 0x10431ab2 /sys/class/sound/hwC*D*/subsystem_id); hw=${hw%/subsystem_id}; hw=${hw##*/}
-card=${hw#hwC}; card=${card%D*}; addr=${hw##*D}; echo "ALC294 is card $card, codec $addr"
-systemctl --user stop pipewire.socket pipewire-pulse.socket pipewire.service pipewire-pulse.service wireplumber.service
-amixer -c "$card" sset Master 30% unmute
-amixer -c "$card" sset Speaker 100% unmute
-speaker-test -D "plughw:$card,0" -c 2 -r 48000 -t wav -l 1
-timeout 30 speaker-test -D "plughw:$card,0" -c 2 -r 48000 -t sine -f 440
-sleep 5; cat /sys/bus/hdaudio/devices/hdaudioC${card}D${addr}/power/runtime_status   # "suspended"
-timeout 10 speaker-test -D "plughw:$card,0" -c 2 -r 48000 -t sine -f 440      # after a runtime resume
-systemctl --user start pipewire.socket pipewire-pulse.socket wireplumber.service
-```
-
-Pass: "Front Left" from the left speaker and "Front Right" from the right; a steady
-440 Hz tone for 30 s with no dropouts, crackle or rhythmic gating; the same tone again
-after the codec was runtime-suspended.
-
-### 3.8 Full dump (only for investigation)
+### 5.6 Full dump (only for investigation)
 
 To see all 130 coefficients, use the kernel's own dumper (it also only selects slots
 and reads):
@@ -280,14 +390,14 @@ echo -1 | sudo tee /sys/module/snd_hda_codec/parameters/dump_coef   # back to th
 
 This is also how to read COEFs on Apex, where alsa-tools is not installed.
 
-## 4. Filling `profile.toml`
+## 6. Filling `profile.toml`
 
 1. Replace the commented `# [audio.measurements]` block with the fragment from the
    phase-A report (the `[audio.measurements]` header, `date`, `bios`, `kernel` and
    `cold_boot`).
-2. Add the `after_windows = [...]` line from the phase-B report under it. Both are
-   needed: `restore_if_windows_differs` lists 0x0f and 0x40, so the renderer refuses to
-   render without the phase-B dump.
+2. Add the `after_windows = [...]` line from the phase-B report under it; it holds the
+   failing state, whatever caused it. Both are needed: `restore_if_windows_differs`
+   lists 0x0f and 0x40, so the renderer refuses to render without the phase-B dump.
 3. Optionally add the `with_fix_loaded`, `with_fix_after_suspend` and
    `with_fix_cold_boot` lines from C, D and E. `apexctl` accepts these keys and checks
    them (no index twice), but they are informative and never rendered.
@@ -320,8 +430,8 @@ just render-check    # exit 1 and a diff if the committed files differ from the 
 
 `profile render` writes `hardware/m7400qc/generated/alc294-m7400qc.fw` and
 `apex-audio.conf` (and `monitors.xml`). Read the `.fw` file before testing it. With the
-placeholder values of the renderer's golden test (0x0f differs after Windows, 0x40
-does not) it looks like this, after a few provenance comments:
+placeholder values of the renderer's golden test (0x0f differs in the phase-B dump,
+0x40 does not) it looks like this, after a few provenance comments:
 
 ```
 [codec]
@@ -345,7 +455,7 @@ The 0x1b value is the phase-A value with bit 0x0400 set, and an index from
 `apex/alc294-m7400qc.fw` entries. Commit `profile.toml` and the generated files in the
 same change; CI fails when they disagree.
 
-## 5. Testing on Ubuntu with `try-fix.sh`
+## 7. Testing on Ubuntu with `try-fix.sh`
 
 ```sh
 sudo $A/try-fix.sh install   # copy the fix to /lib/firmware/apex and /etc/modprobe.d
@@ -366,7 +476,7 @@ sudo $A/try-fix.sh revert    # remove exactly those two files
 
 Both actions are idempotent, print what to do next and how to verify. After `revert`,
 remember that the codec keeps the values the fix wrote until it loses power: measure
-A or B only after a power-off or a Windows round trip.
+A or B only after a power-off.
 
 ### If `snd-hda-intel` is in the initramfs
 
@@ -390,7 +500,11 @@ initramfs, before `/lib/firmware` is reachable, and the fix is not applied. Then
    `/etc/modprobe.d/*.conf` into the image, so the option is picked up too).
 3. After `try-fix.sh revert`, delete the hook and run `sudo update-initramfs -u` again.
 
-## 6. Upstream submission
+## 8. Upstream submission
+
+This section applies only if the patch firmware was needed (§3 found no alias). If an
+alias won, the upstream patch is instead the one-line `SND_PCI_QUIRK(0x1043, 0x1ab2, …)`
+to that alias's fixup (ROADMAP hardware track).
 
 The kernel patch is `packaging/pkgs/kernel/patches/0001-ALSA-hda-realtek-Fix-speaker-output-on-ASUS-M7400QC.patch`.
 It adds `ALC294_FIXUP_ASUS_COEF_1B_BIT10` (a read-modify-write of bit 10 of COEF 0x1b at
@@ -404,17 +518,18 @@ Update the patch first:
 1. **Author.** Replace `Your Name <you@example.org>` in `From:` and `Signed-off-by:`
    with your real name and address.
 2. **Commit message.** Replace the `0x4e4b -> 0x4a4b` sentence with the measured A and
-   B values, state that the fault needs no power-off to fix with the patch applied
-   (phase C), and that cold boot (E) and suspend (D) still work. Remove anything the
-   dumps did not confirm.
+   B values and the state B was taken in, state that the fault needs no power-off to
+   fix with the patch applied (phase C), and that cold boot (E) and suspend (D) still
+   work. Remove anything the dumps did not confirm, including the Windows wording if
+   the failing state did not involve Windows.
 3. **Chain.** If 0x0f did not differ between A and B and the speakers work without
    it, change `.chain_id` to `ALC294_FIXUP_ASUS_HEADSET_MIC`. If a TRRS headset mic
    does not work on pin 0x19 with the chain, end the chain before the headset-mic
    fixups and say so in the message.
 4. **Tested-by.** Add `Tested-by:` only after running a kernel with the patch (the
-   `.fw` test proves the values, not the patch). The Apex kernel fork (M2) or a
-   rebuilt `snd-hda-codec-alc269` module for the running kernel both work; remove the
-   `.fw` fix (`try-fix.sh revert`, power-off) before that test.
+   `.fw` test proves the values, not the patch). The Apex kernel lane or a rebuilt
+   `snd-hda-codec-alc269` module for the running kernel both work; remove the `.fw`
+   fix (`try-fix.sh revert`, power-off) before that test.
 
 Then, in a checkout of `tiwai/sound.git` (`for-next`):
 
@@ -441,7 +556,7 @@ git send-email --to=tiwai@suse.com --cc=perex@perex.cz \
 - Copy the final patch back into `packaging/pkgs/kernel/patches/` so the repository matches
   what was sent.
 
-## 7. Upstream quirk check and removal of the firmware file
+## 9. Upstream quirk check and removal of the firmware file
 
 A kernel quirk for this codec shows as its SSID bytes in `snd-hda-codec-alc269.ko`. No
 workflow looks for them: GitHub runs only `ci.yml` (ARCHITECTURE §4). From S1c, the
@@ -470,9 +585,8 @@ Removing the file is a manual change, after this test on Apex:
 2. Disable the patch file for one boot by shadowing the image's modprobe file (a file
    in `/etc/modprobe.d` with the same name overrides the one in `/usr/lib/modprobe.d`):
    `echo '# disabled for the quirk test' | sudo tee /etc/modprobe.d/apex-audio.conf`
-3. Power off, then run phases B and C of the acceptance test with no fix loaded
-   (`init_verbs` empty). If the speakers work after a Windows warm reboot and after a
-   cold boot, send a PR that removes the firmware file and the modprobe file from the
+3. Power off, then run the rows of §2 with no fix loaded (`init_verbs` empty). If they
+   pass, send a PR that removes the firmware file and the modprobe file from the
    image. That PR also changes the profile schema: in schema 1 `[audio.fix]` is a
    required table, and a profile without `[audio.measurements]` makes the image build
    label the image `degraded=audio`. So `apexctl`, the profile and the Containerfile's

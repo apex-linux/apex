@@ -4,7 +4,10 @@ Status: accepted (2026-09-24, revised after design review); amended by ADR 0015 
 `model=` alias is tried first (ARCHITECTURE §6.2), and a kernel quirk ships through the
 kernel pair lane only if the alias fails; amended 2026-09-28: decision 6 has no CI
 canary and opens no issue; from S1c the kernel lane's bump report checks for the SSID
-(ADR 0015 §8)
+(ADR 0015 §8); amended 2026-09-29: Windows is deleted, so dump B cannot follow a warm
+reboot from Windows. A test with no fix comes first (`docs/hardware/AUDIO.md` §2); if it
+passes, ROADMAP W5 supersedes this ADR; if it fails and no `model=` alias helps, dump B
+is taken in the failing state it found
 
 ## Context
 

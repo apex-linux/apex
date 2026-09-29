@@ -14,7 +14,7 @@ names are placeholders in `<…>`.
 | A notification or `apexctl status` says the update failed its health checks | §3 |
 | The new version does not boot | §1 (it usually recovers by itself) |
 | Neither version boots, or the GRUB menu cannot be reached | §4 |
-| "No bootable device", firmware boots Windows only, ESP damaged | §5 |
+| "No bootable device", the firmware boots only Ubuntu, ESP damaged | §5 |
 | A signing key or the GitHub account may be compromised | §6 |
 | The builder VM was rebuilt, and the lane says there is no Apex RPM key | §6.8 |
 | You applied an update and want to cancel it before the restart | §7.1 |
@@ -36,8 +36,8 @@ tapping ↓ as soon as the ASUS logo disappears.
 
 **Entries.** `10_blscfg` lists one entry per ostree deployment: entry 0 is the default
 (normally the newest), entry 1 the previous deployment. The titles end in
-`(ostree:0)` and `(ostree:1)`. Then comes "UEFI Firmware Settings". Windows is not in
-this menu; start it from the firmware boot menu.
+`(ostree:0)` and `(ostree:1)`. Then comes "UEFI Firmware Settings". Ubuntu is not in
+this menu; start it from the firmware boot menu ("Ubuntu").
 
 **Writing grubenv on a running Apex.** bootc mounts `/boot` read-only, and it stays
 read-only for the whole system. Every `grub2-editenv … set|unset` below therefore runs
@@ -428,14 +428,17 @@ that it opens, unmount everything on `apex-root` and `cryptsetup close apex-root
 
 ## 5. Restoring the ESP and firmware boot entries
 
-The ESP is shared with Windows. INSTALL.md §2 took a file backup before Apex was
-installed (`esp-<date>.tar`) and §9 one afterwards (`esp-apex-<date>.tar`).
+The ESP is shared with Ubuntu (ARCHITECTURE §5.5). INSTALL.md §2 took a file backup
+before Apex was installed (`esp-<date>.tar`) and §9 one afterwards
+(`esp-apex-<date>.tar`). `bootloader-update.service` rewrites Apex's files on the ESP
+at boot whenever an image brings a newer shim or GRUB, and `bootc rollback` does not
+undo that: these backups are the way back from a bad bootloader update.
 
 ### 5.1 File-level restore
 
 ```sh
 mkdir -p /mnt/esp && mount /dev/<ESP> /mnt/esp
-ls /mnt/esp/EFI                                        # Microsoft, fedora, BOOT, ...
+ls /mnt/esp/EFI                                        # BOOT, fedora, ubuntu (BOOT may show as Boot)
 ```
 
 - **Repair Apex's boot files:** `tar --extract --file=<BACKUP_DIR>/esp-apex-<date>.tar --directory=/mnt/esp`
@@ -453,22 +456,27 @@ fsck.vfat -a /dev/<ESP>                               # try a repair first
 ```
 
 Only if that fails: `mkfs.vfat -F 32 -n EFI /dev/<ESP>` (this **erases** the ESP,
-including Windows' boot files), then extract `esp-<date>.tar` (Windows and anything
+including Ubuntu's boot files), then extract `esp-<date>.tar` (Ubuntu and anything
 else from before Apex) and then `esp-apex-<date>.tar` (Apex's files).
 
 ### 5.3 Firmware boot entries
 
 ```sh
 efibootmgr -v                                          # compare with efibootmgr-<date>.txt from the backup
-efibootmgr --create --disk <DISK> --part <ESP number> --label "Windows Boot Manager" \
-    --loader '\EFI\Microsoft\Boot\bootmgfw.efi'
+efibootmgr --create --disk <DISK> --part <ESP number> --label "Ubuntu" \
+    --loader '\EFI\ubuntu\shimx64.efi'
 efibootmgr --create --disk <DISK> --part <ESP number> --label "Fedora" \
     --loader '\EFI\fedora\shimx64.efi'
 efibootmgr --bootorder <XXXX>,<YYYY>
 ```
 
-Without any entry, the firmware boots `EFI/BOOT/BOOTX64.EFI`; shim's fallback then
-recreates the Fedora entry from `EFI/fedora/BOOTX64.CSV` by itself.
+Without any entry, the firmware boots `EFI/BOOT/BOOTX64.EFI`. shim's fallback then
+recreates an entry for every `EFI/<dir>/BOOTX64.CSV`, so for Apex and for Ubuntu, and
+starts the first one it created (ARCHITECTURE §5.5). Check the order afterwards.
+
+If the laptop starts Ubuntu instead of Apex after Ubuntu installed a shim or GRUB
+update, both entries are fine: Ubuntu's update only moved its entry to the front of
+`BootOrder` (ARCHITECTURE §5.5). The `--bootorder` line above puts Apex back.
 
 ### 5.4 From a running Apex
 
@@ -476,7 +484,16 @@ recreates the Fedora entry from `EFI/fedora/BOOTX64.CSV` by itself.
 sudo bootupctl status      # installed and available bootloader versions
 sudo bootupctl validate    # checks the installed EFI files against bootupd's record
 sudo bootupctl update      # rewrites outdated EFI files from the booted image
+journalctl -b -u bootloader-update.service   # what the automatic update did at this boot
 ```
+
+While Ubuntu is installed, `validate` may list `BOOT/BOOTX64.EFI` and `BOOT/fbx64.efi`
+as changed: Ubuntu's GRUB updates put Ubuntu's shim on the fallback path. That is
+expected and harmless (ARCHITECTURE §5.5). Any other changed file is not.
+
+To stop automatic bootloader updates while you find out what went wrong:
+`sudo systemctl mask bootloader-update.service`; undo it with `sudo systemctl unmask
+bootloader-update.service`.
 
 bootupd never regenerates the static `/boot/grub2/grub.cfg`; if it is lost or lacks the
 `# apex-bootcount v1` marker, copy it back from your backup
@@ -815,7 +832,9 @@ apexctl update apply               # then restart
 
 From S1c, every image carries one kernel, `kernel-cachyos`, with the NVIDIA modules
 built and signed for exactly that kernel (ADR 0015, ARCHITECTURE §4.2). Secure Boot is
-off. Turning it on is the optional step W3, after Windows is removed (ADR 0015 §7).
+off. Turning it on is the optional step W3 (ADR 0015 §7). Windows no longer stands in
+the way (it was deleted on 2026-09-29); both deployments must carry a signed kernel
+first.
 
 ### 8.1 A kernel or NVIDIA driver that misbehaves (S1c)
 

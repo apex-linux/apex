@@ -3,7 +3,10 @@
 Status: accepted (2026-09-28). It records the owner's answers of 2026-09-28 to the
 decision sheet (`docs/reviews/2026-09-28-review.md` §5). It supersedes ADR 0011 and
 amends ADR 0002 and ADR 0007. Decision 22 (kernel and dGPU) is
-[ADR 0015](0015-cachyos-kernel-and-nvidia.md).
+[ADR 0015](0015-cachyos-kernel-and-nvidia.md). Amended 2026-09-29: the owner deleted
+Windows before S4 (ROADMAP W1), so under "Boot handoff" only the case after Windows
+applies: bootloader updates are on, and Ubuntu, not Windows, starts from the firmware
+boot menu (ARCHITECTURE §5.5).
 
 ## Context
 

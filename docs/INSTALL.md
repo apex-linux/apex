@@ -19,15 +19,15 @@ Runbook for [ADR 0010](adr/0010-install-and-bootstrap.md). Recovery is in
 ## 1. What you get
 
 The supported path is `bootc install to-filesystem` onto a disk you have laid out
-yourself. `bootc install to-disk` is not used on the laptop: it would wipe Windows and
-the Ubuntu install.
+yourself. `bootc install to-disk` is not used on the laptop: it would wipe the Ubuntu
+install, which stays as the fallback.
 
 | Partition | Size | Content | Mounted at |
 |---|---|---|---|
-| EFI system partition | existing (shared with Windows) | FAT | mounted by bootupd when needed |
-| Microsoft reserved, Windows | unchanged | NTFS | — |
+| EFI system partition | existing (shared with Ubuntu) | FAT | mounted by bootupd when needed |
 | Apex `/boot` | ≥ 1 GiB, 2 GiB recommended | ext4, **not encrypted** | `/boot` (read-only) |
 | Apex root | the rest of the space for Apex | LUKS2 → btrfs, subvolumes `root` and `var` | `/` (subvol `root`), `/var` (subvol `var`) |
+| Ubuntu | unchanged | ext4 | — |
 
 Why this layout:
 
@@ -42,12 +42,18 @@ Why this layout:
 
 The rehearsal SSD gets the same layout with its own new ESP.
 
-Internal disk today (2026-09-23): `nvme0n1p1` ESP (700 MiB partition, 196 MiB FAT
-filesystem, 158 MiB free), `p2` Microsoft reserved, `p3` Windows, `p4` Ubuntu (ext4,
-the rest of the disk). There is no free space. Before M1.1 the owner decides where the
-Apex partitions come from: shrink the Ubuntu partition (offline, from the live USB), or
-remove Ubuntu once Apex has passed a week of daily use (ROADMAP M1.1). That decision is
-not made here.
+Internal disk on 2026-09-29, after the owner deleted Windows (ROADMAP W1), in 512-byte
+sectors (`/sys/block/nvme0n1/nvme0n1p*/start` and `size`; 1953525168 sectors in all):
+
+| Partition | Start | Sectors | Size | Content |
+|---|---|---|---|---|
+| `nvme0n1p1` | 2048 | 1433600 | 700 MiB | ESP: a 196 MiB FAT filesystem, 189 MiB free; `EFI/ubuntu/` and `EFI/Boot/` |
+| free | 1435648 | 901615616 | 429.9 GiB | where Apex goes (§5.2, ROADMAP W2) |
+| `nvme0n1p4` | 903051264 | 1050470400 | 500.9 GiB | Ubuntu, ext4 |
+
+Nothing is shrunk or moved. Ubuntu stays as the fallback and the builder host until
+Apex has passed its two weeks of daily use (ROADMAP S4). Its partition starts right
+after the free space, so once Ubuntu is gone the Apex root can grow into it.
 
 ## 2. Prerequisites and backups
 
@@ -62,9 +68,32 @@ Prerequisites:
   trust bootstrap reads the policy and keys from it).
 - For the rehearsal: an external USB SSD of at least 64 GB that may be erased.
 - AC power for the whole procedure.
-- The audio measurements of M0.5 are committed (`[audio.measurements]` in
-  `hardware/m7400qc/profile.toml`). They need Windows; do them before you change the
-  internal disk.
+- No Windows entry in the firmware boot entries (below).
+
+**The stale Windows entry (ROADMAP W1).** Deleting Windows removed its files, not its
+firmware boot entry, which then points at the deleted
+`\EFI\MICROSOFT\BOOT\BOOTMGFW.EFI`. From Ubuntu (reading the entries needs no `sudo`):
+
+```sh
+efibootmgr | grep -i 'windows boot manager'      # nothing printed: nothing to remove, skip the rest
+efibootmgr > ~/efibootmgr-before-w1.txt          # the entries as they were
+n=$(efibootmgr | sed -n 's/^Boot\([0-9A-Fa-f]\{4\}\)[* ] Windows Boot Manager.*/\1/p')
+printf '%s\n' "$n"                               # exactly one four-digit number, e.g. 0000
+case $n in
+    [0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]) sudo efibootmgr --bootnum "$n" --delete-bootnum ;;
+    *) echo "not exactly one Windows entry: nothing deleted" ;;
+esac
+efibootmgr                                       # no Windows line, and BootOrder no longer lists that number
+```
+
+The number comes from the entry's label, not from an assumption: check that `printf`
+printed one number and that the line of the first command carries it. The `case`
+deletes only a single four-digit number: `efibootmgr --bootnum ""` would mean
+`Boot0000`, which after an Apex install is usually Apex's own entry. If `printf`
+printed two numbers, there are two Windows entries: run
+`sudo efibootmgr --bootnum <number> --delete-bootnum` once per number, typed by hand.
+`--delete-bootnum` also removes the number from `BootOrder` (efibootmgr 18,
+`delete_var` in `src/efibootmgr.c`).
 
 Backups (from the running Ubuntu, before the internal install; cheap enough to do
 before the rehearsal too). `<BACKUP_DIR>` is on an external drive:
@@ -79,57 +108,14 @@ sudo sgdisk --backup=<BACKUP_DIR>/gpt-$(date +%F).bin <INTERNAL_DISK>
 lsblk -o NAME,SIZE,FSTYPE,UUID,PARTUUID,PARTLABEL > <BACKUP_DIR>/lsblk-$(date +%F).txt
 ```
 
-3. **Windows BitLocker recovery key.** In Windows, an administrator prompt:
-   `manage-bde -protectors -get C:`, or your Microsoft account's recovery-key page.
-   Write it down offline. Firmware boot-order changes and Secure Boot changes can make
-   Windows ask for it.
-4. Check the backups: `tar --list --file=<BACKUP_DIR>/esp-<date>.tar | grep -i microsoft/boot/bootmgfw.efi`
-   prints the Windows boot manager, and the `home` copy opens.
+3. Check the backups: `tar --list --file=<BACKUP_DIR>/esp-<date>.tar | grep -i ubuntu/shimx64.efi`
+   prints Ubuntu's shim, and the `home` copy opens.
 
 Plan where the LUKS **passphrase** and the **recovery key** will be kept (a password
 manager plus paper in a separate place). Losing both loses the data.
 
-**Windows clock (dual boot), once, while you are in Windows.** Apex keeps the hardware
-clock (RTC) in UTC. There is no `LOCAL` line in `/etc/adjtime`, so systemd reads the RTC
-as UTC. Fedora's `/etc/chrony.conf` has `rtcsync`, so once chronyd has synchronised the
-clock, the kernel copies the system time into the RTC every 11 minutes, in UTC. Windows
-reads the RTC as local time by default. After Apex has run, Windows then shows a time
-that is off by the UTC offset (7 hours in Asia/Ho_Chi_Minh). When Windows corrects its
-clock, it writes local time back, and Apex runs 7 hours fast until chronyd has network
-and steps the clock. Ubuntu on this laptop already keeps the RTC in UTC (`timedatectl`
-shows `RTC in local TZ: no`), so if Windows shows the right time after Ubuntu has run,
-the setting below is probably in place already. Tell Windows that the RTC is UTC, in an
-administrator Command Prompt:
-
-```bat
-reg query "HKLM\SYSTEM\CurrentControlSet\Control\TimeZoneInformation" /v RealTimeIsUniversal
-reg add "HKLM\SYSTEM\CurrentControlSet\Control\TimeZoneInformation" /v RealTimeIsUniversal /t REG_DWORD /d 1 /f
-reg query "HKLM\SYSTEM\CurrentControlSet\Control\TimeZoneInformation" /v RealTimeIsUniversal
-```
-
-The first `reg query` shows whether the value is already there (otherwise it reports
-that it cannot find it). `reg add` prints "The operation completed successfully.", and
-the last `reg query` must show `RealTimeIsUniversal    REG_DWORD    0x1`. Restart
-Windows, then press "Sync now" once under Settings > Time & language > Date & time.
-From then on Windows reads and writes the RTC as UTC. Microsoft does not document this
-value on Microsoft Learn; it is the long-standing dual-boot setting
-([Arch Wiki: UTC in Microsoft Windows](https://wiki.archlinux.org/title/System_time#UTC_in_Microsoft_Windows)).
-To undo it:
-`reg delete "HKLM\SYSTEM\CurrentControlSet\Control\TimeZoneInformation" /v RealTimeIsUniversal /f`.
-Keep `/v RealTimeIsUniversal` in that command: without it, `reg delete` removes the
-whole `TimeZoneInformation` key.
-
-Apex does not switch Linux to a local-time RTC (`timedatectl set-local-rtc 1`), for
-three reasons:
-
-- timedatectl(1) itself says a local-time RTC is not fully supported, causes problems
-  with time-zone changes and daylight-saving adjustments, and should be avoided. A UTC
-  RTC stays correct when you travel.
-- Ubuntu on this laptop keeps the RTC in UTC. While both are installed, a local-time Apex
-  and a UTC Ubuntu would each rewrite the RTC in their own way.
-- The switch is a machine-local line in `/etc/adjtime`. Apex keeps `/etc` at the image
-  defaults apart from the few files ARCHITECTURE §7.3 lists, and a setting that only
-  Windows needs belongs in Windows.
+Apex keeps the hardware clock (RTC) in UTC, as Ubuntu on this laptop does (`timedatectl`
+shows `RTC in local TZ: no`), so the two agree on the time.
 
 ## 3. Rehearsal on an external USB SSD
 
@@ -192,18 +178,23 @@ mkfs.vfat -F 32 -n EFI "$ESP_PART"
 
 ### 5.2 Internal disk (existing ESP, free space prepared)
 
-The free space must already exist (§1). Nothing here moves or resizes a partition.
+The free space already exists (§1). Nothing here moves or resizes a partition.
 
 ```sh
-sgdisk --print "$TARGET_DISK"                   # note the free space at the end
+sgdisk --print "$TARGET_DISK"                   # partitions 1 and 4 only, as in §1; the gap between them
 sgdisk --new=0:0:+2G --typecode=0:8300 --change-name=0:apex-boot "$TARGET_DISK"
 sgdisk --new=0:0:0   --typecode=0:8304 --change-name=0:apex-root "$TARGET_DISK"
+sgdisk --print "$TARGET_DISK"                   # 2 apex-boot from 1435648; 3 apex-root from 5629952 to 903051263
 lsblk -o NAME,SIZE,FSTYPE,PARTLABEL "$TARGET_DISK"
 ESP_PART=/dev/<existing ESP>; BOOT_PART=/dev/<new apex-boot>; ROOT_PART=/dev/<new apex-root>
 ```
 
 Partition number `0` means "the first free number" and start `0` means the start of
-the largest free block (sgdisk(8)). Do **not** format the existing ESP.
+the largest free block, end `0` its end (sgdisk(8)). With the §1 table that gives
+`nvme0n1p2` apex-boot (2 GiB) and `nvme0n1p3` apex-root (897421312 sectors, 427.9 GiB),
+the root ending on the sector before Ubuntu's partition; these numbers are worked out
+from §1, not yet seen on the disk. If `sgdisk` prints other numbers, stop. Do **not**
+format the existing ESP.
 
 ### 5.3 `/boot`, LUKS2 and btrfs (both cases)
 
@@ -343,7 +334,27 @@ bootc installs shim and GRUB through bootupd: it adds `EFI/fedora/` to the ESP,
 replaces the fallback loader `EFI/BOOT/BOOTX64.EFI` (and `fbx64.efi`), writes the static
 `/boot/grub2/grub.cfg` with the Apex boot-count snippet, and creates a firmware boot
 entry named after the image's `/etc/system-release` at the front of the boot order.
-Windows' `EFI/Microsoft/` is not touched.
+
+What that does to Ubuntu (sources in ARCHITECTURE §5.5):
+
+- `EFI/ubuntu/` and Ubuntu's firmware entry are not touched. Ubuntu's entry becomes
+  second in the boot order and still starts Ubuntu from the firmware boot menu.
+- Each `shim-signed` or GRUB package update on Ubuntu puts Ubuntu's entry first again,
+  whatever debconf says. When the laptop starts Ubuntu on its own after you updated
+  Ubuntu, put Apex back in front, from either system:
+
+  ```sh
+  efibootmgr                                     # BootOrder, and the numbers of "Fedora" and "Ubuntu"
+  sudo efibootmgr --bootorder <Fedora>,<Ubuntu>,<the rest as listed>
+  ```
+
+- The fallback loader was Ubuntu's shim and is now Fedora's. Ubuntu's next GRUB package
+  update puts its own shim back there, and a later Apex image with a new shim replaces
+  it again. Both work: the fallback path is used only when no boot entry works, and
+  either shim's fallback then recreates the entries of both systems.
+- From then on `bootloader-update.service` keeps bootupd's files in `EFI/fedora/` and
+  `EFI/BOOT/` current at boot, from the booted image. It creates no firmware entry and
+  does not reorder them.
 
 ## 8. `/var` subvolume, then unmount
 
@@ -391,6 +402,9 @@ findmnt /var; findmnt /boot                      # /var: btrfs [/var]; /boot: ex
 sudo grep -c '^# apex-bootcount v1' /boot/grub2/grub.cfg   # 1 (grub.cfg is mode 0600)
 sudo grub2-editenv /boot/grub2/grubenv list      # apex_ok=0; no apex_target, no apex_counter
 systemctl --failed                               # 0 loaded units listed
+systemctl is-enabled bootloader-update.service   # enabled
+systemctl show -p ActiveState -p Result bootloader-update.service   # ActiveState=active, Result=success
+sudo bootupctl status                            # Component EFI, Installed: grub2-1:2.12-…,shim-16.1-…; Update: At latest version
 sudo cryptsetup luksDump /dev/<apex-root partition> | grep -A2 Tokens   # systemd-recovery
 timedatectl                                      # RTC in local TZ: no; once online: System clock synchronized: yes
 ```
@@ -403,9 +417,8 @@ timedatectl                                      # RTC in local TZ: no; once onl
    cannot work: stop and find out why.
 
    `RTC in local TZ: yes` means something set a local-time RTC: undo it with
-   `sudo timedatectl set-local-rtc 0` and set up Windows as §2 describes. If the first
-   boot seems to hang behind the splash, watch it in text mode (RECOVERY.md §1, "Watch
-   a boot in text mode").
+   `sudo timedatectl set-local-rtc 0`. If the first boot seems to hang behind the
+   splash, watch it in text mode (RECOVERY.md §1, "Watch a boot in text mode").
 
 5. Back up the boot files Apex added: the ESP (mount it first, it is not mounted by
    default) and the static GRUB configuration, which bootupd never regenerates
@@ -420,10 +433,8 @@ timedatectl                                      # RTC in local TZ: no; once onl
 
 6. Run [hardware/ACCEPTANCE.md](hardware/ACCEPTANCE.md).
 
-Windows is not in the GRUB menu (bootupd's static configuration has no os-prober).
-Start it from the firmware boot menu (Esc at the ASUS logo, "Windows Boot Manager").
-Do not add a GRUB chainload entry for Windows: it changes what the TPM measures, and
-BitLocker would ask for its recovery key.
+Ubuntu is not in the GRUB menu (bootupd's static configuration has no os-prober).
+Start it from the firmware boot menu (Esc at the ASUS logo, "Ubuntu").
 
 ## 10. Undoing an installation attempt
 
@@ -443,10 +454,60 @@ sudo efibootmgr --bootnum <XXXX> --delete-bootnum
    `efibootmgr --bootorder <XXXX>,<YYYY>,…`
 3. Remove the Apex partitions (**check the numbers against `lsblk` first**):
    `sgdisk --delete=<apex-root number> --delete=<apex-boot number> <TARGET_DISK>`.
-4. If Ubuntu's partition was shrunk for the install, grow it back offline
-   (`sgdisk` to recreate the partition with the same start sector, then
-   `e2fsck -f` and `resize2fs`), or restore from the §2 backups.
+   The space is free again, and Ubuntu's partition was never touched.
 
 If the partition table itself is damaged, `sgdisk --load-backup=<BACKUP_DIR>/gpt-<date>.bin
 <INTERNAL_DISK>` restores the saved one. That overwrites the current table: use it only
 when the table is broken, never to undo a working change.
+
+## 11. BIOS updates without Windows
+
+MyASUS and Windows Update no longer deliver BIOS updates. The two remaining paths, as
+checked on 2026-09-29:
+
+| Path | State |
+|---|---|
+| fwupd and LVFS | Not available. Ubuntu's fwupd sees the BIOS as an updatable UEFI capsule device ("System Firmware", version 785), but `fwupdmgr get-updates` lists it under "Devices with no available firmware updates": the LVFS metadata of 2026-09-28 has no entry for its GUID, and an LVFS search for `M7400QC` finds nothing. |
+| ASUS EZ Flash | The path to use. ASUS publishes "BIOS for ASUS EZ Flash Utility" files for the M7400QC. The newest is 311 (2023-07-07, `M7400QCAS311.zip`, 7.63 MB), and the laptop already runs it (`cat /sys/class/dmi/id/bios_version` prints `M7400QC.311`). |
+
+Not checked on this unit: that its setup screen offers the EZ Flash item. Look once
+without changing anything: hold F2 and press the power button, open the Advanced
+screen, find "ASUS Firmware Update" (or "ASUS EZ Flash 3 Utility"), then leave with
+Esc and discard changes.
+
+To see whether LVFS has gained this model, on Ubuntu (Ubuntu's `fwupd-refresh.timer`
+refreshes the metadata): `fwupdmgr get-updates`. "System Firmware" under "Devices with
+no available firmware updates" means it has not.
+
+An update with EZ Flash, following ASUS's FAQ
+([How to update BIOS with ASUS Firmware Update/EZ Flash](https://www.asus.com/support/faq/1008859/),
+updated 2026-04-22):
+
+1. From the M7400QC support page, "BIOS & FIRMWARE", download the file titled "BIOS
+   for ASUS EZ Flash Utility", not "BIOS Update for Windows".
+2. Check it: `sha256sum M7400QCAS<version>.zip` must equal the SHA-256 ASUS gives for
+   the download (ASUS's support API returns one per file; for 311 it is
+   `45ca4f62b680a1069b17704043f58947864ec063d0a710d4d5544a7e7f52a9d4`). Unzip it.
+3. Put the extracted file on a USB stick with a FAT32 filesystem; ASUS requires FAT32:
+
+   ```sh
+   lsblk -o NAME,SIZE,MODEL,TRAN,FSTYPE           # the stick shows TRAN=usb; CHECK MODEL AND SIZE
+   sudo mkfs.vfat -F 32 -n BIOS /dev/<stick partition>   # ERASES that partition
+   udisksctl mount -b /dev/<stick partition>      # prints where it is mounted
+   cp <extracted BIOS file> <mount point>/
+   udisksctl unmount -b /dev/<stick partition>
+   efibootmgr > ~/efibootmgr-before-bios.txt      # the boot entries, to compare afterwards
+   ```
+
+4. Connect AC; the battery must be at 20 % or more. Power off.
+5. Hold F2 and press the power button. On the Advanced screen choose "ASUS Firmware
+   Update" (or "ASUS EZ Flash 3 Utility"), then the stick and the file, and confirm.
+   Do not power off while it writes; the laptop restarts by itself.
+6. Afterwards, from Apex or Ubuntu: `cat /sys/class/dmi/id/bios_version` shows the new
+   version, `mokutil --sb-state` still prints `SecureBoot disabled`, and `efibootmgr`
+   matches `~/efibootmgr-before-bios.txt`. Whether this BIOS resets setup options or
+   boot entries on update was not checked. If entries are missing, the firmware starts
+   `EFI/BOOT/BOOTX64.EFI`, whose fallback recreates the Apex and Ubuntu entries
+   (ARCHITECTURE §5.5); restore the order with `sudo efibootmgr --bootorder …`
+   (RECOVERY.md §5.3). Then run [hardware/ACCEPTANCE.md](hardware/ACCEPTANCE.md) §1
+   and §9.
