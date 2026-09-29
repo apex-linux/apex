@@ -16,6 +16,7 @@ names are placeholders in `<…>`.
 | Neither version boots, or the GRUB menu cannot be reached | §4 |
 | "No bootable device", firmware boots Windows only, ESP damaged | §5 |
 | A signing key or the GitHub account may be compromised | §6 |
+| The builder VM was rebuilt, and the lane says there is no Apex RPM key | §6.8 |
 | You applied an update and want to cancel it before the restart | §7.1 |
 | Follow the testing channel, or go back to stable | §7.2 |
 | You want to see the boot messages behind the splash | §1, "Watch a boot in text mode" |
@@ -506,6 +507,8 @@ Two more keys come with the kernel pair (ADR 0015 §3):
 - the Apex Secure Boot key (W3), only if the owner turns Secure Boot on. It signs
   `vmlinuz` and nothing else. Its rotation and revocation are in §6.6.
 
+The Apex RPM key (S1a) signs the RPMs the builder VM builds, not images; §6.8.
+
 Rules for every procedure below:
 
 - The policy that verifies an update is the one in the **booted** image. A new key
@@ -701,6 +704,43 @@ negativo17's SRPM and binaries are third-party inputs, each pinned by key and sh
   NVIDIA set (`degraded=nvidia`, through the override of `just publish`).
 - Pin a replacement key only after its owner has published it, and check its
   fingerprint against a second source (ADR 0015 §5).
+
+### 6.8 Apex RPM key: lost, exposed or rotated
+
+The key (OpenPGP Ed25519; its fingerprint is in ARCHITECTURE §5.1) signs every RPM Apex
+builds, and the compose's `[apex]` trusts only it and Fedora's key
+(packaging/README.md, "Signing"). Its private half has no passphrase and lives only in
+the builder VM, in `~/.local/share/apex/rpm-gnupg`; the owner keeps one armoured backup
+on offline media. The laptop never installs an RPM from `[apex]`: images reach it
+through the cosign signature, so this key protects the builds, not the channel.
+
+Impact of a leak: whoever also gets an RPM into the builder VM's store or build context
+gets it into an image. From S1d the cosign key lives in the same VM, so a leak from the
+VM exposes both.
+
+- **Lost with the builder VM** (`builder-vm.sh destroy`, a new VM): restore the backup
+  and write `~/.config/apex/rpm-signing.env` again (packaging/README.md, "Signing"). No
+  rotation is needed.
+- **Exposed, or rotated on purpose:**
+  1. In the builder VM, make a new key in a new GnuPG home (packaging/README.md,
+     "Signing", "A new key"), and its one offline backup
+     (`gpg --armor --export-secret-keys FPR` to offline media). Check the backup with
+     `gpg --show-keys`.
+  2. In one reviewed change: the new public half replaces
+     `image/system_files/usr/share/apex/keys/RPM-GPG-KEY-apex`, and its fingerprint
+     replaces `APEX_RPM_KEY_FPR` in `image/checks/lib/common.sh` and the fingerprints in
+     packaging/README.md, ARCHITECTURE §5.1, the keys' README
+     (`image/system_files/usr/share/apex/keys/README.md`) and the G1 tests
+     `image/tests/t-signing.sh` and `t-desktop.sh`.
+  3. Point `rpm-signing.env` at the new key and GnuPG home. The lane refuses to build
+     while the file and the committed key disagree.
+  4. A stored build keeps the key it was signed with: the lane stops on it when the
+     content key is unchanged, and the compose refuses it. Move the stored sets out of
+     `~/apex-store/pkgs/` so that the next `just vm-image` builds and signs every package
+     again. A held family has no build to fall back to: choose stock for it
+     (`just pkg-stock`) until its series applies.
+  5. When the new image passed its gates, delete the old GnuPG home in the VM. If the
+     key was exposed, destroy its offline backup too.
 
 ## 7. Cancelling an applied update, changing the channel
 

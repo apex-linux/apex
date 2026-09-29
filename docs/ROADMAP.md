@@ -80,9 +80,9 @@ Gates stay proportionate for one owner. ARCHITECTURE §11 has the details.
 - **G1, build checks,** on every image build.
   - Kept: legacy, firmware, keys, secrets, signing, overlay, UEFI only, `--strict`
     schemas, `bootc container lint --fatal-warnings`.
-  - From S1a: composefs is on; gnome-shell is `.apexN` at the NEVRA the lane locked,
-    and signed with the Apex RPM key once it exists; the Apex marker is in the light
-    and dark sheets (`grep -a` on the theme resource); upstream's sheets exist under
+  - From S1a: composefs is on; gnome-shell is `.apexN` at the NEVRA the lane locked, and
+    signed with the Apex RPM key; the Apex marker is in the light and dark sheets
+    (`grep -a` on the theme resource); upstream's sheets exist under
     `/org/gnome/shell/theme/stock/` (the lane and G2 check them); no
     `G_RESOURCE_OVERLAYS`, `--unsafe-mode` or `APEX_SHELL_TEST_FAULT` in `/usr` or
     `/etc`; the Apex schema compiles with `--strict`; the crash guard is installed.
@@ -96,10 +96,10 @@ Gates stay proportionate for one owner. ARCHITECTURE §11 has the details.
     initramfs; no akmods, DKMS or kernel-devel; `nvidia-persistenced` disabled; the
     NVIDIA licence file present.
 - **Lane checks,** on every package build: the SRPM signature, fuzz 0, the build, the
-  Apex marker. For the kernel pair also: one signing key on every module (SHA-512 on
-  the in-tree modules; SHA-256 on the NVIDIA ones, which kmodtool's `brp-kmodsign`
-  always uses), no private key in any payload, the module count within ±5 % of the last
-  pair, BTF present.
+  Apex marker, the Apex RPM signature on what it built. For the kernel pair also: one
+  signing key on every module (SHA-512 on the in-tree modules; SHA-256 on the NVIDIA
+  ones, which kmodtool's `brp-kmodsign` always uses), no private key in any payload, the
+  module count within ±5 % of the last pair, BTF present.
 - **G2, headless shell,** from S1a, on every image build. The built image runs
   gnome-shell at scale 2 with fixtures and a fixed clock, twice: with the Apex layer,
   and with `APEX_SHELL_SAFE=1`. It fails on a `JS ERROR`. The safe run asserts stock

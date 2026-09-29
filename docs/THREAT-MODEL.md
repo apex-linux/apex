@@ -7,10 +7,10 @@ are named by the document that implements them.
 
 - The owner's data on the laptop.
 - The integrity of the operating system and the boot chain on the laptop.
-- The signing keys: the release key, the CI key and the offline backup key. From step
-  W3, the Apex Secure Boot key, if the owner turns Secure Boot on (ADR 0015 §7). No
-  module-signing key persists: each kernel build makes its own and shreds it (S1c,
-  ADR 0015 §3).
+- The signing keys: the release key, the CI key and the offline backup key; the Apex
+  RPM key (S1a), in the builder VM and on offline media. From step W3, the Apex Secure
+  Boot key, if the owner turns Secure Boot on (ADR 0015 §7). No module-signing key
+  persists: each kernel build makes its own and shreds it (S1c, ADR 0015 §3).
 - The GitHub account and the ghcr.io packages it owns.
 - Biometric data: fingerprint images and templates. A leaked fingerprint cannot be
   revoked.
@@ -34,7 +34,7 @@ are named by the document that implements them.
 |---|---|---|
 | T1 | Theft or loss of the powered-off laptop | LUKS2 with a passphrase and a recovery key (ADR 0010) |
 | T2 | Code running as the desktop user (browser, npm, an agent) tries to escalate through apex-updated, polkit or sudo | The polkit action table; the daemon reads no user files and exposes no writable properties; bootc argv comes from enums only; fingerprint is kept out of `system-auth` (ADR 0006, ADR 0008) |
-| T3 | Compromise of one upstream input (a crate, an npm package, a GitHub Action, the CachyOS source, the COPR SRPM or negativo17's packages) that tries to steal secrets or signing keys, or persist | GitHub runs only `ci.yml`: actions pinned by SHA, a read-only token, and no secret in any job; `cargo deny`; every image build scans its root filesystem for private keys (`image/checks/secrets.sh`). The kernel and NVIDIA inputs (S1c, ADR 0015 §2 to §5): the COPR SRPM and negativo17's SRPM and binaries are checked against their pinned keys, locked by NEVR and sha256, and mirrored at first sight, so the compose never contacts negativo17.org; the CachyOS tag passes `git verify-tag` and must match the SRPM's Source0; the kernel is rebuilt from the signed SRPM, so COPR's build hosts leave the chain; each bump writes a report with the config and BORE-patch diffs, and a config change, a new kernel line or a new driver waits for the owner; the per-build module key lives on a tmpfs and is shredded with its job; from W3, the Apex Secure Boot key reaches only an isolated step that signs `vmlinuz` |
+| T3 | Compromise of one upstream input (a crate, an npm package, a GitHub Action, the CachyOS source, the COPR SRPM or negativo17's packages) that tries to steal secrets or signing keys, or persist | GitHub runs only `ci.yml`: actions pinned by SHA, a read-only token, and no secret in any job; `cargo deny`; every image build scans its root filesystem for private keys (`image/checks/secrets.sh`). Apex's RPMs are signed with the Apex RPM key in the builder VM after their build container exits, and no build container mounts the key's GnuPG home; the compose's `[apex]` accepts only that key's and Fedora's signatures (`gpgcheck=1`), and G1 checks that every Apex package carries that key's signature (packaging/README.md, "Signing"). The kernel and NVIDIA inputs (S1c, ADR 0015 §2 to §5): the COPR SRPM and negativo17's SRPM and binaries are checked against their pinned keys, locked by NEVR and sha256, and mirrored at first sight, so the compose never contacts negativo17.org; the CachyOS tag passes `git verify-tag` and must match the SRPM's Source0; the kernel is rebuilt from the signed SRPM, so COPR's build hosts leave the chain; each bump writes a report with the config and BORE-patch diffs, and a config change, a new kernel line or a new driver waits for the owner; the per-build module key lives on a tmpfs and is shredded with its job; from W3, the Apex Secure Boot key reaches only an isolated step that signs `vmlinuz` |
 | T4 | A compromised GitHub token or workflow tries to push, sign or retag images | Separate testing and release repositories and keys; the `release` environment requires manual approval; versions must increase; a staleness warning; the offline backup key for recovery (ADR 0012) |
 | T5 | An attacker on the network or at the registry | Signature enforcement through a strict policy file under `/usr` (ADR 0012) |
 | T6 | Leakage of biometric data during diagnostics | Diagnostics only in tmpfs; a CI guard against image and template files; redaction of hardware dumps (ADR 0006) |
@@ -64,6 +64,7 @@ These live in `docs/RECOVERY.md` and cover:
 - a leaked CI or release key: rotate, and sign an emergency image with the offline
   backup key;
 - a compromised GitHub account or token: audit the tags, rotate the secrets;
+- a lost, exposed or rotated Apex RPM key (§6.8);
 - a suspect kernel or NVIDIA input: hold the pair, or replace the running kernel with
   the break-glass image (S1c);
 - a leaked Apex Secure Boot key: enrol a successor, then revoke the old key with
