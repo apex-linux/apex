@@ -133,7 +133,7 @@ Ubuntu is removed. `just check`, `just deny`, `just image-test`, `just layer-tes
 
 | Step | What it does | Output |
 |---|---|---|
-| `ci.yml` | on every pull request and every push to `main`: fmt, clippy `-D warnings`, `cargo test`, `cargo deny`, the RPM `License:` check, shellcheck and actionlint, the script self-tests, `image/tests/run.sh`, the Apex layer's safety net in gjs (`tests/layer/run.sh`), the privacy guard. To come: ESLint on `desktop/shell/js/` and sassc on the Apex SCSS (S1a), blueprint-compiler (S2c), and nextest with the wall-clock tests in a slow profile (no slice yet) | pass or fail |
+| `ci.yml` | on every pull request and every push to `main`: fmt, clippy `-D warnings`, `cargo test`, the comment guard (`apex-lint`, [CONTRIBUTING](CONTRIBUTING.md)), `cargo deny`, the RPM `License:` check, shellcheck and actionlint, the script self-tests, `image/tests/run.sh`, the Apex layer's safety net in gjs (`tests/layer/run.sh`), the privacy guard. To come: ESLint on `desktop/shell/js/` and sassc on the Apex SCSS (S1a), blueprint-compiler (S2c), and nextest with the wall-clock tests in a slow profile (no slice yet) | pass or fail |
 | packages | `apex-lane build <pkg>` for each directory in `packaging/pkgs/` (§4.1), and the kernel pair job (§4.2) | signed RPMs stored by content key; `rpms.lock.next` in the builder VM's store |
 | image | `image.sh context --lane-lock` → `build-rootfs` → build checks (G1) → headless shell (G2) → rechunk with `--previous-build` → push under a unique tag → cosign sign → move `:45` | `ghcr.io/sekirokenjii/apex:45`, and a public source artifact per digest (§4.2, S1d) |
 
