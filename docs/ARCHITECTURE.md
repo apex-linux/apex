@@ -277,12 +277,33 @@ Rules:
 | A new kernel line | Waits for the owner's review of the bump report, and for the laptop rows | 14 days from the COPR's first build of the line; the old line's end of life upstream is the hard stop |
 | A new NVIDIA release | 7 days of soak in negativo17, the matching Flathub `GL.nvidia` extension, and the owner's ACCEPTANCE §4 run on the staged deployment. A release named in an NVIDIA security bulletin skips the soak. | none; the current driver keeps working |
 | A Fedora package or a kernel pair that regresses on this laptop | `packaging/hold.txt` pins the last good signed build, or the last good pair by content key. | until fixed, within the limits above |
+| Before Fedora 45 GA: a build pinned from updates-testing (`image/packages/updates-testing-allowlist.txt`) that Fedora unpushes or edits out of its update | The repos stage fails the build while the pin is listed and the stable repositories carry an older build of that name. The pin is dropped and the image takes the stable build. If Fedora pushes the update to updates-testing again, it is pinned again: every installed subpackage, together with the builds it requires. Once it is stable, the next build takes it unpinned. | 72 h for a security update, counted from Fedora's next push of it |
 
 Nothing degrades a design package or the NVIDIA driver to stock on its own. In the
 August and September 2026 sample, two of the eight 7.2 point releases first reached the
 COPR more than 72 h after their kernel.org release: 7.2.4, which the COPR skipped, in
 7.2.5 after about 138 h, and 7.2.6 after 98 h. The kernel row therefore asks the owner
 once or twice a month.
+
+One update stands at the updates-testing row. FEDORA-2026-91259c13b9 is a security
+update: libxml2 2.15.4 and the rebuilds against it, 490 builds, among them
+`epiphany-51.0-2.fc45` and `gnome-control-center-51.0-2.fc45`, whose four subpackages
+were pinned on 2026-09-29. On 2026-10-02 at 15:19 UTC Bodhi's JSON gave status
+`pending` with request `stable`, after edits on 2026-10-01 and 2026-10-02 that reset
+its karma. updates-testing no longer carried its builds, and Koji tagged both
+`f45-updates-pending`. The pins are dropped. The image carries the `51.0-1` builds of
+FEDORA-2026-48a7996f9c (GNOME 51.0, stable since 2026-09-30) and libxml2 2.13.9.
+
+- When Bodhi pushes FEDORA-2026-91259c13b9 stable, nothing is pinned. The next build
+  takes it, and `rpm -q epiphany gnome-control-center libxml2` in that image must show
+  the update's builds.
+- If it returns to updates-testing first, pin `epiphany`, `epiphany-runtime`,
+  `gnome-control-center` and `gnome-control-center-filesystem` at the update's builds
+  together with its `libxml2`, which provides the `libxml2.so.16` they require, its
+  `libxml2_2.13`, which keeps `libxml2.so.2` for the packages that were not rebuilt,
+  and whatever else the compose then needs from the update. The four alone are
+  admitted and not installed: the image of 2026-09-29 carried `51~rc`
+  ([image/README.md](../image/README.md), Containerfile).
 
 ### 4.4 Release cost
 
