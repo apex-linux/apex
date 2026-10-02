@@ -353,8 +353,9 @@ What that does to Ubuntu (sources in ARCHITECTURE §5.5):
   it again. Both work: the fallback path is used only when no boot entry works, and
   either shim's fallback then recreates the entries of both systems.
 - From then on `bootloader-update.service` keeps bootupd's files in `EFI/fedora/` and
-  `EFI/BOOT/` current at boot, from the booted image. It creates no firmware entry and
-  does not reorder them.
+  `EFI/BOOT/` current from the booted image, once per boot and only after
+  `apex-boot-assess` has judged that boot green (ARCHITECTURE §5.5). It creates no
+  firmware entry and does not reorder them.
 
 ## 8. `/var` subvolume, then unmount
 
@@ -403,7 +404,8 @@ sudo grep -c '^# apex-bootcount v1' /boot/grub2/grub.cfg   # 1 (grub.cfg is mode
 sudo grub2-editenv /boot/grub2/grubenv list      # apex_ok=0; no apex_target, no apex_counter
 systemctl --failed                               # 0 loaded units listed
 systemctl is-enabled bootloader-update.service   # enabled
-systemctl show -p ActiveState -p Result bootloader-update.service   # ActiveState=active, Result=success
+systemctl is-active apex-boot-assess.service    # active: the boot assessment has finished
+systemctl show -p ActiveState -p Result bootloader-update.service   # then ActiveState=active, Result=success
 sudo bootupctl status                            # Component EFI, Installed: grub2-1:2.12-…,shim-16.1-…; Update: At latest version
 sudo cryptsetup luksDump /dev/<apex-root partition> | grep -A2 Tokens   # systemd-recovery
 timedatectl                                      # RTC in local TZ: no; once online: System clock synchronized: yes
@@ -415,6 +417,11 @@ timedatectl                                      # RTC in local TZ: no; once onl
    writes nothing. Other variables in the list are not Apex's. If `apex_ok` is missing,
    the Apex GRUB snippet did not run or could not write grubenv, and boot counting
    cannot work: stop and find out why.
+
+   `Result=exec-condition` for `bootloader-update.service` means the assessment did not
+   judge this boot green, so the ESP was left alone.
+   `journalctl -b -u bootloader-update.service` says why, and
+   `journalctl -b -u apex-boot-assess.service` which check failed.
 
    `RTC in local TZ: yes` means something set a local-time RTC: undo it with
    `sudo timedatectl set-local-rtc 0`. If the first boot seems to hang behind the

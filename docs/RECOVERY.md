@@ -431,8 +431,9 @@ that it opens, unmount everything on `apex-root` and `cryptsetup close apex-root
 The ESP is shared with Ubuntu (ARCHITECTURE §5.5). INSTALL.md §2 took a file backup
 before Apex was installed (`esp-<date>.tar`) and §9 one afterwards
 (`esp-apex-<date>.tar`). `bootloader-update.service` rewrites Apex's files on the ESP
-at boot whenever an image brings a newer shim or GRUB, and `bootc rollback` does not
-undo that: these backups are the way back from a bad bootloader update.
+whenever the booted image brings a newer shim or GRUB, once `apex-boot-assess` has
+judged that boot green (ARCHITECTURE §5.5), and `bootc rollback` does not undo that:
+these backups are the way back from a bad bootloader update.
 
 ### 5.1 File-level restore
 
