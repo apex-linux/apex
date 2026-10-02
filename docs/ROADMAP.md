@@ -244,11 +244,12 @@ the safety net come before the first Apex pixel.
     `bootc switch --transport containers-storage`, about 10 minutes, keeping
     `/var/home` and `/etc`.
 - G1 shell checks and the composefs check. G2, twice per build. G4 with boot to GDM,
-  login, lock and unlock, triggered by a shell, mutter or gdm NVR change.
+  login, lock and unlock, triggered by its key (a shell, mutter or gdm NVR change among
+  others, `qualify.sh g4-key`) or a week after its last pass.
 - The token file and the top-bar SCSS, as the proof of the `@import` hook.
 - In parallel, in the builder VM: the kernel spike K1 (S1c).
 - **Exit:**
-  - a `.apex1` gnome-shell is built from the F45 SRPM; `rpm -qp --requires` shows
+  - an `.apexN` gnome-shell is built from the F45 SRPM; `rpm -qp --requires` shows
     `mutter = <EVR>`;
   - with the empty layer, G2 captures equal Fedora's stock shell outside the masks;
   - the safe G2 run asserts the stock values;

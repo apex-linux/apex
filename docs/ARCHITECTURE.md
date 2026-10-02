@@ -128,12 +128,12 @@ While the repository is private, GitHub runs one workflow, `ci.yml`. Packages an
 images are built in the builder VM ([`tools/builder-vm/`](../tools/builder-vm/)) and
 published from it with `just publish` (S1d), by hand or from a daily host timer on AC
 power. The builder VM runs on the laptop: under Ubuntu today, and under Apex once
-Ubuntu is removed. `just check`, `just deny`, `just image-test`, `just layer-test` and
-`just privacy` run `ci.yml`'s commands locally.
+Ubuntu is removed. `just check`, `just deny`, `just image-test`, `just layer-test`,
+`just shots-test` and `just privacy` run `ci.yml`'s commands locally.
 
 | Step | What it does | Output |
 |---|---|---|
-| `ci.yml` | on every pull request and every push to `main`: fmt, clippy `-D warnings`, `cargo test`, the comment guard (`apex-lint`, [CONTRIBUTING](CONTRIBUTING.md)), `cargo deny`, the RPM `License:` check, shellcheck and actionlint, the script self-tests, `image/tests/run.sh`, the Apex layer's safety net in gjs (`tests/layer/run.sh`), the privacy guard. To come: ESLint on `desktop/shell/js/` and sassc on the Apex SCSS (S1a), blueprint-compiler (S2c), and nextest with the wall-clock tests in a slow profile (no slice yet) | pass or fail |
+| `ci.yml` | on every pull request and every push to `main`: fmt, clippy `-D warnings`, `cargo test`, the comment guard (`apex-lint`, [CONTRIBUTING](CONTRIBUTING.md)), `cargo deny`, the RPM `License:` check, shellcheck and actionlint, the script self-tests, `image/tests/run.sh`, the Apex layer's safety net in gjs (`tests/layer/run.sh`), G2's own tests (`tests/shots/selftest.sh`), the privacy guard. To come: ESLint on `desktop/shell/js/` and sassc on the Apex SCSS (S1a), blueprint-compiler (S2c), and nextest with the wall-clock tests in a slow profile (no slice yet) | pass or fail |
 | packages | `apex-lane build <pkg>` for each directory in `packaging/pkgs/` (§4.1), and the kernel pair job (§4.2) | signed RPMs stored by content key; `rpms.lock.next` in the builder VM's store |
 | image | `image.sh context --lane-lock` → `build-rootfs` → build checks (G1) → headless shell (G2) → rechunk with `--previous-build` → push under a unique tag → cosign sign → move `:45` | `ghcr.io/sekirokenjii/apex:45`, and a public source artifact per digest (§4.2, S1d) |
 
@@ -480,8 +480,25 @@ third-party clauses.
     one it created ([`fallback.c`](https://github.com/rhboot/shim/blob/16.1/fallback.c),
     `find_boot_options`).
 - **Bootloader updates are on** (W4): `80-apex.preset` enables
-  `bootloader-update.service`, which runs `bootupctl update` at every boot and writes
-  only when the booted image carries a newer shim or GRUB.
+  `bootloader-update.service`, which runs `bootupctl update` and writes only when the
+  booted image carries a newer shim or GRUB.
+  - **Only after a green boot.** The ESP is outside the rollback envelope, so only a
+    deployment whose boot `apex-boot-assess` judged green may write it. The image's
+    drop-in `bootloader-update.service.d/10-apex-after-green-boot.conf` orders the unit
+    after `apex-boot-assess.service`, and its `ExecCondition=` lets `bootupctl` run only
+    when this boot's assessment finished every step (`Result=success`) and its decision
+    reported green (`journalctl _SYSTEMD_INVOCATION_ID=`). On any other boot the condition
+    skips the unit (`Result=exec-condition`): a red update on trial, the boot after GRUB
+    fell back, or a boot without an assessment. `image/tests/t-bootloader.sh` runs every
+    decision of the assessment's decision table through the condition, and G4 sees the
+    skip on the fallback boot; in G4's counted boots, which reboot themselves,
+    `bootupctl` leaves no line. The update runs once per boot, after the assessment, so
+    at least 20 s after the greeter or a session is up.
+  - The drop-in sets `DefaultDependencies=no` and lists the defaults it needs.
+    `multi-user.target` wants the unit, and with default dependencies it would also wait
+    for it. That closes a cycle through `apex-boot-assess` (`After=graphical.target`),
+    and systemd breaks it by dropping a start job, at times the assessment's
+    (`image/tests/t-bootloader.sh`).
   - bootupd's UEFI updates are safe against power loss (the `RENAME_EXCHANGE` above;
     [bootupd README](https://github.com/coreos/bootupd/blob/v0.2.35/README.md#status)),
     and Fedora enables the same unit on its Atomic Desktops
@@ -492,9 +509,10 @@ third-party clauses.
     [issue #440](https://github.com/coreos/bootupd/issues/440)), and `bootc rollback`
     cannot undo an ESP write: a bad shim or GRUB breaks every deployment. The ESP
     backups of INSTALL.md §2 and §9 and [RECOVERY.md](RECOVERY.md) §5 are the way back.
-  - A failed run does not make the boot red, because the unit is not one of the boot
-    assessment's required units (`crates/apex-boot/src/checks/units.rs`).
-    `systemctl --failed` shows it (INSTALL.md §9).
+  - A failed run does not make the boot red: the verdict is taken before the unit runs,
+    and the unit is not one of the boot assessment's required units
+    (`crates/apex-boot/src/checks/units.rs`). `systemctl --failed` shows it (INSTALL.md
+    §9).
 - **Secure Boot** stays off and remains an owner choice (W3, ADR 0015 §7). Windows no
   longer blocks it. It still waits for the pair lane to sign `vmlinuz`, and goes on only
   when the booted and the rollback deployments both carry a signed kernel.
@@ -773,8 +791,10 @@ and mirrored unmodified into `[apex]` (§3).
   `APEX_SHELL_TEST=1` turns on the test hook G2 uses.
 - Fault injection: `APEX_SHELL_TEST_FAULT=configure`, `enable` or `abort-after-enable`
   adds the `fault` feature (`js/ui/apex/fault/feature.js`), enabled after every real
-  feature, which throws in that phase or aborts the shell 5 s after enable. It proves the
-  per-feature `try/catch` and the crash guard on the shipped build (ROADMAP S1a exit);
+  feature, which throws in that phase or aborts the shell 5 s after enable, and after it
+  the `witness` feature, which shows that a feature after a failing one still runs. They
+  prove the per-feature `try/catch` and the crash guard on the shipped build (ROADMAP S1a
+  exit);
   `tests/layer/run.sh` runs it in gjs on every push, and G1 fails an image that sets the
   variable anywhere.
 - Crash guard, shipped by `apex-desktop`: the layer creates `%t/apex-shell-starting`
@@ -970,10 +990,10 @@ docs/         ARCHITECTURE, THREAT-MODEL, ROADMAP, INSTALL, RECOVERY, adr/, hard
 | Gate | When | Checks |
 |---|---|---|
 | G1 build checks | every image build | `bootc container lint --fatal-warnings` (skips justified in a file that can only shrink; it is empty); the legacy gate; firmware files; one kernel, and an initramfs with amdgpu and its green_sardine firmware, the microcode and the LUKS2 modules, and without snd-hda-intel, nouveau or nova; no keys or secrets in any layer; rpm signature enforcement untouched; the shipped Apex RPM key is the pinned one, and every package Apex builds (`apex.txt`'s and each `.apexN` release) carries its signature, where only a stock libfprint (`degraded=fingerprint`) carries Fedora's instead; the overlay's units, udev rules and tmpfiles validate; UEFI only; `glib-compile-schemas --strict` on the override; composefs on. Desktop (S1a, `image/checks/desktop.sh`): every RPM of the lane's lock (`/usr/share/apex/rpms.lock`) is installed at its locked NEVRA; gnome-shell, and each GNOME package rebuilt later, is an `.apexN` (or `.apexN.M`) build, signed with the Apex RPM key, or Fedora's signed build when the owner chose stock (`degraded=shell`); gnome-shell's `Requires: mutter =` matches the installed mutter, which carries Fedora's signature; the Apex marker is in the light and dark sheets and the structure marker in the high-contrast sheet (`grep -a` on `gnome-shell-theme.gresource`, which stores its CSS uncompressed), and `rpm -V gnome-shell` is clean, mtimes aside; upstream's sheets under `/org/gnome/shell/theme/stock/` sit in libshell's resource, which only `gresource` (not in the image) lists, so the lane's check and G2 prove them; no shell extension in `/usr/share/gnome-shell/extensions/`; no text file in `/usr` or `/etc`, documentation aside, names `G_RESOURCE_OVERLAYS`, `--unsafe-mode` or `APEX_SHELL_TEST_FAULT`; the Apex schema compiles with `--strict`; the crash guard is installed and verifies (`systemd-analyze --user`). From S1b, with the icon theme: every `.desktop` `Icon=` resolves. Plymouth (S1d): the default theme is `apex`, `DeviceScale=2` is set, and `apex-twostep` is installed. From S1b: no two default keybindings share a combination across `wm.keybindings`, mutter, the shell, media keys and the Apex schema. Kernel pair (S1c): the kernel is named `*-cachyos*.apex*`; config assertions (`SCHED_CLASS_EXT`, `DEBUG_INFO_BTF`, `X86_AMD_PSTATE` mode 3, `AMD_PMC`, `ASUS_WMI`, the HDA patch loader, `RECONFIG`, `HWDEP` and ALC269, `MODULE_SIG`, `IMA_ARCH_POLICY`, `EROFS`, `OVERLAY`, `DM_CRYPT`, selinux in `CONFIG_LSM`, `X86_64_VERSION` at most 3); every module signed by the one key built into this kernel, whose certificate matches `manifest.json`; NVIDIA vermagic equals the kernel; one NVIDIA version across the kmod, `nvidia-driver`, `nvidia-kmod-common` and the GSP firmware; the initramfs also holds erofs, overlay and `aesni_intel` (a module on CachyOS), and no nvidia module; no `/usr/src/kernels`, akmods, dkms, `xorg-x11-nvidia` or `nvidia-settings`; the effective modprobe options; `nvidia-persistenced` disabled; `/etc/kernel/cmdline` and `/etc/default/grub` untouched; the NVIDIA licence present. From W3: `sbverify` of `vmlinuz` against the Apex MOK. |
-| G2 headless shell (S1a) | every image build, about 3 minutes | the built image runs `gnome-shell --headless --virtual-monitor 2880x1800` at scale 2, in light and dark, with python-dbusmock fixtures and a fixed clock; the whole static import graph loads, and no `JS ERROR`. It runs twice. With the layer: a few metric assertions where a regression is likely (bar height, dock position and size, launcher columns, window radius), approved goldens with per-scene masks, and from S2b a glass pixel test (a known pattern under glass with partial damage, against a CPU reference blur, within a tolerance that its first run fixes, starting at 3/255 maximum and 1/255 mean per channel; [design/SPEC.md](../design/SPEC.md) §7.2). With `APEX_SHELL_SAFE=1`: stock values, such as thumbnail scale 0.05 and the stock sheet path. |
+| G2 headless shell (S1a) | every image build; about 10 minutes for its two runs | the built image runs `gnome-shell --headless --virtual-monitor 2880x1800` at scale 2 in light and dark, and once at 1440x900 and scale 1; the whole static import graph loads, and no `JS ERROR`. It runs twice, and the second run must report and capture what the first did. With the layer: the top bar's metrics against the token file, whose top-bar tokens must hold SPEC's literal values; the SPEC values S1a cannot draw yet are known gaps, each pinned to what S1a draws; the captures equal Fedora's own build of the same NVR outside the top bar; Quick Settings' Dark Style toggle turns the running shell light, after which no Apex user unit or D-Bus service starts. With `APEX_SHELL_SAFE=1` and the other kill switches: stock values, such as thumbnail scale 0.05 and the stock sheet path, and captures equal Fedora's outside the clock. The crash guard in the image's own `systemd --user`. Not yet: python-dbusmock fixtures and a fixed clock (until then the clock is masked), the other rows of [design/SPEC.md](../design/SPEC.md) §7.2 (dock position and size, launcher columns, window radius), three enable and disable cycles that leave no actors behind, approved goldens with per-scene masks, and from S2b a glass pixel test (a known pattern under glass with partial damage, against a CPU reference blur, within a tolerance that its first run fixes, starting at 3/255 maximum and 1/255 mean per channel). |
 | G3 contact sheet (S1b) | on demand; not a gate | mockup render, shell capture and their difference for each screen; the owner approves goldens from it |
 | Lane (S1a) | every package build | the SRPM signature verifies; patches apply with fuzz 0; the build succeeds; the Apex marker is present; the built RPMs and the Apex SRPM are signed with the Apex RPM key and verify against the committed public key alone; for the kernel pair, the gates in §4.2 |
-| G4 VM check | weekly, and before publishing a change to `crates/apex-*`, the kargs, GRUB, the gnome-shell, mutter or gdm NVR, or the kernel pair | in the builder VM (`-cpu host`): install, upgrade and counted rollback; boot to GDM, log in, lock and unlock (S1a); no failed system or user units; the runtime assertions moved out of `system.sh` and `power.sh` (journal persistence, one NTP client, the tuned profile). From S1c: `module.sig_enforce` holds, and SELinux is enforcing with no module-load denials. From S3b: the lock matrix (right and wrong password, Esc, blank and wake, suspend and resume while locked, Reduce Motion, `apex.safe=1` giving the stock two-stage lock, `loginctl unlock-session`); greeter and lock goldens once approved |
+| G4 VM check | weekly, and before publishing a change to `crates/apex-*`, the kargs, GRUB, the gnome-shell, mutter or gdm NVR, or the kernel pair; `just vm-image` runs it (`qualify.sh local`) when `qualify.sh g4-due` says it is due: the image's G4 key differs from the last pass, or that pass is 7 days old. The key holds the NEVRAs of gdm, gnome-shell, mutter, gjs, gnome-session, accountsservice, pam, systemd, the kernel, shim, GRUB and bootupd, and the digests of the files of apex and apex-desktop, of every `/usr` file of the image overlay and of the kargs | in the builder VM (`-cpu host`): install and the counted rollback (`qualify.sh local`: a newer image derived in the guest from the one under test is forced red; `qualify.sh upgrade` adds the green upgrade for published digests); boot to GDM, log in through GDM's greeter (a user made only in the guest, its password typed over QEMU's QMP) with no Apex user unit running, lock with `loginctl`, then unlock by the password typed into the unlock dialog and by `loginctl`, with no `JS ERROR` from lock to unlock; a login with `APEX_SHELL_TEST_FAULT=abort-after-enable` trips the crash guard, and the next login logs safe mode with `layer-enabled` false and no `JS ERROR` (S1a; G2's guard phase proves that such a start loads upstream's sheet); `bootloader-update.service` after the assessment of every green boot, skipped by its condition on the fallback boot, and silent in the counted boots, which reboot themselves (§5.5): these rows prove the order and the green-boot condition, not an ESP write, because the builder VM's `bootupctl` finds no update; no failed system or user units. Not yet: the runtime assertions of `system.sh` and `power.sh` (journal persistence, one NTP client, the tuned profile). From S1c: `module.sig_enforce` holds, and SELinux is enforcing with no module-load denials. From S3b: the lock matrix (right and wrong password, Esc, blank and wake, suspend and resume while locked, Reduce Motion, `apex.safe=1` giving the stock two-stage lock, `loginctl unlock-session`); greeter and lock goldens once approved |
 | Hardware | per slice, on the laptop | [hardware/ACCEPTANCE.md](hardware/ACCEPTANCE.md); each fix has a numeric pass criterion. The G4 VM exercises neither NVIDIA nor s2idle, so each new kernel line and each NVIDIA release runs ACCEPTANCE §4 and the s2idle rows. The glass rows run in S2b and S3a, and again after a blur change. |
 
 `ci.yml` checks the code on every pull request and every push to `main` (§4). The
