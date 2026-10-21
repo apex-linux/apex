@@ -148,7 +148,7 @@ Rebase cost:
 | Release | Work | Cost |
 |---|---|---|
 | Point (51.x), about monthly | `just pkg-rebase gnome-shell <nvr>` (`git am -3`), then the gates | 0.5 to 2 h when the series applies |
-| Major (52, with Fedora 46) | Rebase the series, ApexDock and the C patch onto GNOME 52 in the `next` lane after S4 (roadmap S6, May 2027); from the F46 branch point (2027-02-09) an unattended F46 compose reports what breaks; re-approve changed goldens | 4 to 8 owner-days |
+| Major (52, with Fedora 46) | Rebase the series, ApexDock and the C patch onto GNOME 52 in the `next` lane after S4 (roadmap S6, May to June 2027); from the F46 branch point (2027-02-09) an unattended F46 compose reports what breaks; re-approve changed goldens | 4 to 8 owner-days |
 
 Dev loop:
 

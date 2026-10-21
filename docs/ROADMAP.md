@@ -64,9 +64,9 @@ answers: about 11 weeks of owner time.
 | S3b | Lock screen and greeter | 25–26 | Mar 22 – Apr 2 | L |
 | S4 | Daily driver on the internal disk | 27–28, then 2 weeks of use | Apr 5 – Apr 30 | L |
 | S3c | Notifications, Quick Settings, motion, shadows | 29–30, during S4's use | Apr 19 – Apr 30 | L |
-| S6 | Fedora 46 and GNOME 52 | 31–34 | May 3 – May 28, 2027 | L |
-| S7 | The Files redesign | 35–37 | May 31 – Jun 18, 2027 | L |
-| S5 | Apex glyphs, if confirmed | 2 weeks after S7 | about July 2027 | L |
+| S7 | The Files redesign | 31–33 | May 3 – May 21, 2027 | L |
+| S6 | Fedora 46 and GNOME 52 | 34–37 | May 24 – Jun 18, 2027 | L |
+| S5 | Apex glyphs, if confirmed | 2 weeks after S6 | about July 2027 | L |
 | W | Windows removal | owner-triggered; started 2026-09-29 | W1 and W4 done 2026-09-29; W2 in S4; W5 after the owner's speaker test | S to M |
 
 S3c runs during S4's two weeks of use, so its changes reach the daily driver as
@@ -742,38 +742,11 @@ Steps:
 - **Exit:** the glyph set passes an icon-resolution check, and the owner approves the
   contact sheet.
 
-## S6: Fedora 46 and GNOME 52 (weeks 31–34, May 3 – May 28, 2027, L)
+## S7: The Files redesign (weeks 31–33, May 3 – May 21, 2027, L)
 
-The port waits for S4. Fedora 45 is supported to 2027-11-24 and stays on GNOME 51, so
-porting after 52.0 saves a second rebase against the betas. From the F46 branch point
-(about 2027-02-09), the builder VM runs an unattended `FEDORA=46` compose that publishes
-nothing and reports what breaks.
-
-- A `next` lane: `FEDORA=46`, the fedora-bootc:46 digest, images tagged `apex:46`.
-- Rebase the gnome-shell series (0001 to 0017, the dock hooks, 0003-blur), libadwaita,
-  gnome-control-center and nautilus onto GNOME 52. Fix the selector drift the goldens
-  flag. Re-approve changed goldens.
-- The kernel pair on F46: the COPR's fedora-46 chroot and negativo17's fedora-46
-  repository.
-- `apexctl major-upgrade` (polkit):
-  1. `ostree admin pin` on the current deployment;
-  2. a read-only btrfs snapshot of the `/var` subvolume;
-  3. `bootc switch --download-only` to `apex:46`;
-  4. apply at the next restart, with the boot counter armed.
-- F45 images carry a label naming `apex:46`. `Update1` exposes it. The Settings Updates
-  page shows "Apex 46 is available" once the CLI has worked once.
-- **Exit:**
-  - `apex:46` passes G1, G2, G4 and hardware acceptance;
-  - the laptop upgrades with one confirmation, and the pinned F45 entry still boots;
-  - the budgets held (ADR 0014: at most 450 hook lines in at most 33 upstream files, of
-    which the plan uses 31; at most 300 C lines), and the GNOME port took 8 owner-days
-    or less.
-
-## S7: The Files redesign (weeks 35–37, May 31 – Jun 18, 2027, L)
-
-Added 2026-10-21 with SPEC §3.15. It follows S6, so the four new nautilus patches are
-written against GNOME 52 and are not rebased right after they land. The owner can move
-it before S6; S6 then rebases 0004 to 0007 with the rest of the series.
+Added 2026-10-21 with SPEC §3.15 and moved before S6 at the owner's request. It ships
+to the daily driver as updates on GNOME 51, and S6 rebases nautilus 0004 to 0007 onto
+GNOME 52 with the rest of the series.
 
 - nautilus 0004: `ApexDetailsPane`, the end pane of an `AdwOverlaySplitView`, with its
   header button, `win.show-details` and the `files-details-pane` key.
@@ -796,6 +769,33 @@ it before S6; S6 then rebases 0004 to 0007 with the rest of the series.
   - the owner signs off 03 and the Files states (list with details, search) as
     approved goldens.
 - **Owner sees:** the Files window as redesigned, with its folders in the accent.
+
+## S6: Fedora 46 and GNOME 52 (weeks 34–37, May 24 – Jun 18, 2027, L)
+
+The port waits for S4. Fedora 45 is supported to 2027-11-24 and stays on GNOME 51, so
+porting after 52.0 saves a second rebase against the betas. From the F46 branch point
+(about 2027-02-09), the builder VM runs an unattended `FEDORA=46` compose that publishes
+nothing and reports what breaks.
+
+- A `next` lane: `FEDORA=46`, the fedora-bootc:46 digest, images tagged `apex:46`.
+- Rebase the gnome-shell series (0001 to 0017, the dock hooks, 0003-blur), libadwaita,
+  gnome-control-center and nautilus (0001 to 0007, S7's included) onto GNOME 52. Fix
+  the selector drift the goldens flag. Re-approve changed goldens.
+- The kernel pair on F46: the COPR's fedora-46 chroot and negativo17's fedora-46
+  repository.
+- `apexctl major-upgrade` (polkit):
+  1. `ostree admin pin` on the current deployment;
+  2. a read-only btrfs snapshot of the `/var` subvolume;
+  3. `bootc switch --download-only` to `apex:46`;
+  4. apply at the next restart, with the boot counter armed.
+- F45 images carry a label naming `apex:46`. `Update1` exposes it. The Settings Updates
+  page shows "Apex 46 is available" once the CLI has worked once.
+- **Exit:**
+  - `apex:46` passes G1, G2, G4 and hardware acceptance;
+  - the laptop upgrades with one confirmation, and the pinned F45 entry still boots;
+  - the budgets held (ADR 0014: at most 450 hook lines in at most 33 upstream files, of
+    which the plan uses 31; at most 300 C lines), and the GNOME port took 8 owner-days
+    or less.
 
 ## Where the SPEC §8 items land
 
