@@ -6,7 +6,8 @@ amends ADR 0002 and ADR 0007. Decision 22 (kernel and dGPU) is
 [ADR 0015](0015-cachyos-kernel-and-nvidia.md). Amended 2026-09-29: the owner deleted
 Windows before S4 (ROADMAP W1), so under "Boot handoff" only the case after Windows
 applies: bootloader updates are on, and Ubuntu, not Windows, starts from the firmware
-boot menu (ARCHITECTURE §5.5).
+boot menu (ARCHITECTURE §5.5). Amended 2026-10-21: the flat Apex Facets wallpaper
+replaces Apex Aurora, and no surface uses a gradient (SPEC §2.4).
 
 ## Context
 
@@ -83,7 +84,7 @@ under Deviations.
 | gdm | stock. Its greeter runs the rebuilt shell in the gdm mode: Apex CSS, stock JS. | Fedora | 0 |
 | Plymouth | stock, plus the `apex` script theme and the `apex-twostep` fallback theme (data files) | Fedora | 0 |
 | Ptyxis | stock, plus an Apex user palette that `apex-session-agent` writes | Fedora | 0 |
-| Icons, fonts, wallpaper, defaults | `apex-desktop` noarch RPM: the `Apex` icon theme from a pinned Colloid commit, fontconfig `ss03`, JetBrains Mono, Apex Aurora, `90_apex.gschema.override`, the Apex schema | Apex RPM key | n/a |
+| Icons, fonts, wallpaper, defaults | `apex-desktop` noarch RPM: the `Apex` icon theme from a pinned Colloid commit, fontconfig `ss03`, JetBrains Mono, Apex Facets, `90_apex.gschema.override`, the Apex schema | Apex RPM key | n/a |
 | Kernel and NVIDIA | ADR 0015 | Apex RPM key | ADR 0015 |
 
 The budgets are review rules, not build checks. A change that would exceed one amends

@@ -899,7 +899,7 @@ Updates row opens the Apex updates page. "Apex Tweaks" is a `.desktop` entry tha
 
 **apex-desktop** (noarch, built from `desktop/` except `desktop/shell/`) holds the
 `Apex` icon theme from a pinned Colloid commit (`Inherits=Adwaita,hicolor`), the Apex
-Aurora wallpapers, both Plymouth themes, fontconfig `ss03`, the terminal prompt snippet
+Facets wallpapers, both Plymouth themes, fontconfig `ss03`, the terminal prompt snippet
 and Ptyxis profile default, the gschema override, the Apex schemas, the crash guard's
 user units, `60-apex.xml`, and a tmpfiles entry that creates the system Flatpak
 override. S1a ships the schema and the crash guard; `rpms.sh build` builds it next to

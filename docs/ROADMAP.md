@@ -276,7 +276,7 @@ the safety net come before the first Apex pixel.
   - the icon theme from a pinned Colloid commit;
   - fontconfig `ss03`, JetBrains Mono, `Adwaita Sans 10.125` and `JetBrains Mono 9.75`
     (answer 12), no hinting;
-  - the Apex Aurora wallpapers, rendered with dithering at 2880×1800;
+  - the Apex Facets wallpapers, rendered from their SVG sources at 2880×1800;
   - the terminal prompt colours and line spacing (screen 09);
   - the rewritten override, the rest of the Apex schema and its keybindings child
     schema.
