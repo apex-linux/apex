@@ -65,7 +65,8 @@ answers: about 11 weeks of owner time.
 | S4 | Daily driver on the internal disk | 27–28, then 2 weeks of use | Apr 5 – Apr 30 | L |
 | S3c | Notifications, Quick Settings, motion, shadows | 29–30, during S4's use | Apr 19 – Apr 30 | L |
 | S6 | Fedora 46 and GNOME 52 | 31–34 | May 3 – May 28, 2027 | L |
-| S5 | Apex glyphs, if confirmed | 2 weeks after S6 | about June 2027 | L |
+| S7 | The Files redesign | 35–37 | May 31 – Jun 18, 2027 | L |
+| S5 | Apex glyphs, if confirmed | 2 weeks after S7 | about July 2027 | L |
 | W | Windows removal | owner-triggered; started 2026-09-29 | W1 and W4 done 2026-09-29; W2 in S4; W5 after the owner's speaker test | S to M |
 
 S3c runs during S4's two weeks of use, so its changes reach the daily driver as
@@ -565,7 +566,8 @@ Glass protocol, on the laptop on battery, balanced profile, 90 Hz, 2880×1800:
   - the hold drill passes: the image builds with the last good package, the label lists
     it, and `apexctl status` and the Settings Updates page show it;
   - the owner signs off the other 10-* Settings screens and the Files window at the
-    default zoom with 72 px icons. They become approved goldens.
+    default zoom with 72 px icons (the footer, the item count and the zoom; the rest of
+    the Files redesign is S7). They become approved goldens.
 - **Owner sees:** coloured Settings tiles, updates announced and applied from Settings,
   and the Files window as drawn.
 
@@ -729,7 +731,7 @@ Steps:
     both boot, NVIDIA loads, `amd-s2idle test` runs under lockdown, and
     `docs/RECOVERY.md` has the `mokutil --mokx` runbook.
 
-## S5: Apex Symbolic glyphs (optional, two weeks, about June 2027, L)
+## S5: Apex Symbolic glyphs (optional, two weeks, about July 2027, L)
 
 - Only if the owner confirms it (answer 11, default: Colloid now, S5 optional).
 - About 40 symbolic icons visible on mockup surfaces: the top bar, Quick Settings, the
@@ -767,6 +769,34 @@ nothing and reports what breaks.
     which the plan uses 31; at most 300 C lines), and the GNOME port took 8 owner-days
     or less.
 
+## S7: The Files redesign (weeks 35–37, May 31 – Jun 18, 2027, L)
+
+Added 2026-10-21 with SPEC §3.15. It follows S6, so the four new nautilus patches are
+written against GNOME 52 and are not rebased right after they land. The owner can move
+it before S6; S6 then rebases 0004 to 0007 with the rest of the series.
+
+- nautilus 0004: `ApexDetailsPane`, the end pane of an `AdwOverlaySplitView`, with its
+  header button, `win.show-details` and the `files-details-pane` key.
+- nautilus 0005: `ApexRecentStrip` on Home in grid view, fed by `GtkRecentManager`, and
+  the `files-recent-strip` key with its main-menu item.
+- nautilus 0006: `ApexSearchChips`, a `GtkCustomFilter` on the view's model, with
+  per-group counts from the unfiltered results.
+- nautilus 0007: the two-option `AdwToggleGroup` for grid and list.
+- The `Apex` icon theme: flat `places/` and `mimetypes/` rendered from two SVG
+  templates, the nine `Apex-<accent>` folder themes, and a check that every folder and
+  content type the templates cover resolves to an Apex icon.
+- apex-session-agent points `icon-theme` at the folder theme for the current
+  `accent-color`.
+- **Exit:**
+  - the nautilus budget held: at most 400 changed lines in upstream files (ADR 0014);
+  - an accent change recolours the folders in Files, the file chooser and Spotlight
+    within 1 s;
+  - with the Apex schema missing, Files starts with the details pane closed and the
+    recent strip shown;
+  - the owner signs off 03 and the Files states (list with details, search) as
+    approved goldens.
+- **Owner sees:** the Files window as redesigned, with its folders in the accent.
+
 ## Where the SPEC §8 items land
 
 Answer 26 builds these now. Items that another decision settles keep that decision's
@@ -786,6 +816,11 @@ rows in stock panels (27). The privacy indicators in the status pill stay.
 | Radius changes in open windows (libadwaita) | S2c | M |
 | Files item-count bar (nautilus 0002) | S2d | M |
 | Files 72 px zoom (nautilus 0003) | S2d | S |
+| Files details pane (nautilus 0004) | S7 | M |
+| Files recent strip (nautilus 0005) | S7 | M |
+| Files search chips with counts (nautilus 0006) | S7 | M |
+| Files grid/list toggle group (nautilus 0007) | S7 | S |
+| Flat Files icons, folders in the accent | S7 | M |
 | Spotlight sections and caps | S3a | L |
 | Thumbnails 150×94 from two workspaces | S3a | S |
 | Overview: always-visible titles, no workspace background cards | S3a | S |
