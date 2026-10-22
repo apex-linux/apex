@@ -6,7 +6,11 @@ amends ADR 0002 and ADR 0007. Decision 22 (kernel and dGPU) is
 [ADR 0015](0015-cachyos-kernel-and-nvidia.md). Amended 2026-09-29: the owner deleted
 Windows before S4 (ROADMAP W1), so under "Boot handoff" only the case after Windows
 applies: bootloader updates are on, and Ubuntu, not Windows, starts from the firmware
-boot menu (ARCHITECTURE §5.5).
+boot menu (ARCHITECTURE §5.5). Amended 2026-10-21: the flat Apex Facets wallpaper
+replaces Apex Aurora, and no surface uses a gradient (SPEC §2.4). Amended 2026-10-21
+again: the Files redesign (SPEC §3.15) adds nautilus patches 0004 to 0007, which raise
+the nautilus budget from 160 to 400 changed lines in upstream files, and flat icons in
+the `Apex` theme with nine accent-variant themes.
 
 ## Context
 
@@ -79,11 +83,11 @@ under Deviations.
 | libadwaita | Fedora SRPM plus one patch: the window radius follows `apex.css` live | Apex RPM key | 1 patch, at most 80 changed lines |
 | GTK 4 | stock | Fedora | 0 |
 | gnome-control-center | Fedora SRPM plus 3 patches: the Apex Desktop panel; coloured sidebar tiles in the mockup's order; the Software Updates row and page | Apex RPM key | At most 150 changed lines in upstream files |
-| nautilus | Fedora SRPM plus 3 patches: the disk-usage footer; the item-count bar; a 72 px grid zoom level | Apex RPM key | At most 160 changed lines in upstream files |
+| nautilus | Fedora SRPM plus 7 patches: the disk-usage footer; the item-count bar; a 72 px grid zoom level; the details pane; the recent strip; the search chips; the view toggle group (SPEC §3.15) | Apex RPM key | At most 400 changed lines in upstream files. The Apex widgets are added files under `src/apex/` and do not count. |
 | gdm | stock. Its greeter runs the rebuilt shell in the gdm mode: Apex CSS, stock JS. | Fedora | 0 |
 | Plymouth | stock, plus the `apex` script theme and the `apex-twostep` fallback theme (data files) | Fedora | 0 |
 | Ptyxis | stock, plus an Apex user palette that `apex-session-agent` writes | Fedora | 0 |
-| Icons, fonts, wallpaper, defaults | `apex-desktop` noarch RPM: the `Apex` icon theme from a pinned Colloid commit, fontconfig `ss03`, JetBrains Mono, Apex Aurora, `90_apex.gschema.override`, the Apex schema | Apex RPM key | n/a |
+| Icons, fonts, wallpaper, defaults | `apex-desktop` noarch RPM: the `Apex` icon theme (app icons from a pinned Colloid commit; flat folder and file icons from Apex templates, with nine `Apex-<accent>` folder themes), fontconfig `ss03`, JetBrains Mono, Apex Facets, `90_apex.gschema.override`, the Apex schema | Apex RPM key | n/a |
 | Kernel and NVIDIA | ADR 0015 | Apex RPM key | ADR 0015 |
 
 The budgets are review rules, not build checks. A change that would exceed one amends
@@ -144,7 +148,7 @@ Rebase cost:
 | Release | Work | Cost |
 |---|---|---|
 | Point (51.x), about monthly | `just pkg-rebase gnome-shell <nvr>` (`git am -3`), then the gates | 0.5 to 2 h when the series applies |
-| Major (52, with Fedora 46) | Rebase the series, ApexDock and the C patch onto GNOME 52 in the `next` lane after S4 (roadmap S6, May 2027); from the F46 branch point (2027-02-09) an unattended F46 compose reports what breaks; re-approve changed goldens | 4 to 8 owner-days |
+| Major (52, with Fedora 46) | Rebase the series, ApexDock and the C patch onto GNOME 52 in the `next` lane after S4 (roadmap S6, May to June 2027); from the F46 branch point (2027-02-09) an unattended F46 compose reports what breaks; re-approve changed goldens | 4 to 8 owner-days |
 
 Dev loop:
 

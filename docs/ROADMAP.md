@@ -64,8 +64,9 @@ answers: about 11 weeks of owner time.
 | S3b | Lock screen and greeter | 25–26 | Mar 22 – Apr 2 | L |
 | S4 | Daily driver on the internal disk | 27–28, then 2 weeks of use | Apr 5 – Apr 30 | L |
 | S3c | Notifications, Quick Settings, motion, shadows | 29–30, during S4's use | Apr 19 – Apr 30 | L |
-| S6 | Fedora 46 and GNOME 52 | 31–34 | May 3 – May 28, 2027 | L |
-| S5 | Apex glyphs, if confirmed | 2 weeks after S6 | about June 2027 | L |
+| S7 | The Files redesign | 31–33 | May 3 – May 21, 2027 | L |
+| S6 | Fedora 46 and GNOME 52 | 34–37 | May 24 – Jun 18, 2027 | L |
+| S5 | Apex glyphs, if confirmed | 2 weeks after S6 | about July 2027 | L |
 | W | Windows removal | owner-triggered; started 2026-09-29 | W1 and W4 done 2026-09-29; W2 in S4; W5 after the owner's speaker test | S to M |
 
 S3c runs during S4's two weeks of use, so its changes reach the daily driver as
@@ -276,7 +277,7 @@ the safety net come before the first Apex pixel.
   - the icon theme from a pinned Colloid commit;
   - fontconfig `ss03`, JetBrains Mono, `Adwaita Sans 10.125` and `JetBrains Mono 9.75`
     (answer 12), no hinting;
-  - the Apex Aurora wallpapers, rendered with dithering at 2880×1800;
+  - the Apex Facets wallpapers, rendered from their SVG sources at 2880×1800;
   - the terminal prompt colours and line spacing (screen 09);
   - the rewritten override, the rest of the Apex schema and its keybindings child
     schema.
@@ -565,7 +566,8 @@ Glass protocol, on the laptop on battery, balanced profile, 90 Hz, 2880×1800:
   - the hold drill passes: the image builds with the last good package, the label lists
     it, and `apexctl status` and the Settings Updates page show it;
   - the owner signs off the other 10-* Settings screens and the Files window at the
-    default zoom with 72 px icons. They become approved goldens.
+    default zoom with 72 px icons (the footer, the item count and the zoom; the rest of
+    the Files redesign is S7). They become approved goldens.
 - **Owner sees:** coloured Settings tiles, updates announced and applied from Settings,
   and the Files window as drawn.
 
@@ -729,7 +731,7 @@ Steps:
     both boot, NVIDIA loads, `amd-s2idle test` runs under lockdown, and
     `docs/RECOVERY.md` has the `mokutil --mokx` runbook.
 
-## S5: Apex Symbolic glyphs (optional, two weeks, about June 2027, L)
+## S5: Apex Symbolic glyphs (optional, two weeks, about July 2027, L)
 
 - Only if the owner confirms it (answer 11, default: Colloid now, S5 optional).
 - About 40 symbolic icons visible on mockup surfaces: the top bar, Quick Settings, the
@@ -740,7 +742,35 @@ Steps:
 - **Exit:** the glyph set passes an icon-resolution check, and the owner approves the
   contact sheet.
 
-## S6: Fedora 46 and GNOME 52 (weeks 31–34, May 3 – May 28, 2027, L)
+## S7: The Files redesign (weeks 31–33, May 3 – May 21, 2027, L)
+
+Added 2026-10-21 with SPEC §3.15 and moved before S6 at the owner's request. It ships
+to the daily driver as updates on GNOME 51, and S6 rebases nautilus 0004 to 0007 onto
+GNOME 52 with the rest of the series.
+
+- nautilus 0004: `ApexDetailsPane`, the end pane of an `AdwOverlaySplitView`, with its
+  header button, `win.show-details` and the `files-details-pane` key.
+- nautilus 0005: `ApexRecentStrip` on Home in grid view, fed by `GtkRecentManager`, and
+  the `files-recent-strip` key with its main-menu item.
+- nautilus 0006: `ApexSearchChips`, a `GtkCustomFilter` on the view's model, with
+  per-group counts from the unfiltered results.
+- nautilus 0007: the two-option `AdwToggleGroup` for grid and list.
+- The `Apex` icon theme: flat `places/` and `mimetypes/` rendered from two SVG
+  templates, the nine `Apex-<accent>` folder themes, and a check that every folder and
+  content type the templates cover resolves to an Apex icon.
+- apex-session-agent points `icon-theme` at the folder theme for the current
+  `accent-color`.
+- **Exit:**
+  - the nautilus budget held: at most 400 changed lines in upstream files (ADR 0014);
+  - an accent change recolours the folders in Files, the file chooser and Spotlight
+    within 1 s;
+  - with the Apex schema missing, Files starts with the details pane closed and the
+    recent strip shown;
+  - the owner signs off 03 and the Files states (list with details, search) as
+    approved goldens.
+- **Owner sees:** the Files window as redesigned, with its folders in the accent.
+
+## S6: Fedora 46 and GNOME 52 (weeks 34–37, May 24 – Jun 18, 2027, L)
 
 The port waits for S4. Fedora 45 is supported to 2027-11-24 and stays on GNOME 51, so
 porting after 52.0 saves a second rebase against the betas. From the F46 branch point
@@ -749,8 +779,8 @@ nothing and reports what breaks.
 
 - A `next` lane: `FEDORA=46`, the fedora-bootc:46 digest, images tagged `apex:46`.
 - Rebase the gnome-shell series (0001 to 0017, the dock hooks, 0003-blur), libadwaita,
-  gnome-control-center and nautilus onto GNOME 52. Fix the selector drift the goldens
-  flag. Re-approve changed goldens.
+  gnome-control-center and nautilus (0001 to 0007, S7's included) onto GNOME 52. Fix
+  the selector drift the goldens flag. Re-approve changed goldens.
 - The kernel pair on F46: the COPR's fedora-46 chroot and negativo17's fedora-46
   repository.
 - `apexctl major-upgrade` (polkit):
@@ -786,6 +816,11 @@ rows in stock panels (27). The privacy indicators in the status pill stay.
 | Radius changes in open windows (libadwaita) | S2c | M |
 | Files item-count bar (nautilus 0002) | S2d | M |
 | Files 72 px zoom (nautilus 0003) | S2d | S |
+| Files details pane (nautilus 0004) | S7 | M |
+| Files recent strip (nautilus 0005) | S7 | M |
+| Files search chips with counts (nautilus 0006) | S7 | M |
+| Files grid/list toggle group (nautilus 0007) | S7 | S |
+| Flat Files icons, folders in the accent | S7 | M |
 | Spotlight sections and caps | S3a | L |
 | Thumbnails 150×94 from two workspaces | S3a | S |
 | Overview: always-visible titles, no workspace background cards | S3a | S |

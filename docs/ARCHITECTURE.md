@@ -205,7 +205,7 @@ Rules:
 | gnome-shell | Fedora SRPM, plus `desktop/shell/` as Source1 | hook hunks and the `ShellBlurEffect` patch (§7.4) | hold, as one family with mutter |
 | libadwaita (S2c) | Fedora SRPM | 1: the live window radius | hold |
 | gnome-control-center (S2c–S2d) | Fedora SRPM | 3: the Apex Desktop panel, the sidebar tiles, Software Updates | hold |
-| nautilus (S2d) | Fedora SRPM | 3: the disk footer, the item count, a 72 px zoom level | hold |
+| nautilus (S2d; S7) | Fedora SRPM | 7: the disk footer, the item count, a 72 px zoom level (S2d); the details pane, the recent strip, the search chips, the view toggle (S7) | hold |
 | libfprint, if the score test passes (S2c) | `git`: filip-rs/libfprint `elanpress` at a pinned commit | its series | degrade |
 | kernel-cachyos and kmod-nvidia (S1c) | the COPR and negativo17 SRPMs | §4.2 | hold (§4.3) |
 
@@ -771,7 +771,7 @@ and mirrored unmodified into `[apex]` (§3).
 | Greeter | The rebuilt shell with the Apex CSS and stock JS | S3b |
 | Window radius | `apex.css` from `apex-session-agent`, read at app start; a libadwaita patch that makes host apps follow it live | S1b; live S2c |
 | Settings | gnome-control-center, 3 patches: the Apex Desktop panel; coloured sidebar tiles in the mockup's order; the Software Updates row and page on `Update1` | S2c–S2d |
-| Files | nautilus, 3 patches: the disk-usage footer, the item-count bar, a 72 px grid zoom level | S2d |
+| Files | nautilus, 7 patches: the disk-usage footer, the item-count bar, a 72 px grid zoom level (S2d); the details pane, the recent strip, the search chips, the view toggle (S7). Flat folder and file icons, with folders in the accent (SPEC §3.15) | S2d; S7 |
 | Terminal | Ptyxis; `apex-session-agent` writes a user palette whose cursor is the accent | S1b |
 | Boot splash | Plymouth script theme `apex`: rounded bar, @2x assets, its own LUKS prompt. The two-step `apex-twostep` theme stays installed as the fallback. | S1d |
 | GRUB | Menu hidden unless the last boot failed (§5.5) | S4 |
@@ -898,8 +898,9 @@ Updates row opens the Apex updates page. "Apex Tweaks" is a `.desktop` entry tha
 `gnome-control-center apex`. There is no separate Updates app.
 
 **apex-desktop** (noarch, built from `desktop/` except `desktop/shell/`) holds the
-`Apex` icon theme from a pinned Colloid commit (`Inherits=Adwaita,hicolor`), the Apex
-Aurora wallpapers, both Plymouth themes, fontconfig `ss03`, the terminal prompt snippet
+`Apex` icon theme from a pinned Colloid commit (`Inherits=Adwaita,hicolor`) with flat
+folder and file icons from Apex's own templates and nine `Apex-<accent>` folder themes
+(S7, SPEC §3.15), the Apex Facets wallpapers, both Plymouth themes, fontconfig `ss03`, the terminal prompt snippet
 and Ptyxis profile default, the gschema override, the Apex schemas, the crash guard's
 user units, `60-apex.xml`, and a tmpfiles entry that creates the system Flatpak
 override. S1a ships the schema and the crash guard; `rpms.sh build` builds it next to
@@ -950,7 +951,7 @@ glyphs (MIT).
 | `apex-boot` | Rust | Boot assessment: grubenv codec, decision table, checks with timeouts; binary `apex-boot-assess` |
 | `apex-dbus` | Rust, XML | The `io.github.sekirokenjii.Apex.Update1` contract. The XML also feeds gdbus-codegen in gnome-control-center (S2d). |
 | `apex-updated` | Rust | System bus service: one operation queue, polkit (system-bus-name subject), hardened unit |
-| `apex-session-agent` (S1b) | Rust | User unit: writes `apex.css` for the window radius and the Ptyxis accent palette, offers to turn the Apex desktop back on after the crash guard trips, posts update notifications (S2d) |
+| `apex-session-agent` (S1b) | Rust | User unit: writes `apex.css` for the window radius and the Ptyxis accent palette, offers to turn the Apex desktop back on after the crash guard trips, posts update notifications (S2d), points `icon-theme` at the `Apex-<accent>` folder theme for the current accent (S7) |
 | `apexctl` | Rust | CLI: `status` (degraded and held packages, the kernel pair and its hold clock, S2d), `update …`, `hw report`, `major-upgrade` (S6) |
 | `apex-lane` | Rust | The rebuild lane (§4.1): the `pkg.env`, `series` and `spec-edit` parsers, the content key, the `.apexN.M` release rule, the store and the locks, the hold policy; a dev tool built and run in the builder VM, never shipped |
 | Apex layer (S1a–S3c) | GJS, C | `desktop/shell/`: shell behaviour, ApexDock, the glass manager; the `ShellBlurEffect` patch |
