@@ -1,7 +1,10 @@
 # Roadmap
 
 Status: accepted (2026-09-28), with ADR 0014 and ADR 0015. The proposal it grew from is
-kept as `docs/reviews/2026-09-28-roadmap.md`.
+kept as `docs/reviews/2026-09-28-roadmap.md`. Re-baselined 2026-10-23, when the owner
+handed implementation to Claude: the owner's design canvas replaces `design/SPEC.md`
+([DESIGN.md](DESIGN.md)), the repository moves to the `apex-linux` GitHub organisation
+(step M), and the Apex Symbolic glyphs of S5 move into S1b.
 
 Slices are ordered by what the owner sees. Each slice from S1a on ends with an image
 the owner can boot: in the desktop VM for S1a to S1c, on the laptop from S1d. Every
@@ -14,7 +17,8 @@ Related documents:
   desktop: rebuilt gnome-shell first": mechanisms, patch budgets, kill switches.
 - ADR 0015 (`docs/adr/0015-cachyos-kernel-and-nvidia.md`): the CachyOS GCC kernel and
   the NVIDIA open modules, built as one pair.
-- `design/SPEC.md`: geometry, settings, and the §8 items this roadmap schedules.
+- [DESIGN.md](DESIGN.md): the design direction, the canvas boards each slice
+  implements, the product rules and the settings contract.
 - The 2026-09-28 review (`docs/reviews/2026-09-28-review.md`): findings, cuts (§4), the
   decision sheet (§5) and the owner's answers (§5.3).
 - The architecture delta (`docs/reviews/2026-09-28-architecture-delta.md`): the target
@@ -29,49 +33,48 @@ Related documents:
 | 14: dynamic glass everywhere | A patched `ShellBlurEffect` and a glass manager (S2b). A first performance run on the laptop in S2b; the full exit in S3a. Reduce Transparency stays the off switch. |
 | 17: recommended boot handoff; Windows deleted later | The owner deleted Windows on 2026-09-29, before S4 (step W). S4 installs next to Ubuntu, with none of the Windows parts. |
 | 22: CachyOS GCC kernel; NVIDIA modules built for exactly that kernel | A new slice, S1c, before the first laptop boot. The dGPU is used. |
-| 26: build the §8 items now | Each item has a slice and a size ("Where the SPEC §8 items land"). |
+| 26: build the design's engine-level details now | Each item has a slice and a size ("Where the engine-level details land"). |
 
 The daily-driver date moves from 2027-02-12 to 2027-04-30. That is the cost of the
-answers: about 11 weeks of owner time.
+answers: about 11 weeks of owner time. The re-baseline of 2026-10-23 moves it to
+2027-06-04: two weeks for step M, a year-end break and Tết.
 
 ## Sizes and timing
 
 - S is at most 1 day, M is 2 to 5 days, L is 1 to 3 weeks.
 - Work that does not fit in 3 weeks is split into parts (S1a to S1d, S2a to S2d, S3a to
   S3c). A part keeps its slice number, so "S1" in other documents means all of S1.
-- Weeks count from the day the owner accepts ADR 0014 and ADR 0015. Week 1 is the first
-  full week after it.
-- Target dates assume acceptance on Wednesday 2026-09-30, and one owner working with AI
-  help about five days a week.
+- Target dates were re-baselined on 2026-10-23. They assume Claude implementing about
+  five days a week, with the owner for decisions, sign-offs and laptop steps.
 - From S1d on, standing work (kernel, NVIDIA and GNOME updates) takes about 1.5 to 2
   owner-days a month ("Standing work", below). Slice lengths include it.
-- The dates include no holidays or breaks. A break moves every later date by its length.
-  Tết falls on 2027-02-06, between S2c and S2d.
+- The dates include a year-end break in S1d and the Tết week (2027-02-06) in S2b. Any
+  other break moves every later date by its length.
 - Estimates carry about ±20 %. The first slices re-estimate the rest.
 
-| Slice | The owner gets | Weeks after acceptance | Target dates | Size |
-|---|---|---|---|---|
-| S0 | The decisions applied, the hardware answers | until 2 days after | Sep 28 – Oct 2 | M |
-| S1a | A rebuilt gnome-shell with its safety net and dev loop, in the desktop VM | 1–3 | Oct 5 – Oct 23 | L |
-| S1b | The Apex theme, assets and Super+Space, in the desktop VM | 4–6 | Oct 26 – Nov 13 | L |
-| S1c | The CachyOS kernel and NVIDIA pair in every image | 7–8 | Nov 16 – Nov 27 | L |
-| S1d | Apex on the laptop from the USB SSD | 9–10 | Nov 30 – Dec 11 | L |
-| S2a | The Apex dock and top bar | 11–13 | Dec 14 – Jan 1 | L |
-| S2b | Dynamic glass, with a first laptop measurement | 14–15 | Jan 4 – Jan 15 | L |
-| S2c | The Apex Desktop panel and live window radius | 16–18 | Jan 18 – Feb 5 | L |
-| S2d | Updates in Settings and the Files window | 19–21 | Feb 8 – Feb 26 | L |
-| S3a | Spotlight, overview, launcher; the glass exit | 22–24 | Mar 1 – Mar 19 | L |
-| S3b | Lock screen and greeter | 25–26 | Mar 22 – Apr 2 | L |
-| S4 | Daily driver on the internal disk | 27–28, then 2 weeks of use | Apr 5 – Apr 30 | L |
-| S3c | Notifications, Quick Settings, motion, shadows | 29–30, during S4's use | Apr 19 – Apr 30 | L |
-| S7 | The Files redesign | 31–33 | May 3 – May 21, 2027 | L |
-| S6 | Fedora 46 and GNOME 52 | 34–37 | May 24 – Jun 18, 2027 | L |
-| S5 | Apex glyphs, if confirmed | 2 weeks after S6 | about July 2027 | L |
-| W | Windows removal | owner-triggered; started 2026-09-29 | W1 and W4 done 2026-09-29; W2 in S4; W5 after the owner's speaker test | S to M |
+| Slice | The owner gets | Target dates | Size |
+|---|---|---|---|
+| S0 | The decisions applied, the hardware answers | Sep 28 – Oct 2 | M |
+| S1a | A rebuilt gnome-shell with its safety net and dev loop, in the desktop VM | Oct 5 – Oct 23 | L |
+| M | The design reset and the move to the `apex-linux` organisation | Oct 26 – Nov 6 | M |
+| S1b | The Apex theme, assets, Apex Symbolic and Super+Space, in the desktop VM | Nov 9 – Nov 27 | L |
+| S1c | The CachyOS kernel and NVIDIA pair in every image | Nov 30 – Dec 11 | L |
+| S1d | Apex on the laptop from the USB SSD | Dec 14 – Jan 8 | L |
+| S2a | The Apex dock and top bar | Jan 11 – Jan 29 | L |
+| S2b | Dynamic glass, with a first laptop measurement | Feb 1 – Feb 19 | L |
+| S2c | The Apex Desktop panel and live window radius | Feb 22 – Mar 12 | L |
+| S2d | Updates in Settings and the Files window | Mar 15 – Apr 2 | L |
+| S3a | Spotlight, overview, launcher; the glass exit | Apr 5 – Apr 23 | L |
+| S3b | Lock screen and greeter | Apr 26 – May 7 | L |
+| S4 | Daily driver on the internal disk | May 10 – May 21, then 2 weeks of use to Jun 4 | L |
+| S3c | Notifications, Quick Settings, motion, shadows | May 24 – Jun 4, during S4's use | L |
+| S7 | The Files redesign | Jun 7 – Jun 25, 2027 | L |
+| S6 | Fedora 46 and GNOME 52 | Jun 28 – Jul 23, 2027 | L |
+| W | Windows removal | owner-triggered; W1 and W4 done 2026-09-29; W2 in S4; W5 after the owner's speaker test | S to M |
 
 S3c runs during S4's two weeks of use, so its changes reach the daily driver as
 ordinary updates. The owner can move S4 earlier, to right after S2d (target
-2027-03-01). Then S3a to S3c ship as updates to the daily driver, and the unlock-path
+2027-04-05). Then S3a to S3c ship as updates to the daily driver, and the unlock-path
 changes of S3b land on the only machine.
 
 ## Gates
@@ -105,7 +108,7 @@ Gates stay proportionate for one owner. ARCHITECTURE §11 has the details.
   gnome-shell at scale 2 with fixtures and a fixed clock, twice: with the Apex layer,
   and with `APEX_SHELL_SAFE=1`. It fails on a `JS ERROR`. The safe run asserts stock
   values (for example thumbnail scale 0.05 and the stock stylesheet path). Metric
-  assertions sit where a regression is likely (`design/SPEC.md` §7). A glass pixel test
+  assertions sit where a regression is likely. A glass pixel test
   joins in S2b.
 - **Goldens.** Captures of the real shell, approved by the owner screen by screen. An
   approved golden gates every `just publish` from then on.
@@ -213,7 +216,7 @@ In parallel, about 4 owner-hours on the current Ubuntu install (hardware track):
 - **Owner sees:** the decisions in the repository, a green check, and possibly working
   speakers on Ubuntu the same day.
 
-## S1a: The rebuilt shell and the dev loop (weeks 1–3, Oct 5 – Oct 23, L)
+## S1a: The rebuilt shell and the dev loop (Oct 5 – Oct 23, L)
 
 There is little to see in S1a. The price of answer 1 is that the lane, the loader and
 the safety net come before the first Apex pixel.
@@ -267,24 +270,61 @@ the safety net come before the first Apex pixel.
 - **Owner sees:** in the desktop VM, a shell from Apex's own package that looks like
   stock GNOME with the Apex top bar, light by default, and a 15-second edit loop.
 
-## S1b: The Apex theme, assets and Super+Space (weeks 4–6, Oct 26 – Nov 13, L)
+## M: The design reset and the move to apex-linux (Oct 26 – Nov 6, M)
+
+- In this repository first:
+  - the old design removed, with [DESIGN.md](DESIGN.md) in its place;
+  - every name moved under `apex-linux`: `ghcr.io/apex-linux`, `github.com/apex-linux`
+    and the `io.github.apex_linux.*` D-Bus, GSettings and polkit ids. Nothing is
+    published yet, so nothing installed needs a migration;
+  - the seams the split needs: the lane takes its recipes from a second root and
+    counts releases across both; the image tests and G2 take their inputs from
+    variables; the lane tests use frozen recipe fixtures.
+- The S1a exit items still open: python-dbusmock fixtures and a fixed clock for G2, and
+  the enable and disable cycles.
+- The split, with history, into seven public repositories under
+  `github.com/apex-linux`:
+  - `.github`: shared CI;
+  - `apex`: the documents;
+  - `apex-system`: the Rust crates and the `apex` RPM;
+  - `apex-gnome`: the Apex layer and the GNOME series;
+  - `apex-desktop`: the `apex-desktop` RPM;
+  - `apex-kernel`: the kernel pair and libfprint;
+  - `apex-image`: the image, the lane and the builder VMs.
+
+  `apex-image/components.lock` pins the others by commit. Every check that spans
+  repositories runs there.
+- A self-hosted runner on the owner's KVM host runs the VM build, G2 and G4, for
+  `apex-image`'s main branch only.
+- **Exit:**
+  - every repository's CI is green on `main`, and `apex-image`'s contracts check passes
+    against the pinned commits;
+  - two VM runs from `apex-image` pass G2 and G4 and promote the lock;
+  - `SekiroKenjii/apex-fedora` is archived with a pointer to the organisation.
+- **Owner sees:** the project at `github.com/apex-linux`, public, building on the owner's
+  machine.
+
+## S1b: The Apex theme, assets, Apex Symbolic and Super+Space (Nov 9 – Nov 27, L)
 
 - Apex SCSS, light and dark, through the hook:
   - Quick Settings (stock submenus styled to match), the calendar and notifications on
     stock structure, the overview, the app grid;
-  - the derived surfaces in `design/SPEC.md` §3.17.
+  - the derived surfaces ([DESIGN.md](DESIGN.md)).
 - The `apex-desktop` noarch RPM:
-  - the icon theme from a pinned Colloid commit;
+  - the `Apex` icon theme: app icons from a pinned Colloid commit, and the Apex
+    Symbolic glyphs (canvas board 31), with their strokes turned into fills at build so
+    GTK and St recolour them;
   - fontconfig `ss03`, JetBrains Mono, `Adwaita Sans 10.125` and `JetBrains Mono 9.75`
     (answer 12), no hinting;
-  - the Apex Facets wallpapers, rendered from their SVG sources at 2880×1800;
-  - the terminal prompt colours and line spacing (screen 09);
+  - the Apex Facets wallpapers (`desktop/wallpapers/`, installed since step M) as the
+    default background, with a `gnome-background-properties` entry;
+  - the terminal prompt colours and line spacing;
   - the rewritten override, the rest of the Apex schema and its keybindings child
     schema.
 - The app set from answer 10, in `image/packages/`.
 - Super+Space (answer 6):
   - `toggle-spotlight=['<Super>space']` in
-    `io.github.sekirokenjii.Apex.Desktop.Keybindings`, registered with
+    `io.github.apex_linux.Apex.Desktop.Keybindings`, registered with
     `Main.wm.addKeybinding` in the normal and overview modes. It opens the stock
     overview search until S3a;
   - `switch-input-source=['<Super><Alt>space','XF86Keyboard']` and
@@ -297,11 +337,13 @@ the safety net come before the first Apex pixel.
 - `apex-session-agent` v0 (Rust, user unit):
   - offers "Turn the Apex desktop back on" after the crash guard fires;
   - writes `~/.config/gtk-4.0/apex.css` for the window radius (14, answer 5);
-  - writes the Ptyxis `apex.palette` with the accent caret (SPEC §8), after a spike
+  - writes the Ptyxis `apex.palette` with the accent caret, after a spike
     checks that an open terminal reloads it.
 - A Bazaar spike checks that the Flatpak override exposes `apex.css`.
 - In the week after Fedora 45 GA: delete the updates-testing admission (review §4).
-- A contact sheet per screen (G3, not a gate).
+- Shell captures beside the canvas boards, for sign-off (not a gate). Boards for Quick
+  Settings, notifications, the overview, the launcher and the terminal are drawn on the
+  canvas first.
 - **Exit:**
   - a new session in the VM starts light with the Apex theme, Colloid icons, JetBrains
     Mono and the wallpaper, and no `JS ERROR`;
@@ -313,12 +355,16 @@ the safety net come before the first Apex pixel.
     owner decides on a small Ptyxis patch;
   - GNOME 51.1 (or the first shell and mutter update after S1a) was absorbed through
     the lane with fuzz 0, or rebased within its hold limit;
-  - the owner signs off the contact sheets for 04 and 05 (styling), 07, 08 (styling)
-    and 09, light and dark. They become the first approved goldens.
-- **Owner sees:** the Apex skin on every stock surface, Colloid icons, JetBrains Mono,
+  - every symbolic icon the shell and the default apps show resolves to an Apex
+    Symbolic glyph or a stock one, with no missing-icon glyph;
+  - the owner signs off Quick Settings and notifications (styling), the overview, the
+    launcher (styling), the terminal and the Apex Symbolic set, light and dark. They
+    become the first approved goldens.
+- **Owner sees:** the Apex skin on every stock surface, Colloid and Apex Symbolic icons,
+  JetBrains Mono,
   the wallpaper, Super+Space for search, and the accent caret in the terminal.
 
-## S1c: The kernel and dGPU pair (weeks 7–8, Nov 16 – Nov 27, L)
+## S1c: The kernel and dGPU pair (Nov 30 – Dec 11, L)
 
 It lands before the first laptop boot, for four reasons:
 
@@ -403,7 +449,7 @@ The slice (ADR 0015):
 - **Owner sees:** `uname -r` reading `7.3.y-cachyos1.apexN.fc45.x86_64` in the desktop
   VM, and the first automatic kernel bump.
 
-## S1d: Apex on the laptop (weeks 9–10, Nov 30 – Dec 11, L)
+## S1d: Apex on the laptop (Dec 14 – Jan 8, with a year-end break, L)
 
 - `just publish` in the builder VM: push under a unique tag, sign with cosign, move
   `:45`. It runs by hand and from the daily host timer on AC power (answer 20). It
@@ -412,8 +458,9 @@ The slice (ADR 0015):
   lists only these two keys. The `apex-testing` entry and `ci.pub` go.
 - A public source artifact per published digest: the kernel and nvidia-kmod SRPMs and
   the Apex series (GPL; NVIDIA licence).
-- The Plymouth script theme `apex` (SPEC §8): the black splash with the Apex wordmark
-  (answer 17), the 160×3 bar with round ends, @2x assets, and its own LUKS prompt. The
+- The Plymouth script theme `apex` (canvas boards 01 and 30): the black splash with the
+  Apex wordmark (answer 17) and no footer, the 160×3 bar with round ends, @2x assets,
+  and its own LUKS prompt. The
   two-step theme stays as the fallback.
 - Install on the external USB SSD, with LUKS2 (ADR 0010).
 - The audio drop-in, if the S0 test failed a row and a `model=` alias won. CachyOS
@@ -431,7 +478,8 @@ The slice (ADR 0015):
 - **Exit:**
   - the laptop boots Apex from the USB SSD, and `apexctl update check` finds a newer
     `:45` that `just publish` signed;
-  - the owner signs off 01 (boot splash) on the laptop: sharp at DeviceScale 2, round
+  - the owner signs off the boot splash and disk unlock (boards 01, 30) on the laptop:
+    sharp at DeviceScale 2, round
     bar ends, LUKS unlock works;
   - ACCEPTANCE §4 rows 4.1 to 4.5, 4.7 and 4.8 pass: RTD3 "Enabled (fine-grained)";
     at least 95 % runtime-suspended over 10 idle minutes; D3cold with video memory
@@ -448,7 +496,7 @@ The slice (ADR 0015):
 - **Owner sees:** the Apex splash and desktop on the laptop, the CachyOS kernel, apps
   that run on the RTX 3050 on request, and updates from the signed image.
 
-## S2a: The dock and the top bar (weeks 11–13, Dec 14 – Jan 1, L)
+## S2a: The dock and the top bar (Jan 11 – Jan 29, L)
 
 - ApexDock (ADR 0014), a subclass of upstream `Dash` in `js/ui/apex/dock/`, about 800
   lines:
@@ -460,7 +508,7 @@ The slice (ADR 0015):
   - the overview's own dash hidden, its Show Apps button bound to the dock's;
   - no Dash to Dock (the image never shipped it); the dock's keys live in the Apex
     schema.
-- Top-bar hooks (SPEC §8): workspace dots 22×7 and 7×7 at .45; a 4×4 hot-corner zone
+- Top-bar hooks: workspace dots 22×7 and 7×7 at .45; a 4×4 hot-corner zone
   next to the pressure barrier; the status-pill filter (camera, microphone, location,
   remote access, screen recording and sharing, unsafe mode and the input source stay);
   the focused-app name; the search button; the bar solid over maximised windows.
@@ -473,12 +521,13 @@ The slice (ADR 0015):
   - "Launch Using Discrete Graphics Card" appears in the dock menu on the laptop, and
     the app runs on NVIDIA;
   - the camera and microphone indicators still show during a Snapshot recording;
-  - the owner signs off 03 (bar, dock, wallpaper, window corners) and the dock in 04 to
-    08, light and dark. They become approved goldens.
+  - the owner signs off the desktop (bar, dock, wallpaper, window corners; drawn on the
+    canvas first) and edge tiling (board 22), light and dark. They become approved
+    goldens.
 - **Owner sees:** the floating Apex dock with its lift and Trash, the workspace dots,
   the app name in the bar, and a bar that turns solid over maximised windows.
 
-## S2b: Dynamic glass (weeks 14–15, Jan 4 – Jan 15, L)
+## S2b: Dynamic glass (Feb 1 – Feb 19, with the Tết week, L)
 
 - Series 0003-blur, a C patch to `ShellBlurEffect` (at most 300 lines):
   - a saturation property, CSS's matrix in the existing final pass;
@@ -500,7 +549,7 @@ The slice (ADR 0015):
 - **Exit:**
   - the G2 pixel test passes (a pattern under glass with partial damage, against a CPU
     reference blur); its first run fixes the tolerance, starting at a maximum error of
-    3/255 and a mean of 1/255 per channel (`design/SPEC.md` §7.2);
+    3/255 and a mean of 1/255 per channel;
   - 5 minutes of `CLUTTER_PAINT=damage-region` stress show no stale or black regions;
   - the stock unlock blur at default properties differs by 0 pixels from Fedora's build;
   - with Reduce Transparency on, G2 finds no blur effect on any actor;
@@ -525,13 +574,13 @@ Glass protocol, on the laptop on battery, balanced profile, 90 Hz, 2880×1800:
   10-minute runs each with glass and with Reduce Transparency, same windows, brightness
   50 %, Wi-Fi off. Idle delta at most 0.3 W; scenario A delta at most 0.5 W.
 
-## S2c: The Apex Desktop panel and live radius (weeks 16–18, Jan 18 – Feb 5, L)
+## S2c: The Apex Desktop panel and live radius (Feb 22 – Mar 12, L)
 
 - gnome-control-center in the lane (`on_fail=hold`), with its dev tier: incremental
   ninja and `usroverlay` in the desktop VM, 1 to 3 minutes.
 - Patch 0001: the Apex Desktop panel. The "Apex Tweaks" tile, an alias for
   `gnome-control-center apex`.
-- libadwaita in the lane (SPEC §8): one patch loads `apex.css` into a provider at
+- libadwaita in the lane: one patch loads `apex.css` into a provider at
   `GTK_STYLE_PROVIDER_PRIORITY_USER + 1` and reloads it when the file changes. GTK reads
   `gtk.css` once per process, so without the patch a stale value at user priority would
   win. Host apps then follow a radius change live; Flatpak apps keep reading `apex.css`
@@ -540,38 +589,41 @@ Glass protocol, on the laptop on battery, balanced profile, 90 Hz, 2880×1800:
   are diffed against today's build before the verdict is applied. Then
   `packaging/libfprint/`, `oci-artifact.sh` and lock replay are deleted.
 - **Exit:**
-  - every row in `design/SPEC.md` §6.1 exists, is bound to its key and changes the live
+  - every row in [DESIGN.md](DESIGN.md#apex-desktop-panel-rows) exists, is bound to its
+    key and changes the live
     desktop;
   - a Corner Radius change updates open Files, Settings and Ptyxis windows within 1 s;
     maximised, tiled and fullscreen windows stay square; GTK apps start cleanly with no
     `apex.css`;
-  - the owner signs off 10-settings-apex-desktop and 11. They become approved goldens.
+  - the owner signs off the Apex Desktop panel (board 11, both scroll positions) and
+    the restyled Appearance and Power panels (boards 23, 24). They become approved
+    goldens.
 - **Owner sees:** Settings with Apex Desktop first, where every switch, including
   Corner Radius, changes the open desktop at once.
 
-## S2d: Updates in Settings and the Files window (weeks 19–21, Feb 8 – Feb 26, L)
+## S2d: Updates in Settings and the Files window (Mar 15 – Apr 2, L)
 
-- gnome-control-center patch 0002: coloured sidebar tiles in the mockup's order. The
+- gnome-control-center patch 0002: coloured sidebar tiles in the design's order. The
   Appearance mapping is not needed after S1a.
 - Patch 0003: the Software Updates row in System and its page on `Update1`.
 - `Update1` and `apexctl status` expose the held and degraded lists from the image
   label, including a kernel hold with its 72 h clock and `degraded=nvidia`.
 - `apex-session-agent`: the "Updates Ready" notification.
 - nautilus in the lane: 0001 the disk footer, 0002 the item-count bar, 0003 a 72 px grid
-  zoom level (SPEC §8).
+  zoom level.
 - A hold drill: break a gnome-control-center patch on a branch and build the image.
 - **Exit:**
   - System shows the real update count, and one update from `just publish` is applied
     from Settings;
   - the hold drill passes: the image builds with the last good package, the label lists
     it, and `apexctl status` and the Settings Updates page show it;
-  - the owner signs off the other 10-* Settings screens and the Files window at the
-    default zoom with 72 px icons (the footer, the item count and the zoom; the rest of
+  - the owner signs off Software Updates and the health-failure dialog (boards 18, 26)
+    and the Files window at the default zoom with 72 px icons (the footer, the item count and the zoom; the rest of
     the Files redesign is S7). They become approved goldens.
 - **Owner sees:** coloured Settings tiles, updates announced and applied from Settings,
-  and the Files window as drawn.
+  and the Files window as designed.
 
-## S3a: Spotlight, overview, launcher; the glass exit (weeks 22–24, Mar 1 – Mar 19, L)
+## S3a: Spotlight, overview, launcher; the glass exit (Apr 5 – Apr 23, L)
 
 - Spotlight in `js/ui/apex/spotlight/`: Apex's own rows over the stock search
   providers, with the drawn sections and caps (Calculator 1, Applications 4, Settings 3,
@@ -585,25 +637,26 @@ Glass protocol, on the laptop on battery, balanced profile, 90 Hz, 2880×1800:
   (wallpaper and windows) in actor mode, cached until the desktop beneath changes
   (ADR 0014). The bar and the dock over a scrim blur the scrim's result. Patch 0017
   puts the same glass on the OSDs, banners, Alt+Tab and the screenshot panel
-  (`design/SPEC.md` §3.17).
+  ([DESIGN.md](DESIGN.md)).
 - **Exit:**
   - Super+Space opens Spotlight; Up, Down, Enter and Esc work; a provider past a 1 s
     timeout does not hide the other sections;
   - with one busy workspace and the empty one, the thumbnails show;
   - the glass protocol passes scenarios A, B and C with every glass surface on;
-  - the owner signs off 06, 06b, 07 and 08, light and dark. They become approved
-    goldens.
+  - the owner signs off Spotlight, the overview and the launcher (drawn on the canvas
+    first), the window switcher, the OSD and banner glass and the screenshot UI (boards
+    15, 16, 19), light and dark. They become approved goldens.
 - **Owner sees:** the Spotlight popup as drawn, overview titles and thumbnails,
   the launcher's own search, and glass everywhere without dropped frames.
 
-## S3b: Lock screen and greeter (weeks 25–26, Mar 22 – Apr 2, L)
+## S3b: Lock screen and greeter (Apr 26 – May 7, L)
 
 Series 0015-lock carries the review label "unlock path".
 
 - Single stage, as drawn: the clock and the prompt show together, date above time,
   with the unlock hint. The prompt is torn down on blank and rebuilt on wake, so PAM and
   the fingerprint reader do not run while the screen is off.
-- The SPEC §8 lock details: blur σ 30 with saturation 1.3; the field's own glass; the
+- The lock details (board 20): blur σ 30 with saturation 1.3; the field's own glass; the
   initial-letter avatar when the user has no picture; "Enter Password" only for PAM's
   exact `Password:` question.
 - Greeter styling from the shared sheets. No Apex JS runs in the gdm mode.
@@ -613,10 +666,11 @@ Series 0015-lock carries the review label "unlock path".
     resume while locked, Reduce Motion, `loginctl unlock-session`, and `apex.safe=1`
     giving the stock two-stage lock;
   - a test PAM question other than `Password:` shows verbatim;
-  - the owner signs off 02 and the greeter. They become approved goldens.
+  - the owner signs off the lock screen, the greeter and the authentication dialog
+    (boards 20, 12, 13). They become approved goldens.
 - **Owner sees:** the one-step lock screen as drawn, and an Apex login screen.
 
-## S4: Daily driver (weeks 27–28, Apr 5 – Apr 16, L; then two weeks of use to Apr 30)
+## S4: Daily driver (May 10 – May 21, L; then two weeks of use to Jun 4)
 
 - The internal install (ADR 0010): LUKS2 with a recovery key, `/var` as its own btrfs
   subvolume, into the space Windows left (W2): sectors 1435648 to 903051263 of
@@ -656,7 +710,7 @@ Series 0015-lock carries the review label "unlock path".
 - **Owner sees:** Apex as the daily system, suspend that holds the battery, and unlock
   by finger if the sensor allows it.
 
-## S3c: Notifications, Quick Settings, motion, shadows (weeks 29–30, Apr 19 – Apr 30, L)
+## S3c: Notifications, Quick Settings, motion, shadows (May 24 – Jun 4, L)
 
 It runs during S4's two weeks of use and ships as updates.
 
@@ -674,7 +728,8 @@ It runs during S4's two weeks of use and ships as updates.
     switches between Balanced and the last profile;
   - G2 asserts the cubic-bezier mode on maximise and on the overview transition;
   - an idle desktop shows no extra repaints under `CLUTTER_PAINT=damage-region`;
-  - the owner re-approves 04, 05 and every golden the shadows change.
+  - the owner re-approves Quick Settings, notifications, the power-off dialog and the
+    Wi-Fi submenu (boards 14, 17), and every golden the shadows change.
 - **Owner sees:** notifications and Quick Settings as drawn, the drawn easing, and the
   two-layer shadows.
 
@@ -731,20 +786,9 @@ Steps:
     both boot, NVIDIA loads, `amd-s2idle test` runs under lockdown, and
     `docs/RECOVERY.md` has the `mokutil --mokx` runbook.
 
-## S5: Apex Symbolic glyphs (optional, two weeks, about July 2027, L)
+## S7: The Files redesign (Jun 7 – Jun 25, 2027, L)
 
-- Only if the owner confirms it (answer 11, default: Colloid now, S5 optional).
-- About 40 symbolic icons visible on mockup surfaces: the top bar, Quick Settings, the
-  Files and Settings sidebars, and header-bar buttons.
-- Redrawn on the 16 px grid from the free Hugeicons stroke-rounded set
-  (`@hugeicons/core-free-icons`, MIT, notice kept), in the `Apex` icon theme. A glyph
-  that exists only in Hugeicons Pro stays Adwaita.
-- **Exit:** the glyph set passes an icon-resolution check, and the owner approves the
-  contact sheet.
-
-## S7: The Files redesign (weeks 31–33, May 3 – May 21, 2027, L)
-
-Added 2026-10-21 with SPEC §3.15 and moved before S6 at the owner's request. It ships
+Added 2026-10-21 with the Files redesign and moved before S6 at the owner's request. It ships
 to the daily driver as updates on GNOME 51, and S6 rebases nautilus 0004 to 0007 onto
 GNOME 52 with the rest of the series.
 
@@ -756,7 +800,7 @@ GNOME 52 with the rest of the series.
   per-group counts from the unfiltered results.
 - nautilus 0007: the two-option `AdwToggleGroup` for grid and list.
 - The `Apex` icon theme: flat `places/` and `mimetypes/` rendered from two SVG
-  templates, the nine `Apex-<accent>` folder themes, and a check that every folder and
+  templates, with folder emblems from the Apex Symbolic set, the nine `Apex-<accent>` folder themes, and a check that every folder and
   content type the templates cover resolves to an Apex icon.
 - apex-session-agent points `icon-theme` at the folder theme for the current
   `accent-color`.
@@ -766,11 +810,10 @@ GNOME 52 with the rest of the series.
     within 1 s;
   - with the Apex schema missing, Files starts with the details pane closed and the
     recent strip shown;
-  - the owner signs off 03 and the Files states (list with details, search) as
-    approved goldens.
+  - the owner signs off the Files states (boards 27, 28, 29) as approved goldens.
 - **Owner sees:** the Files window as redesigned, with its folders in the accent.
 
-## S6: Fedora 46 and GNOME 52 (weeks 34–37, May 24 – Jun 18, 2027, L)
+## S6: Fedora 46 and GNOME 52 (Jun 28 – Jul 23, 2027, L)
 
 The port waits for S4. Fedora 45 is supported to 2027-11-24 and stays on GNOME 51, so
 porting after 52.0 saves a second rebase against the betas. From the F46 branch point
@@ -797,11 +840,11 @@ nothing and reports what breaks.
     which the plan uses 31; at most 300 C lines), and the GNOME port took 8 owner-days
     or less.
 
-## Where the SPEC §8 items land
+## Where the engine-level details land
 
 Answer 26 builds these now. Items that another decision settles keep that decision's
 default and are not built: app-chrome greys (4), radius 14 (5), the power-off
-confirmation (8), the app set without Mail (10), glyphs (11), the name "Apex" (19), no
+confirmation (8), the app set without Mail (10), the name "Apex" (19), no
 rows in stock panels (27). The privacy indicators in the status pill stay.
 
 | Item | Slice | Size |
