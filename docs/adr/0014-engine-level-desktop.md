@@ -7,16 +7,18 @@ amends ADR 0002 and ADR 0007. Decision 22 (kernel and dGPU) is
 Windows before S4 (ROADMAP W1), so under "Boot handoff" only the case after Windows
 applies: bootloader updates are on, and Ubuntu, not Windows, starts from the firmware
 boot menu (ARCHITECTURE §5.5). Amended 2026-10-21: the flat Apex Facets wallpaper
-replaces Apex Aurora, and no surface uses a gradient (SPEC §2.4). Amended 2026-10-21
-again: the Files redesign (SPEC §3.15) adds nautilus patches 0004 to 0007, which raise
+replaces Apex Aurora, and no surface uses a gradient. Amended 2026-10-21
+again: the Files redesign adds nautilus patches 0004 to 0007, which raise
 the nautilus budget from 160 to 400 changed lines in upstream files, and flat icons in
-the `Apex` theme with nine accent-variant themes.
+the `Apex` theme with nine accent-variant themes. Amended 2026-10-23: the owner's design
+canvas replaces the HTML mockup and `design/SPEC.md` as the standard
+([DESIGN.md](../DESIGN.md)), and the Apex Symbolic glyphs (decision 11) land in S1b.
 
 ## Context
 
-- The owner's defining requirement is the mockup,
-  `design/mockup/Apex Fedora Desktop.dc.html`. `design/SPEC.md` derives its geometry,
-  tokens and mechanisms.
+- The owner's defining requirement is the design. Since 2026-10-23 that is the owner's
+  design canvas, described in [DESIGN.md](../DESIGN.md); this ADR was written against the
+  earlier HTML mockup and its spec.
 - ADR 0011 refuses Shell themes, gtk.css, icon-theme swapping and a patched
   gnome-control-center (ADR 0011:27), and leaves the shell to one later extension
   (ADR 0011:26). Today the desktop is stock GNOME 51 plus five vendor defaults
@@ -34,10 +36,10 @@ The owner's answers that shape this ADR (2026-09-28):
 | 1 | A rebuilt gnome-shell is the primary mechanism, not an overlay. ADR 0011 is superseded. |
 | 2 | The Apex SCSS enters the gnome-shell package through an `@import` hook. sassc runs at build; the shipped CSS is deleted in `%prep`. |
 | 6 | Super+Space opens Spotlight. Input switching moves to another key (§ Keys). |
-| 14 | Dynamic blur on every drawn glass surface (bar, dock, popovers, scrims), with the mockup's saturation. It must hold 90 Hz at 2880×1800 on the Vega 7 iGPU. Reduce Transparency is the off switch. |
+| 14 | Dynamic blur on every drawn glass surface (bar, dock, popovers, scrims), with the design's saturation. It must hold 90 Hz at 2880×1800 on the Vega 7 iGPU. Reduce Transparency is the off switch. |
 | 17 | Black splash with the Apex wordmark; GRUB menu hidden unless the last boot failed. Dual boot now; the owner removes Windows later. |
 | 22 | The CachyOS GCC kernel, with NVIDIA open modules built for exactly that kernel (ADR 0015). The RTX 3050 is used. |
-| 26 | Build the `design/SPEC.md` §8 items now, with the rebuilt packages they need. Items another decision settles keep that decision's default: 4, 5, 8, 10, 11, 19 and 27. The privacy indicators in the status pill stay. |
+| 26 | Build the design's engine-level details now (then listed in `design/SPEC.md` §8), with the rebuilt packages they need. Items another decision settles keep that decision's default: 4, 5, 8, 10, 11, 19 and 27. The privacy indicators in the status pill stay. |
 | Others | The recommended defaults, including 18: hold limits of 72 h for a security update and 14 days otherwise. |
 
 Facts this design rests on. Upstream line references are to the GNOME 51.0 tags
@@ -69,7 +71,7 @@ Facts this design rests on. Upstream line references are to the GNOME 51.0 tags
 
 ## Decision
 
-The mockup is the standard. A deviation needs a hard reason (physics, safety, a real
+The design is the standard ([DESIGN.md](../DESIGN.md)). A deviation needs a hard reason (physics, safety, a real
 conflict, or a large engine cost) and an owner decision. The approved ones are listed
 under Deviations.
 
@@ -82,8 +84,8 @@ under Deviations.
 | mutter | Fedora binary, pinned to the exact EVR gnome-shell was built against; mirrored unmodified into `[apex]` | Fedora | 0 patches |
 | libadwaita | Fedora SRPM plus one patch: the window radius follows `apex.css` live | Apex RPM key | 1 patch, at most 80 changed lines |
 | GTK 4 | stock | Fedora | 0 |
-| gnome-control-center | Fedora SRPM plus 3 patches: the Apex Desktop panel; coloured sidebar tiles in the mockup's order; the Software Updates row and page | Apex RPM key | At most 150 changed lines in upstream files |
-| nautilus | Fedora SRPM plus 7 patches: the disk-usage footer; the item-count bar; a 72 px grid zoom level; the details pane; the recent strip; the search chips; the view toggle group (SPEC §3.15) | Apex RPM key | At most 400 changed lines in upstream files. The Apex widgets are added files under `src/apex/` and do not count. |
+| gnome-control-center | Fedora SRPM plus 3 patches: the Apex Desktop panel; coloured sidebar tiles in the design's order; the Software Updates row and page | Apex RPM key | At most 150 changed lines in upstream files |
+| nautilus | Fedora SRPM plus 7 patches: the disk-usage footer; the item-count bar; a 72 px grid zoom level; the details pane; the recent strip; the search chips; the view toggle group | Apex RPM key | At most 400 changed lines in upstream files. The Apex widgets are added files under `src/apex/` and do not count. |
 | gdm | stock. Its greeter runs the rebuilt shell in the gdm mode: Apex CSS, stock JS. | Fedora | 0 |
 | Plymouth | stock, plus the `apex` script theme and the `apex-twostep` fallback theme (data files) | Fedora | 0 |
 | Ptyxis | stock, plus an Apex user palette that `apex-session-agent` writes | Fedora | 0 |
@@ -255,7 +257,7 @@ and every gate passes. Otherwise the family is held (decision 18).
 ### Escalation
 
 Escalation now means one of these. Each is an owner decision, with a measured need or a
-named mockup detail:
+named design detail:
 
 - **mutter joins the lane with a patch.** The one candidate today is exported
   redraw-clip expansion for glass (§Glass, lever 3). mutter then leaves Fedora's
@@ -268,7 +270,7 @@ named mockup detail:
 
 ### Glass everywhere (decision 14)
 
-Every surface the mockup draws with `backdrop-filter` samples what is really beneath
+Every glass surface of the design samples what is really beneath
 it, live, and pays only when that changes.
 
 | Surface | σ (CSS px) | Saturation | Mode |
@@ -284,11 +286,11 @@ it, live, and pays only when that changes.
 
 - The radius in device px is 2 × σ × scale, since `ClutterBlur` uses σ = radius / 2
   (mutter `clutter/clutter/clutter-blur.c:362`).
-- The derived transient surfaces (SPEC §3.17) take the glass of the drawn surface they
+- The derived transient surfaces ([DESIGN.md](../DESIGN.md)) take the glass of the drawn surface they
   copy.
 - **Scrims.** GNOME hides `window_group`, which holds the wallpaper and the windows,
-  while the overview shows (`js/ui/layout.js:984-988`). The mockup's scrims blur the
-  desktop as it was, windows included (html:245, 264). The layer places a non-reactive
+  while the overview shows (`js/ui/layout.js:984-988`). The design's scrims blur the
+  desktop as it was, windows included. The layer places a non-reactive
   `Clutter.Clone` of `window_group` under the scrim and blurs it in actor mode. Actor
   mode keeps its result until the actor is dirty (`shell-blur-effect.c:610-611`), so a
   still desktop costs one blur per overview open. A G2 pixel test proves that a window
@@ -324,7 +326,7 @@ The glass manager (`js/ui/apex/glass/`):
 
 Cost model. It counts Gaussian taps (`1 + 2·ceil(1.5σ)` per pixel per pass,
 `clutter-blur.c:90`) and framebuffer bytes, at 25 GB/s and 25 Gtaps/s effective, half
-of the Vega 7's peak. It is committed as `tools/design/blurcost.py`. It is a model, not
+of the Vega 7's peak. It is committed as [`0014-blurcost.py`](0014-blurcost.py). It is a model, not
 a measurement.
 
 | Surface, per re-blur | Stock (ms) | Patched (ms) |
@@ -368,7 +370,7 @@ Reduce Transparency always turns glass off.
 
 | Action | Keys | Where it is set |
 |---|---|---|
-| Spotlight | Super+Space | `toggle-spotlight` in `io.github.sekirokenjii.Apex.Desktop.Keybindings` |
+| Spotlight | Super+Space | `toggle-spotlight` in `io.github.apex_linux.Apex.Desktop.Keybindings` |
 | Next input source (English ↔ Vietnamese Telex) | Super+Alt+Space; XF86Keyboard | `org.gnome.desktop.wm.keybindings switch-input-source`, in the vendor override |
 | Previous input source | Shift+Super+Alt+Space; Shift+XF86Keyboard | `switch-input-source-backward`, in the vendor override |
 | Overview | Super tap; hot corner; Activities pill; three-finger swipe | stock |
@@ -412,7 +414,8 @@ Reduce Transparency always turns glass off.
 - The Plymouth `apex` script theme draws the drawn splash: black, the diamond and the
   Apex wordmark, a 160×3 bar with round ends, and its own LUKS prompt. The two-step
   `apex-twostep` theme stays installed as the fallback. Esc at boot shows Plymouth's
-  text view, which always shows the passphrase prompt. Details in SPEC §3.1.
+  text view, which always shows the passphrase prompt. The look is boards 01 and 30
+  ([DESIGN.md](../DESIGN.md)).
 - The GRUB menu stays hidden unless the last boot failed. Esc, F4 or Shift during the
   hidden timeout shows it. bootupd's static `grub-static-pre.cfg` always shows the menu
   for 1 s, so a static snippet, `07_apex-menu.cfg`, reads the previous boot's
@@ -429,12 +432,12 @@ Reduce Transparency always turns glass off.
 ### App chrome, style and Flatpak
 
 - Accents stay libadwaita's nine. There is no arbitrary RGB.
-- Shell surfaces use the mockup's tokens. App chrome keeps libadwaita's colours and
+- Shell surfaces use the design's tokens. App chrome keeps libadwaita's colours and
   metrics (decision 4).
 - Window radius 14, as drawn (decision 5). Maximised, tiled and fullscreen windows stay
   square.
   - `apex-session-agent` writes `~/.config/gtk-4.0/apex.css` (the value and the `0px`
-    resets, SPEC §6.2) and imports it from `gtk.css`. GTK reads `gtk.css` once per
+    resets, [DESIGN.md](../DESIGN.md#settings-contract)) and imports it from `gtk.css`. GTK reads `gtk.css` once per
     process.
   - The libadwaita patch loads the same file into a provider at
     `GTK_STYLE_PROVIDER_PRIORITY_USER + 1` and reloads it when a `GFileMonitor` reports
@@ -455,12 +458,12 @@ Reduce Transparency always turns glass off.
   longer sets `color-scheme`, `apex-session-agent` does not rewrite it, and
   gnome-control-center needs no Appearance mapping.
 - The gdm mode keeps `'prefer-dark'`. The greeter rules are the same in both variants.
-- Mockup apps ship as image RPMs where Fedora packages them. Software is Bazaar, a
+- The design's apps ship as image RPMs where Fedora packages them. Software is Bazaar, a
   Flathub app with no Fedora package. Other Flatpak apps keep their own chrome.
 
 ### Settings
 
-- One schema, `io.github.sekirokenjii.Apex.Desktop`, with one child schema,
+- One schema, `io.github.apex_linux.Apex.Desktop`, with one child schema,
   `.Keybindings`, holds only keys with no upstream home. The dock's keys live there
   now. Every other row of the Apex Desktop panel binds a stock GNOME key.
 - The Apex Desktop panel is the one home for Apex settings. Stock panels gain no rows
@@ -493,7 +496,7 @@ HIG deviations the owner approved (decision 24):
 | Full-colour Colloid app icons | Owner's design; symbolic icons stay Adwaita |
 | A search popup separate from the overview | One search engine behind every entry point |
 
-Mockup details the build does not follow. Each is settled by an owner decision:
+Design details the build does not follow. Each is settled by an owner decision:
 
 | Detail | Decision | Why |
 |---|---|---|
@@ -501,7 +504,7 @@ Mockup details the build does not follow. Each is settled by an owner decision:
 | Radius 14 in Flatpak windows | 5 | 15 if the Bazaar spike fails |
 | One-tap Restart in Quick Settings | 8 | A stray tap would end the session and lose unsaved work. |
 | The Mail tile | 10 | No GTK4 GNOME mail client exists. |
-| Hugeicons glyphs | 11 | Colloid app icons now; Apex symbolic glyphs in S5 if confirmed |
+| Hugeicons glyphs | 11 | Resolved 2026-10-23: Apex Symbolic, drawn in-house, ships in S1b; app icons stay Colloid |
 | The "Apex Fedora" name | 19 | Fedora's trademark rules; the product is "Apex" |
 | Rows in stock Settings panels | 27 | One home: the Apex Desktop panel |
 | Ctrl+Space or Alt+Space for search | 6 | IDE completion and mutter's window menu; Super+Space instead |
@@ -531,7 +534,7 @@ Two gaps have no path: GTK3 and X11 windows keep their own chrome.
 - The input-switching habit changes: Super+Alt+Space, not Super+Space or a UniKey-style
   Ctrl+Shift.
 - The answers together move the daily driver about 11 weeks, from 2027-02-12 to
-  2027-04-30 (roadmap). Building the `design/SPEC.md` §8 items now is part of that: S3c,
+  2027-04-30 (roadmap). Building the design's engine-level details now is part of that: S3c,
   and parts of S1b, S1d, S2a to S2d, S3a and S3b. S4 then lands next to the Fedora 46 GA
   target (2027-04-20), after GNOME 52.0, and the GNOME 52 port (S6) follows it.
 - The iGPU composites every frame, including all glass; ADR 0015 keeps mutter off the
@@ -568,7 +571,7 @@ Two gaps have no path: GTK3 and X11 windows keep their own chrome.
 - **A libadwaita patch that reads an Apex GSettings key.** Every GTK app would depend on
   an Apex schema. The patch watches the file the agent already writes.
 - **A St patch for multi-layer `box-shadow`.** It needs C in `st-theme-node*.c`,
-  beyond the C budget. Shadow-layer actors carry the second layer (SPEC §2.5).
+  beyond the C budget. Shadow-layer actors carry the second layer.
 - **A custom JSON session mode.** A mode named like a built-in one is ignored
   (`js/ui/sessionMode.js:109-110`), and JSON modes exclude the unlock dialog (`:122`).
 - **COPR or Packit as the build host for GNOME packages.** It adds a trust root and a
@@ -589,10 +592,11 @@ Then, in one commit:
   rebuilds through the lane are allowed; status adds `amended by ADR 0014`.
 - ARCHITECTURE: §4.1 (gnome-shell is the lane's first package, `spec-edit`, the
   mirrored mutter), §4.2 (hold families), §4.3 (release cost), §7.3 and §7.4 (the
-  desktop layer), §11 (G1, G2 and G4 as in SPEC §7).
+  desktop layer), §11 (G1, G2 and G4).
 - Roadmap: the lane moves to S1a; the dock is Apex's own (S2a); glass starts on the bar,
   the dock and the popovers in S2b and covers every surface in S3a; a new S3c holds
   notifications, Quick Settings, motion and shadows.
-- `design/SPEC.md`: rewritten for these answers.
-- `tools/design/blurcost.py`: the cost model.
+- `design/SPEC.md`: rewritten for these answers (removed 2026-10-23 for
+  [DESIGN.md](../DESIGN.md)).
+- `tools/design/blurcost.py`, now [`0014-blurcost.py`](0014-blurcost.py): the cost model.
 - Review §5: the owner's answers are recorded under the table.

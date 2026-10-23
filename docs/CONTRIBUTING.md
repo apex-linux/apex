@@ -57,7 +57,7 @@ The guard does not see trailing comments (`code # why`), comments inside a multi
 quoted program (`jq '...'`, `awk '...'`) or Python docstrings. The rule still applies to
 them.
 
-Out of scope, as not authored here or not code: `design/mockup/`, test data
+Out of scope, as not authored here or not code: test data
 (`tests/fixtures/`, `tests/golden/`), Markdown, patches, insta snapshots, `Cargo.lock`,
 JSON, SVG and XML.
 

@@ -2,8 +2,8 @@
 
 Apex is a personal, image-based Linux distribution for one machine: the ASUS Vivobook
 Pro 14X OLED **M7400QC**. It is built on **Fedora 45**, **GNOME 51** and the
-**CachyOS** kernel. Its desktop follows the owner's mockup in
-[`design/mockup/`](../design/mockup/), specified in [design/SPEC.md](../design/SPEC.md).
+**CachyOS** kernel. Its desktop follows the owner's design canvas, described in
+[DESIGN.md](DESIGN.md).
 Apex's own daemons, agents and tools are in **Rust**. Code that lives inside a GNOME
 project is written in that project's language
 ([ADR 0014](adr/0014-engine-level-desktop.md)).
@@ -25,7 +25,7 @@ Goals, in priority order:
    D3cold otherwise, s2idle, all firmware, and the 80 % battery charge limit. Every fix
    is measured on the laptop, has an acceptance row, and is written so it can go
    upstream.
-2. **The Apex desktop.** The mockup is the standard. Apex reaches it with a rebuilt
+2. **The Apex desktop.** The design is the standard. Apex reaches it with a rebuilt
    gnome-shell that carries the Apex layer, and small patch series on other GNOME
    packages, within the budgets of [ADR 0014](adr/0014-engine-level-desktop.md). A
    deviation needs a hard reason and the owner's approval. Approved deviations are
@@ -135,7 +135,7 @@ Ubuntu is removed. `just check`, `just deny`, `just image-test`, `just layer-tes
 |---|---|---|
 | `ci.yml` | on every pull request and every push to `main`: fmt, clippy `-D warnings`, `cargo test`, the comment guard (`apex-lint`, [CONTRIBUTING](CONTRIBUTING.md)), `cargo deny`, the RPM `License:` check, shellcheck and actionlint, the script self-tests, `image/tests/run.sh`, the Apex layer's safety net in gjs (`tests/layer/run.sh`), G2's own tests (`tests/shots/selftest.sh`), the privacy guard. To come: ESLint on `desktop/shell/js/` and sassc on the Apex SCSS (S1a), blueprint-compiler (S2c), and nextest with the wall-clock tests in a slow profile (no slice yet) | pass or fail |
 | packages | `apex-lane build <pkg>` for each directory in `packaging/pkgs/` (§4.1), and the kernel pair job (§4.2) | signed RPMs stored by content key; `rpms.lock.next` in the builder VM's store |
-| image | `image.sh context --lane-lock` → `build-rootfs` → build checks (G1) → headless shell (G2) → rechunk with `--previous-build` → push under a unique tag → cosign sign → move `:45` | `ghcr.io/sekirokenjii/apex:45`, and a public source artifact per digest (§4.2, S1d) |
+| image | `image.sh context --lane-lock` → `build-rootfs` → build checks (G1) → headless shell (G2) → rechunk with `--previous-build` → push under a unique tag → cosign sign → move `:45` | `ghcr.io/apex-linux/apex:45`, and a public source artifact per digest (§4.2, S1d) |
 
 Rules:
 
@@ -150,8 +150,8 @@ Rules:
 - **Monotonic versions.** `:45` moves only to a higher `45.YYYYMMDD.N`, and only after
   G1 and G2 pass. A change to `crates/apex-*`, the kargs, GRUB, the gnome-shell,
   mutter or gdm NVR, or the kernel pair is published only after a G4 run (§11).
-- **Visible state.** The image labels `io.github.sekirokenjii.apex.degraded` and
-  `io.github.sekirokenjii.apex.held` list what is degraded or held; they copy the
+- **Visible state.** The image labels `io.github.apex-linux.apex.degraded` and
+  `io.github.apex-linux.apex.held` list what is degraded or held; they copy the
   `degraded` and `held` fields of the image's manifest (contract §3). `apexctl status`
   and Settings > System > Software Updates show both (S2d). Nothing opens issues.
   `just publish` refuses an image whose degraded set grew, unless the owner passes an
@@ -176,7 +176,8 @@ Rules:
   package directory, its Source1 directory (`desktop/shell/` for gnome-shell), the
   lane's source (`crates/apex-lane/src` and its `Cargo.toml`), and
   `packaging/rebuild.sh`, the Bash lane apex-lane replaced, whose history keeps N from
-  dropping. A content key can also change without a commit, when a Fedora update moves
+  dropping. A recipe in its own repository counts there and adds the lane's count, so N
+  only grows. A content key can also change without a commit, when a Fedora update moves
   only the pin (a mutter-only update): each later key of the same Fedora build at
   `.apexN` is `.apexN.M`, M one above the highest stored, so two builds never share a
   NEVRA. In the VM, after the container and before the store, `rpmsign` signs the built
@@ -322,7 +323,7 @@ FEDORA-2026-48a7996f9c (GNOME 51.0, stable since 2026-09-30) and libxml2 2.13.9.
 The update and boot stack is frozen at its current scope. It is the safety net for the
 desktop and kernel work: a shell, greeter or kernel that cannot start never produces a
 session that lives for 20 s, so the counted boot rolls it back. The contract is the
-D-Bus XML `crates/apex-dbus/data/io.github.sekirokenjii.Apex.Update1.xml` together with
+D-Bus XML `crates/apex-dbus/data/io.github.apex_linux.Apex.Update1.xml` together with
 the Rust types.
 
 ### 5.1 Channel, trust and keys
@@ -332,7 +333,7 @@ This section supersedes the signing and repository rules of
 [ADR 0015](adr/0015-cachyos-kernel-and-nvidia.md) amends its Secure Boot and
 third-party clauses.
 
-- One repository, `ghcr.io/sekirokenjii/apex`, with the tags `45` and `45.YYYYMMDD.N`,
+- One repository, `ghcr.io/apex-linux/apex`, with the tags `45` and `45.YYYYMMDD.N`,
   signed with one cosign key. The laptop's policy also lists the public half of the
   key's offline backup. The image package is public, since the image holds no secrets,
   so the laptop pulls without a token.
@@ -737,13 +738,13 @@ words is an optional roadmap item.
 ### 7.3 Vendor defaults
 
 Defaults ship as `/usr/share/glib-2.0/schemas/90_apex.gschema.override`, compiled at
-build time, with no dconf locks. They set the mockup's defaults on stock keys where
+build time, with no dconf locks. They set the design's defaults on stock keys where
 stock differs: fonts and hinting, icon theme, button layout, clock fields, battery
 percentage, wallpaper, lock-screen notifications, search order, favourites and the
 input-source shortcuts (§7.2). They keep the input sources and the power-key action.
 `color-scheme` keeps GNOME's `'default'`, which the rebuilt shell draws light (§7.4).
 The stock accent, blue, already matches. The calendar's first weekday and the clock
-format follow the locale. The values are in [design/SPEC.md](../design/SPEC.md) §6.
+format follow the locale. The values are in [DESIGN.md](DESIGN.md#vendor-defaults).
 
 The only files Apex places in `/etc` are `/etc/xdg/monitors.xml`, the fontconfig links,
 `/etc/plymouth/plymouthd.conf` (written by `plymouth-set-default-theme`, plus
@@ -754,7 +755,7 @@ the symlinks that `systemctl enable`, `mask` and `set-default` create under
 
 ### 7.4 Desktop layer
 
-([ADR 0014](adr/0014-engine-level-desktop.md), [design/SPEC.md](../design/SPEC.md))
+([ADR 0014](adr/0014-engine-level-desktop.md), [DESIGN.md](DESIGN.md))
 
 gnome-shell is rebuilt with the Apex layer inside it. libadwaita, gnome-control-center
 and nautilus carry small series. mutter, GTK, gdm, Ptyxis and Plymouth stay
@@ -770,8 +771,8 @@ and mirrored unmodified into `[apex]` (§3).
 | Lock screen | Single stage, date above time, blur σ 30 with saturation, the field's glass, an initial-letter avatar, "Enter Password" for PAM's exact `Password:` question only | S3b |
 | Greeter | The rebuilt shell with the Apex CSS and stock JS | S3b |
 | Window radius | `apex.css` from `apex-session-agent`, read at app start; a libadwaita patch that makes host apps follow it live | S1b; live S2c |
-| Settings | gnome-control-center, 3 patches: the Apex Desktop panel; coloured sidebar tiles in the mockup's order; the Software Updates row and page on `Update1` | S2c–S2d |
-| Files | nautilus, 7 patches: the disk-usage footer, the item-count bar, a 72 px grid zoom level (S2d); the details pane, the recent strip, the search chips, the view toggle (S7). Flat folder and file icons, with folders in the accent (SPEC §3.15) | S2d; S7 |
+| Settings | gnome-control-center, 3 patches: the Apex Desktop panel; coloured sidebar tiles in the design's order; the Software Updates row and page on `Update1` | S2c–S2d |
+| Files | nautilus, 7 patches: the disk-usage footer, the item-count bar, a 72 px grid zoom level (S2d); the details pane, the recent strip, the search chips, the view toggle (S7). Flat folder and file icons, with folders in the accent | S2d; S7 |
 | Terminal | Ptyxis; `apex-session-agent` writes a user palette whose cursor is the accent | S1b |
 | Boot splash | Plymouth script theme `apex`: rounded bar, @2x assets, its own LUKS prompt. The two-step `apex-twostep` theme stays installed as the fallback. | S1d |
 | GRUB | Menu hidden unless the last boot failed (§5.5) | S4 |
@@ -825,7 +826,7 @@ and mirrored unmodified into `[apex]` (§3).
   `Before=gnome-session-restart-dbus.service` (the same list restarts the session bus,
   and `gsettings` exits 0 when its write is lost) and
   `ConditionPathExists=%t/apex-shell-starting`: it runs
-  `gsettings set io.github.sekirokenjii.Apex.Desktop layer-enabled false`, leaves
+  `gsettings set io.github.apex_linux.Apex.Desktop layer-enabled false`, leaves
   `$XDG_STATE_HOME/apex/shell-guard-tripped` for `apex-session-agent`, which then
   offers to turn the Apex desktop back on (S1b; until then `gsettings`), and removes the
   layer's file. ADR 0014's second trigger, a second shell failure on the same
@@ -841,9 +842,8 @@ unlock-dialog modes, so GNOME's `'default'` draws a light shell. The Quick Setti
 Dark Style toggle and Settings > Appearance then work unchanged. No agent rewrites the
 key, and no Settings patch maps it.
 
-**Glass** (decision 14). Every surface the mockup draws with `backdrop-filter` gets
-dynamic blur with the drawn saturation. The values are in
-[design/SPEC.md](../design/SPEC.md) §2.6.
+**Glass** (decision 14). Every glass surface of the design gets dynamic blur with the
+drawn saturation. The values are tokens in `desktop/shell/data/theme/apex/`.
 
 - The `ShellBlurEffect` patch adds a saturation stage (CSS's luma matrix, in the
   brightness pass), a corner radius, a background mode that follows the actor's
@@ -868,7 +868,7 @@ dynamic blur with the drawn saturation. The values are in
   decision).
 
 **Keybindings** (decision 6, S1b). `toggle-spotlight`, default `['<Super>space']`,
-lives in `io.github.sekirokenjii.Apex.Desktop.Keybindings`. The layer registers it for
+lives in `io.github.apex_linux.Apex.Desktop.Keybindings`. The layer registers it for
 the normal and overview modes.
 `/usr/share/gnome-control-center/keybindings/60-apex.xml` lists it, so Settings >
 Keyboard can change it. A Super tap opens the overview, and Super+A the launcher. Input
@@ -891,7 +891,7 @@ stale copy at user priority never wins. libadwaita reads no Apex schema. Flatpak
 read `apex.css` at start through the system Flatpak override if the Bazaar spike
 passes, and keep libadwaita's 15 px otherwise. Colour variables never go into user CSS.
 
-**Settings.** One schema, `io.github.sekirokenjii.Apex.Desktop`, with a `.Keybindings`
+**Settings.** One schema, `io.github.apex_linux.Apex.Desktop`, with a `.Keybindings`
 child, holds only keys with no upstream home. Every other row of the Apex Desktop panel
 binds a stock GNOME key. Stock panels gain no rows (decision 27). System's Software
 Updates row opens the Apex updates page. "Apex Tweaks" is a `.desktop` entry that runs
@@ -900,14 +900,13 @@ Updates row opens the Apex updates page. "Apex Tweaks" is a `.desktop` entry tha
 **apex-desktop** (noarch, built from `desktop/` except `desktop/shell/`) holds the
 `Apex` icon theme from a pinned Colloid commit (`Inherits=Adwaita,hicolor`) with flat
 folder and file icons from Apex's own templates and nine `Apex-<accent>` folder themes
-(S7, SPEC §3.15), the Apex Facets wallpapers, both Plymouth themes, fontconfig `ss03`, the terminal prompt snippet
+(S7), the Apex Symbolic glyphs (S1b), the Apex Facets wallpapers, both Plymouth themes, fontconfig `ss03`, the terminal prompt snippet
 and Ptyxis profile default, the gschema override, the Apex schemas, the crash guard's
 user units, `60-apex.xml`, and a tmpfiles entry that creates the system Flatpak
 override. S1a ships the schema and the crash guard; `rpms.sh build` builds it next to
 the `apex` RPM, under its own content key. It is separate from the Rust
 `apex` RPM, so an asset change never rebuilds cargo. Its `License:` tag covers Apex's
-own files (GPL-3.0-or-later), Colloid (GPL-3.0) and, from S5, the Hugeicons-derived
-glyphs (MIT).
+own files (GPL-3.0-or-later, the Apex Symbolic glyphs included) and Colloid (GPL-3.0).
 
 - Every app in the Apex dock and default app grid ships as an image RPM, except
   Software. Software is Bazaar, which has no Fedora package and stays a Flatpak.
@@ -929,14 +928,14 @@ glyphs (MIT).
   GTK4, GNOME Shell's Clutter/St UI, the cursor and GTK3 render 1:1. X11 clients through
   Xwayland are not measured yet, and this claim does not cover them until they are. At
   5/3 all but GTK4 are resampled, and GTK4 borders only align every 3 logical pixels.
-  The workspace is 1440×900, which is the mockup's stage. For more room, the supported
+  The workspace is 1440×900, the size the design's boards are drawn at. For more room, the supported
   choice is 5/3, not text scaling.
 - **Docked.** mutter recomputes the scale for any monitor set it has no stored config
   for. The AOC Q24G2 at scale 1 is about 123 effective DPI, close to the panel's 121 at
   scale 2, so windows keep the same physical size on both screens.
 - **Fonts.** Grayscale antialiasing, no hinting (as drawn) and subpixel positioning.
   fontconfig `10-sub-pixel-none` covers clients that are not GTK4. The keys are in
-  [design/SPEC.md](../design/SPEC.md) §6. No mutter experimental keys (mutter 51
+  [DESIGN.md](DESIGN.md#vendor-defaults). No mutter experimental keys (mutter 51
   removed the old key).
 - **Custom drawing.** Our own drawing uses GTK 4.24's `Snapshot::set_snap`. That
   affects only custom drawing: stock libadwaita widgets are not snapped at 5/3.
@@ -949,7 +948,7 @@ glyphs (MIT).
 | `apex-bootc` | Rust | Lenient serde model of the bootc status API; invocation builder (argv from enums, `env_clear`, fixed `PATH`, strict `CONTAINERS_POLICY_JSON`); process runner |
 | `apex-update` | Rust | Pure engine: snapshot, gates, state derivation, atomic stores, version ordering, `rpmvercmp`, manifest diff |
 | `apex-boot` | Rust | Boot assessment: grubenv codec, decision table, checks with timeouts; binary `apex-boot-assess` |
-| `apex-dbus` | Rust, XML | The `io.github.sekirokenjii.Apex.Update1` contract. The XML also feeds gdbus-codegen in gnome-control-center (S2d). |
+| `apex-dbus` | Rust, XML | The `io.github.apex_linux.Apex.Update1` contract. The XML also feeds gdbus-codegen in gnome-control-center (S2d). |
 | `apex-updated` | Rust | System bus service: one operation queue, polkit (system-bus-name subject), hardened unit |
 | `apex-session-agent` (S1b) | Rust | User unit: writes `apex.css` for the window radius and the Ptyxis accent palette, offers to turn the Apex desktop back on after the crash guard trips, posts update notifications (S2d), points `icon-theme` at the `Apex-<accent>` folder theme for the current accent (S7) |
 | `apexctl` | Rust | CLI: `status` (degraded and held packages, the kernel pair and its hold clock, S2d), `update …`, `hw report`, `major-upgrade` (S6) |
@@ -973,9 +972,9 @@ Rules:
 - **Root daemon hygiene.** It reads only `/usr/share/apex` and `/etc/apex`, never a
   user's home. It has no writable D-Bus properties. bootc argv is built from enums plus
   the compile-time image references. The unit is hardened within what bootc tolerates.
-- **IDs.** One family, prefix `io.github.sekirokenjii.Apex`: bus `…Apex.Update1`,
+- **IDs.** One family, prefix `io.github.apex_linux.Apex`: bus `…Apex.Update1`,
   schemas `…Apex.Desktop` and `…Apex.Desktop.Keybindings`, polkit
-  `io.github.sekirokenjii.apex.update.*`, labels `io.github.sekirokenjii.apex.*`.
+  `io.github.apex-linux.apex.update.*`, labels `io.github.apex-linux.apex.*`.
   There are no extension UUIDs.
 - **Packaging.** Two RPMs come from this repository: `apex` (Rust binaries and units,
   built with `cargo auditable`) and `apex-desktop` (noarch assets; a first build in S1a
@@ -990,9 +989,7 @@ Cargo.toml  Makefile  Justfile  rust-toolchain.toml  deny.toml
 crates/       apex-bootc apex-update apex-boot apex-dbus apex-updated apexctl apex-lane
               apex-session-agent (S1b)
 desktop/      shell/ (js/ui/apex/, data/theme/apex/, apex.gresource.xml; S1a)
-              schemas/ systemd/ (S1a); icons/ plymouth/ wallpaper/ fontconfig/ ptyxis/ (S1b)
-design/       mockup/ (the mockup, support.js, icons/), SPEC.md,
-              renders/ (generated by `just design-render`, not committed)
+              schemas/ systemd/ (S1a); wallpapers/; icons/ plymouth/ fontconfig/ ptyxis/ (S1b)
 hardware/     m7400qc/profile.toml, m7400qc/monitors.xml
 image/        Containerfile, packages/*.txt, system_files/ (rootfs overlay), checks/, audit/
 packaging/    apex.spec, apex-desktop.spec (S1a), hold.txt,
@@ -1001,7 +998,7 @@ packaging/    apex.spec, apex-desktop.spec (S1a), hold.txt,
               state in ~/apex-store/ (§4.1), not a committed file
 tests/        layer/ (the layer's safety net in gjs; S1a), shots/ (headless harness,
               metric assertions, approved goldens; S1a)
-tools/        builder-vm/, design/render-mockup.cjs
+tools/        builder-vm/
 .github/      workflows/ci.yml
 docs/         ARCHITECTURE, THREAT-MODEL, ROADMAP, INSTALL, RECOVERY, adr/, hardware/,
               reviews/
@@ -1012,14 +1009,14 @@ docs/         ARCHITECTURE, THREAT-MODEL, ROADMAP, INSTALL, RECOVERY, adr/, hard
 | Gate | When | Checks |
 |---|---|---|
 | G1 build checks | every image build | `bootc container lint --fatal-warnings` (skips justified in a file that can only shrink; it is empty); the legacy gate; firmware files; one kernel, and an initramfs with amdgpu and its green_sardine firmware, the microcode and the LUKS2 modules, and without snd-hda-intel, nouveau or nova; no keys or secrets in any layer; rpm signature enforcement untouched; the shipped Apex RPM key is the pinned one, and every package Apex builds (`apex.txt`'s and each `.apexN` release) carries its signature, where only a stock libfprint (`degraded=fingerprint`) carries Fedora's instead; the overlay's units, udev rules and tmpfiles validate; UEFI only; `glib-compile-schemas --strict` on the override; composefs on. Desktop (S1a, `image/checks/desktop.sh`): every RPM of the lane's lock (`/usr/share/apex/rpms.lock`) is installed at its locked NEVRA; gnome-shell, and each GNOME package rebuilt later, is an `.apexN` (or `.apexN.M`) build, signed with the Apex RPM key, or Fedora's signed build when the owner chose stock (`degraded=shell`); gnome-shell's `Requires: mutter =` matches the installed mutter, which carries Fedora's signature; the Apex marker is in the light and dark sheets and the structure marker in the high-contrast sheet (`grep -a` on `gnome-shell-theme.gresource`, which stores its CSS uncompressed), and `rpm -V gnome-shell` is clean, mtimes aside; upstream's sheets under `/org/gnome/shell/theme/stock/` sit in libshell's resource, which only `gresource` (not in the image) lists, so the lane's check and G2 prove them; no shell extension in `/usr/share/gnome-shell/extensions/`; no text file in `/usr` or `/etc`, documentation aside, names `G_RESOURCE_OVERLAYS`, `--unsafe-mode` or `APEX_SHELL_TEST_FAULT`; the Apex schema compiles with `--strict`; the crash guard is installed and verifies (`systemd-analyze --user`). From S1b, with the icon theme: every `.desktop` `Icon=` resolves. Plymouth (S1d): the default theme is `apex`, `DeviceScale=2` is set, and `apex-twostep` is installed. From S1b: no two default keybindings share a combination across `wm.keybindings`, mutter, the shell, media keys and the Apex schema. Kernel pair (S1c): the kernel is named `*-cachyos*.apex*`; config assertions (`SCHED_CLASS_EXT`, `DEBUG_INFO_BTF`, `X86_AMD_PSTATE` mode 3, `AMD_PMC`, `ASUS_WMI`, the HDA patch loader, `RECONFIG`, `HWDEP` and ALC269, `MODULE_SIG`, `IMA_ARCH_POLICY`, `EROFS`, `OVERLAY`, `DM_CRYPT`, selinux in `CONFIG_LSM`, `X86_64_VERSION` at most 3); every module signed by the one key built into this kernel, whose certificate matches `manifest.json`; NVIDIA vermagic equals the kernel; one NVIDIA version across the kmod, `nvidia-driver`, `nvidia-kmod-common` and the GSP firmware; the initramfs also holds erofs, overlay and `aesni_intel` (a module on CachyOS), and no nvidia module; no `/usr/src/kernels`, akmods, dkms, `xorg-x11-nvidia` or `nvidia-settings`; the effective modprobe options; `nvidia-persistenced` disabled; `/etc/kernel/cmdline` and `/etc/default/grub` untouched; the NVIDIA licence present. From W3: `sbverify` of `vmlinuz` against the Apex MOK. |
-| G2 headless shell (S1a) | every image build; about 10 minutes for its two runs | the built image runs `gnome-shell --headless --virtual-monitor 2880x1800` at scale 2 in light and dark, and once at 1440x900 and scale 1; the whole static import graph loads, and no `JS ERROR`. It runs twice, and the second run must report and capture what the first did. With the layer: the top bar's metrics against the token file, whose top-bar tokens must hold SPEC's literal values; the SPEC values S1a cannot draw yet are known gaps, each pinned to what S1a draws; the captures equal Fedora's own build of the same NVR outside the top bar; Quick Settings' Dark Style toggle turns the running shell light, after which no Apex user unit or D-Bus service starts. With `APEX_SHELL_SAFE=1` and the other kill switches: stock values, such as thumbnail scale 0.05 and the stock sheet path, and captures equal Fedora's outside the clock. The crash guard in the image's own `systemd --user`. Not yet: python-dbusmock fixtures and a fixed clock (until then the clock is masked), the other rows of [design/SPEC.md](../design/SPEC.md) §7.2 (dock position and size, launcher columns, window radius), three enable and disable cycles that leave no actors behind, approved goldens with per-scene masks, and from S2b a glass pixel test (a known pattern under glass with partial damage, against a CPU reference blur, within a tolerance that its first run fixes, starting at 3/255 maximum and 1/255 mean per channel). |
-| G3 contact sheet (S1b) | on demand; not a gate | mockup render, shell capture and their difference for each screen; the owner approves goldens from it |
+| G2 headless shell (S1a) | every image build; about 10 minutes for its two runs | the built image runs `gnome-shell --headless --virtual-monitor 2880x1800` at scale 2 in light and dark, and once at 1440x900 and scale 1; the whole static import graph loads, and no `JS ERROR`. It runs twice, and the second run must report and capture what the first did. With the layer: the top bar's metrics against the token file; the designed values S1a cannot draw yet are known gaps, each pinned to what S1a draws; the captures equal Fedora's own build of the same NVR outside the top bar; Quick Settings' Dark Style toggle turns the running shell light, after which no Apex user unit or D-Bus service starts. With `APEX_SHELL_SAFE=1` and the other kill switches: stock values, such as thumbnail scale 0.05 and the stock sheet path, and captures equal Fedora's outside the clock. The crash guard in the image's own `systemd --user`. Not yet: python-dbusmock fixtures and a fixed clock (until then the clock is masked), the metrics of the other surfaces (dock position and size, launcher columns, window radius), three enable and disable cycles that leave no actors behind, approved goldens with per-scene masks, and from S2b a glass pixel test (a known pattern under glass with partial damage, against a CPU reference blur, within a tolerance that its first run fixes, starting at 3/255 maximum and 1/255 mean per channel). |
+| Sign-off (per slice) | on demand; not a gate | shell captures placed beside the matching canvas boards ([DESIGN.md](DESIGN.md#boards)); the owner approves goldens from them |
 | Lane (S1a) | every package build | the SRPM signature verifies; patches apply with fuzz 0; the build succeeds; the Apex marker is present; the built RPMs and the Apex SRPM are signed with the Apex RPM key and verify against the committed public key alone; for the kernel pair, the gates in §4.2 |
 | G4 VM check | weekly, and before publishing a change to `crates/apex-*`, the kargs, GRUB, the gnome-shell, mutter or gdm NVR, or the kernel pair; `just vm-image` runs it (`qualify.sh local`) when `qualify.sh g4-due` says it is due: the image's G4 key differs from the last pass, or that pass is 7 days old. The key holds the NEVRAs of gdm, gnome-shell, mutter, gjs, gnome-session, accountsservice, pam, systemd, the kernel, shim, GRUB and bootupd, and the digests of the files of apex and apex-desktop, of every `/usr` file of the image overlay and of the kargs | in the builder VM (`-cpu host`): install and the counted rollback (`qualify.sh local`: a newer image derived in the guest from the one under test is forced red; `qualify.sh upgrade` adds the green upgrade for published digests); boot to GDM, log in through GDM's greeter (a user made only in the guest, its password typed over QEMU's QMP) with no Apex user unit running, lock with `loginctl`, then unlock by the password typed into the unlock dialog and by `loginctl`, with no `JS ERROR` from lock to unlock; a login with `APEX_SHELL_TEST_FAULT=abort-after-enable` trips the crash guard, and the next login logs safe mode with `layer-enabled` false and no `JS ERROR` (S1a; G2's guard phase proves that such a start loads upstream's sheet); `bootloader-update.service` after the assessment of every green boot, skipped by its condition on the fallback boot, and silent in the counted boots, which reboot themselves (§5.5): these rows prove the order and the green-boot condition, not an ESP write, because the builder VM's `bootupctl` finds no update; no failed system or user units. Not yet: the runtime assertions of `system.sh` and `power.sh` (journal persistence, one NTP client, the tuned profile). From S1c: `module.sig_enforce` holds, and SELinux is enforcing with no module-load denials. From S3b: the lock matrix (right and wrong password, Esc, blank and wake, suspend and resume while locked, Reduce Motion, `apex.safe=1` giving the stock two-stage lock, `loginctl unlock-session`); greeter and lock goldens once approved |
 | Hardware | per slice, on the laptop | [hardware/ACCEPTANCE.md](hardware/ACCEPTANCE.md); each fix has a numeric pass criterion. The G4 VM exercises neither NVIDIA nor s2idle, so each new kernel line and each NVIDIA release runs ACCEPTANCE §4 and the s2idle rows. The glass rows run in S2b and S3a, and again after a blur change. |
 
 `ci.yml` checks the code on every pull request and every push to `main` (§4). The
-ADR 0014 patch budgets are a review rule, not a gate. Chromium renders of the mockup
+ADR 0014 patch budgets are a review rule, not a gate. Renders of the design canvas
 are never a gate: they use another renderer, web fonts and CSS blur, so no threshold
 would pass.
 

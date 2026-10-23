@@ -513,9 +513,9 @@ Keys (ADR 0012, `image/system_files/usr/share/apex/keys/README.md`):
 
 | Key | Signs | Private half | Trusted by the laptop through |
 |---|---|---|---|
-| release | `ghcr.io/sekirokenjii/apex` (stable) | GitHub environment `release` (`COSIGN_PRIVATE_KEY`, `COSIGN_PASSWORD`) | `/usr/share/apex/keys/release.pub` |
+| release | `ghcr.io/apex-linux/apex` (stable) | GitHub environment `release` (`COSIGN_PRIVATE_KEY`, `COSIGN_PASSWORD`) | `/usr/share/apex/keys/release.pub` |
 | offline backup | emergencies only | encrypted, on two offline media | `/usr/share/apex/keys/release-backup.pub` |
-| CI | `ghcr.io/sekirokenjii/apex-testing` | GitHub environment `testing` | `/usr/share/apex/keys/ci.pub` |
+| CI | `ghcr.io/apex-linux/apex-testing` | GitHub environment `testing` | `/usr/share/apex/keys/ci.pub` |
 
 Two more keys come with the kernel pair (ADR 0015 §3):
 
@@ -532,7 +532,7 @@ Rules for every procedure below:
 - The policy that verifies an update is the one in the **booted** image. A new key
   must ship in an image before anything is signed with it.
 - Signing always uses the legacy format:
-  `cosign sign --yes --new-bundle-format=false --use-signing-config=false --key <key> ghcr.io/sekirokenjii/apex@sha256:<digest>`.
+  `cosign sign --yes --new-bundle-format=false --use-signing-config=false --key <key> ghcr.io/apex-linux/apex@sha256:<digest>`.
   Rekor upload stays on, which makes signatures searchable:
   `rekor-cli search --public-key <file>.pub --pki-format x509`.
 - Record every new key's fingerprint in its pull request:
@@ -566,7 +566,7 @@ channel trusts them.
    password, counts as the confirmation a downgrade needs. When it is the same image
    (stable builds are testing builds promoted by digest), only the origin changes and
    no boot count is armed; otherwise the next boot is counted as after any `apply`.
-   From the switch on, checks and downloads use only `ghcr.io/sekirokenjii/apex`. The
+   From the switch on, checks and downloads use only `ghcr.io/apex-linux/apex`. The
    `Channel` row changes to `stable (running image)` once the stable image has booted.
    The testing build you were running is then the rollback deployment: do not roll
    back to it. Compare its digest with the CI runs in step 5: if it does not match one,
@@ -581,7 +581,7 @@ channel trusts them.
    request. The next stable image carries it; testing builds signed with the new key
    verify on laptops that booted that image.
 5. Audit: `rekor-cli search --public-key <old ci.pub> --pki-format x509` and
-   `skopeo list-tags docker://ghcr.io/sekirokenjii/apex-testing`; every signature and
+   `skopeo list-tags docker://ghcr.io/apex-linux/apex-testing`; every signature and
    tag must match a CI run. Delete unknown package versions on ghcr.io.
 
 ### 6.3 Release key leaked (emergency)
@@ -597,7 +597,7 @@ downloads anything.
 2. **Find what was signed.** `rekor-cli search --public-key release.pub --pki-format x509`
    lists every signature made with the key; `rekor-cli get --uuid <uuid>` shows each.
    Compare with the digests that `just publish` pushed (S1d). Check where `:45` points:
-   `skopeo inspect --format '{{.Digest}} {{index .Labels "org.opencontainers.image.version"}}' docker://ghcr.io/sekirokenjii/apex:45`.
+   `skopeo inspect --format '{{.Digest}} {{index .Labels "org.opencontainers.image.version"}}' docker://ghcr.io/apex-linux/apex:45`.
 3. **New backup key**, offline: `cosign generate-key-pair --output-key-prefix apex-release-backup-2`.
    Keep `apex-release-backup-2.key` encrypted on two offline media.
 4. **Emergency image E**, built on a trusted machine (not in CI), from the last
@@ -610,10 +610,10 @@ downloads anything.
    mkdir e && cd e
    cp <offline media>/apex-release-backup.pub release.pub
    cp <offline media>/apex-release-backup-2.pub release-backup.pub
-   podman run --rm ghcr.io/sekirokenjii/apex@<GOOD> cat /usr/share/apex/manifest.json > manifest.json
+   podman run --rm ghcr.io/apex-linux/apex@<GOOD> cat /usr/share/apex/manifest.json > manifest.json
    python3 -c 'import json,sys; m=json.load(open("manifest.json")); m["version"]=sys.argv[1]; json.dump(m, open("manifest.json","w"), indent=2)' 45.<YYYYMMDD>.<N>
    cat > Containerfile <<'EOF'
-   FROM ghcr.io/sekirokenjii/apex@<GOOD>
+   FROM ghcr.io/apex-linux/apex@<GOOD>
    COPY release.pub release-backup.pub /usr/share/apex/keys/
    COPY manifest.json /usr/share/apex/manifest.json
    LABEL org.opencontainers.image.version="45.<YYYYMMDD>.<N>"
@@ -621,12 +621,12 @@ downloads anything.
    EOF
    podman build -t localhost/apex-emergency .
    podman login ghcr.io                                  # with a new token (§6.5)
-   podman push --digestfile e.digest localhost/apex-emergency docker://ghcr.io/sekirokenjii/apex:45.<YYYYMMDD>.<N>
+   podman push --digestfile e.digest localhost/apex-emergency docker://ghcr.io/apex-linux/apex:45.<YYYYMMDD>.<N>
    cosign sign --yes --new-bundle-format=false --use-signing-config=false \
-       --key <offline media>/apex-release-backup.key ghcr.io/sekirokenjii/apex@$(cat e.digest)
-   cosign verify --key release.pub ghcr.io/sekirokenjii/apex@$(cat e.digest)
-   skopeo copy --preserve-digests docker://ghcr.io/sekirokenjii/apex@$(cat e.digest) \
-       docker://ghcr.io/sekirokenjii/apex:45
+       --key <offline media>/apex-release-backup.key ghcr.io/apex-linux/apex@$(cat e.digest)
+   cosign verify --key release.pub ghcr.io/apex-linux/apex@$(cat e.digest)
+   skopeo copy --preserve-digests docker://ghcr.io/apex-linux/apex@$(cat e.digest) \
+       docker://ghcr.io/apex-linux/apex:45
    ```
 
 5. **Apply E on the laptop**, checking the digest by eye because the laptop still
@@ -664,12 +664,12 @@ freshly generated pair of keys.
    (`git log --since=<date> -- .github/`), Actions runs and every approval of the
    `release` environment, branch protection and environment settings,
    `gh secret list --env release` and `--env testing`, and the tags and digests of both
-   repositories (`skopeo list-tags docker://ghcr.io/sekirokenjii/apex`).
+   repositories (`skopeo list-tags docker://ghcr.io/apex-linux/apex`).
 4. **Rotate:** if any unexpected run could read the `testing` environment, do §6.2; if
    any could read `release` (an approval you did not give), do §6.3.
 5. **Retag:** if `:45` points at a digest that `just publish` did not push, move it
    back to the newest legitimate one with
-   `skopeo copy --preserve-digests docker://ghcr.io/sekirokenjii/apex@<digest> docker://ghcr.io/sekirokenjii/apex:45`,
+   `skopeo copy --preserve-digests docker://ghcr.io/apex-linux/apex@<digest> docker://ghcr.io/apex-linux/apex:45`,
    and delete unknown package versions. The laptop's monotonic version check refuses
    an older image even if a tag points at one; the staleness warning shows a frozen tag.
 6. Re-enable both timers when done.

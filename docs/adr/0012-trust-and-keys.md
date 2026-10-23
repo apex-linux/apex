@@ -8,9 +8,9 @@ repositories clauses are replaced by ADR 0015 §3, §5 and §7. The threat model
 ## Decision
 
 - **Two repositories and two signing keys.**
-  - `ghcr.io/sekirokenjii/apex-testing` is signed by a **CI key** held in the GitHub
+  - `ghcr.io/apex-linux/apex-testing` is signed by a **CI key** held in the GitHub
     environment `testing`.
-  - `ghcr.io/sekirokenjii/apex` is signed by a **release key** held in the environment
+  - `ghcr.io/apex-linux/apex` is signed by a **release key** held in the environment
     `release`, which is restricted to `main` and needs manual approval.
 
   Qualification means membership in `apex`: the promotion job copies a qualified digest
@@ -29,7 +29,7 @@ repositories clauses are replaced by ADR 0015 §3, §5 and §7. The threat model
   - no transport-level accept rules.
 
   The file lives in `/usr`, so a local edit to `/etc` cannot freeze it against a key
-  rotation. `registries.d` enables sigstore attachments for `ghcr.io/sekirokenjii`, and
+  rotation. `registries.d` enables sigstore attachments for `ghcr.io/apex-linux`, and
   the install config sets `enforce-container-sigpolicy = true`.
 - **Monotonic versions.** The daemon refuses to apply a staged image whose manifest
   version is not higher than the booted one, unless the user explicitly confirms a

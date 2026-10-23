@@ -18,8 +18,8 @@ the same at both scales.
   scale 2 for `eDP-1 / SDC / 0x4154 / serial 0x00000000` at the exact mode rate
   90.001434326171875 Hz. It covers the built-in panel only. 5/3 stays selectable in
   Settings, and it is the supported way to get more space.
-- **Fonts.** GTK font rendering with grayscale antialiasing and no hinting, as the mockup draws
-  (ADR 0014; `design/SPEC.md` §6.3),
+- **Fonts.** GTK font rendering with grayscale antialiasing and no hinting, as the design draws
+  (ADR 0014; [DESIGN.md](../DESIGN.md#vendor-defaults)),
   fontconfig subpixel rendering `none` for clients that are not GTK4, and no mutter
   experimental keys.
 - **Docking (M2).** The user-session agent restores scale 2 for the panel the first time

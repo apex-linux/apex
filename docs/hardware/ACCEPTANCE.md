@@ -293,7 +293,7 @@ Record the output. What to expect:
 
 ```
 Date:            YYYY-MM-DD
-Image:           ghcr.io/sekirokenjii/apex@sha256:…   version 45.YYYYMMDD.N
+Image:           ghcr.io/apex-linux/apex@sha256:…   version 45.YYYYMMDD.N
 Kernel / BIOS:   … / M7400QC.…
 NVIDIA:          /sys/module/nvidia/version, or "not bound"
 Secure Boot:     enabled|disabled, lockdown: …, sig_enforce: Y|N
