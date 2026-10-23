@@ -392,8 +392,6 @@ third-party clauses.
   - `apexctl major-upgrade` (§5.4, S6);
   - expose the degraded and held package lists, the kernel hold clock and the
     next-major label through `Update1` and `apexctl status` (S2d);
-  - remove SwitchChannel with its downgrade waiver, DiscardStaged, the idle exit, the
-    rate limiter, the Stale property and `civil.rs`;
   - one shared types crate, only when a schema change would otherwise touch two copies.
 
 ### 5.3 Boot assessment and rollback
