@@ -250,7 +250,10 @@ and writes the second in its change handler.
 ### Schema `io.github.apex_linux.Apex.Desktop`
 
 Only keys with no upstream home. The schema ships in `apex-desktop`. The layer treats a
-missing schema as safe mode and reads every key live.
+missing schema as safe mode and reads every key live, with one limit: a shell that started
+with the layer on follows `layer-enabled` and `disabled-features` as they change, while a
+shell that started stock (the key false, a kill switch, or no schema) stays stock until
+the next login.
 
 | Key | Type | Default | Read by |
 |---|---|---|---|

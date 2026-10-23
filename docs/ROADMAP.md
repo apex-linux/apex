@@ -127,7 +127,7 @@ External dates, checked 2026-09-28.
 |---|---|---|
 | 2026-10-10 | GNOME 51.1. It reaches F45 around GA. It is the first shell and mutter update the lane absorbs (S1b exit). | https://release.gnome.org/calendar/ |
 | About 2026-10-18 or -25 | Linux 7.3 (7.3-rc5 came out on 2026-09-27). The COPR built 7.2.0 about 103 h after its release. 7.2 goes EOL about 16 days after 7.3.0, as 7.1 did. K1 sees this bump; S1c starts on 7.3.y. | https://www.kernel.org/releases.json; COPR build list API |
-| 2026-10-20; later targets 10-27 and 11-03 | Fedora 45 GA. Within 7 days, delete the updates-testing admission (review §4). From `FEDORA_GA_DATE` plus 7 days, every build fails while `updates-testing-allowlist.txt` has entries (the dated check in `image/Containerfile`'s repos stage). If GA slips, move `FEDORA_GA_DATE` first. | https://fedorapeople.org/groups/schedule/f-45/f-45-key-tasks.html (fetched 2026-09-28: final target 2026-10-20, then 10-27 and 11-03) |
+| 2026-11-03, the last target (10-20 and 10-27 were No-Go; checked 2026-10-23) | Fedora 45 GA. Within 7 days, delete the updates-testing admission (review §4). From `FEDORA_GA_DATE` plus 7 days, every build fails while `updates-testing-allowlist.txt` has entries (the dated check in `image/Containerfile`'s repos stage). If GA slips, move `FEDORA_GA_DATE` first. | https://fedorapeople.org/groups/schedule/f-45/f-45-key-tasks.html (fetched 2026-09-28: final target 2026-10-20, then 10-27 and 11-03) |
 | Late December 2026 to early January 2027 | Linux 7.4: the first kernel major bump through the lane, with owner review. 7.3 goes EOL about two weeks later. | estimate from the 7.1 to 7.3 cadence |
 | 2027-02-09 | Fedora 46 branch point, 10 weeks before the 2027-04-20 target. The builder VM starts an unattended `FEDORA=46` compose that publishes nothing (S6 prep). | https://fedorapeople.org/groups/schedule/f-46/f-46-key-tasks.html (fetched 2026-09-28) |
 | February to March 2027 | GNOME 52 beta and 52.0. The 52 schedule is not published; by the 51 cycle (beta 2026-08-01, 51.0 2026-09-12) the beta lands in early February and 52.0 in mid-March. F45 stays on GNOME 51. | https://release.gnome.org/calendar/ |
@@ -280,8 +280,9 @@ the safety net come before the first Apex pixel.
   - the seams the split needs: the lane takes its recipes from a second root and
     counts releases across both; the image tests and G2 take their inputs from
     variables; the lane tests use frozen recipe fixtures.
-- The S1a exit items still open: python-dbusmock fixtures and a fixed clock for G2, and
-  the enable and disable cycles.
+- S1a's last G2 items, done: python-dbusmock fixtures, a fixed clock, and three enable
+  and disable cycles. S1a's exit is recorded with the first green G2 on the self-hosted
+  runner.
 - The split, with history, into seven public repositories under
   `github.com/apex-linux`:
   - `.github`: shared CI;
