@@ -333,14 +333,17 @@ This section supersedes the signing and repository rules of
 [ADR 0015](adr/0015-cachyos-kernel-and-nvidia.md) amends its Secure Boot and
 third-party clauses.
 
-- One repository, `ghcr.io/apex-linux/apex`, with the tags `45` and `45.YYYYMMDD.N`,
-  signed with one cosign key. The laptop's policy also lists the public half of the
-  key's offline backup. The image package is public, since the image holds no secrets,
-  so the laptop pulls without a token.
+- The laptop follows one repository, `ghcr.io/apex-linux/apex`, with the tags `45` and
+  `45.YYYYMMDD.N`, signed with the cosign key (`release.pub` in the policy). The
+  policy also lists the public half of that key's offline backup. The image package is
+  public, since the image holds no secrets, so the laptop pulls without a token.
+- `ghcr.io/apex-linux/apex-testing` holds the candidates, signed with the CI key
+  (`ci.pub`). Only the build pipeline and the qualification VMs use it.
 - The laptop's bootc calls run with
   `CONTAINERS_POLICY_JSON=/usr/share/apex/containers/policy.json`: default reject,
-  `sigstoreSigned` for the Apex repository only, and no transport-wide accept rules. The
-  general policy used by podman and toolbox stays Fedora's default.
+  `sigstoreSigned` for the two Apex repositories, each with its own keys, and no
+  transport-wide accept rules. The general policy used by podman and toolbox stays
+  Fedora's default.
 - Apex holds two persistent keys, the cosign key and the RPM key. Each private key
   lives in the builder VM on the laptop (§4), with an offline backup. The keys
   therefore guard against tampering in the registry and in transit, not against a

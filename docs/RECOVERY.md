@@ -17,8 +17,8 @@ names are placeholders in `<…>`.
 | "No bootable device", the firmware boots only Ubuntu, ESP damaged | §5 |
 | A signing key or the GitHub account may be compromised | §6 |
 | The builder VM was rebuilt, and the lane says there is no Apex RPM key | §6.8 |
-| You applied an update and want to cancel it before the restart | §7.1 |
-| Follow the testing channel, or go back to stable | §7.2 |
+| You applied an update and no longer want it | §7.1 |
+| The laptop follows the testing channel | §7.2 |
 | You want to see the boot messages behind the splash | §1, "Watch a boot in text mode" |
 | A new kernel or NVIDIA driver misbehaves | §8.1 |
 | A kernel hold passed its 72 h limit, or Fedora has a kernel fix that CachyOS lacks | §8.2 |
@@ -180,8 +180,7 @@ sudo unshare --mount --propagation private -- sh -c \
 ```
 
 This only removes the automatic fallback: an applied update still boots next, now
-without a boot count. Before the restart, `apexctl update discard` disarms and also
-locks the update again (§7.1; it needs the network).
+without a boot count. Nothing cancels it before the restart (§7.1).
 
 **Watch a boot in text mode.** The image boots with `rhgb quiet`: Plymouth's graphical
 splash, and kernel and systemd messages on the console only for errors. The journal has
@@ -552,25 +551,10 @@ Impact: someone can sign `apex-testing` images. Only a laptop that follows the t
 channel trusts them.
 
 1. If the laptop follows testing (the `Channel` row of `apexctl status` says
-   `testing (running image)`, or a Staged row says "from the testing channel"), switch
-   to stable as §7.2 describes (administrator password):
-
-   ```sh
-   apexctl update channel stable    # downloads the stable image, locked; exit 3 if already on stable
-   apexctl status                   # Staged … "locked: not used at the next boot"
-   apexctl update apply             # then restart
-   ```
-
-   `apply` installs the stable build even when it is the same build as the running
-   testing build or an older one. The channel switch, confirmed with the administrator
-   password, counts as the confirmation a downgrade needs. When it is the same image
-   (stable builds are testing builds promoted by digest), only the origin changes and
-   no boot count is armed; otherwise the next boot is counted as after any `apply`.
-   From the switch on, checks and downloads use only `ghcr.io/apex-linux/apex`. The
-   `Channel` row changes to `stable (running image)` once the stable image has booted.
-   The testing build you were running is then the rollback deployment: do not roll
-   back to it. Compare its digest with the CI runs in step 5: if it does not match one,
-   reinstall from stable (INSTALL.md) instead.
+   `testing (running image)`), move it back to stable as §7.2 describes. The testing
+   build you were running is then the rollback deployment: do not roll back to it.
+   Compare its digest with the CI runs in step 5: if it does not match one, reinstall
+   from stable (INSTALL.md) instead.
 2. Remove the leaked secret: `gh secret delete COSIGN_PRIVATE_KEY --env testing` and
    `gh secret delete COSIGN_PASSWORD --env testing`.
 3. Generate a new CI key and store it:
@@ -760,74 +744,29 @@ VM exposes both.
   5. When the new image passed its gates, delete the old GnuPG home in the VM. If the
      key was exposed, destroy its offline backup too.
 
-## 7. Cancelling an applied update, changing the channel
+## 7. An applied update, and the channel
 
-### 7.1 Cancel an applied update before the restart
+### 7.1 An applied update you no longer want
 
-```sh
-apexctl update discard     # no password in your own active session (polkit …update.discard)
-apexctl status             # Staged … "locked: not used at the next boot", or no Staged row
-```
+Nothing cancels an applied update: it installs at the next restart, protected by the
+boot count (§1). If you do not want it, restart, then go back to the version you ran
+before with `apexctl update rollback --mark-bad` (§2), so it is never offered again.
 
-bootc cannot lock a stage in place. Discard therefore runs a new download-only upgrade,
-which pulls the channel's tag again (M1 contract §6). That has consequences:
+### 7.2 A laptop that follows the testing channel
 
-- **It needs the network.** Offline it fails and says that the update is still set to
-  install at the next restart. Nothing has changed then: the update installs at the
-  next restart, and the boot count stays armed to protect that boot. Try again once
-  online.
-- **It is refused where a download would be** (exit 2) whenever it may have to
-  download a newer build: not enough space, on battery below 50 %, or on a metered
-  connection. The message says that cancelling may download a newer update, and why it
-  cannot now.
-- **It may leave a newer build staged, still locked.** The output first says that the
-  applied version will not be installed at the next restart. Then it says either that
-  the channel still offers that build, which is now locked again, or that the channel
-  has moved on and its current build replaced the one you applied, also locked. Either
-  way it prints the locked build's version and full digest and the exact
-  `apexctl update apply --digest …` command. Nothing installs at the next restart.
-  Review a newer build with `apexctl update changes` before you apply it.
-- **It cannot cancel when the channel points back at the running build** (a withdrawn
-  update). Then there is nothing to lock, discard fails, and the applied update still
-  installs at the next restart, protected by the boot count.
-
-Discard succeeds only when bootc reports a locked stage and a fresh status confirms that
-nothing unlocked boots next. Only then does it unset `apex_target` and `apex_counter`.
-When it fails, the boot count stays armed for whatever boots next, because the update
-may still install. Check with `apexctl status`: a Staged row marked "locked: not used
-at the next boot", or no Staged row, means nothing installs. Discard never runs
-`bootc rollback`. It exits 3 when no applied update is waiting, and it is refused while
-a rollback is queued (§1).
-
-### 7.2 Follow another channel
+Apex offers no channel switch. Every installed laptop follows `ghcr.io/apex-linux/apex:45`
+(INSTALL.md). Testing images are signed with the CI key, are not qualified for stable,
+and are used only by the build pipeline and the qualification VMs. A laptop whose
+`Channel` row says `testing (running image)` was installed or switched by hand. Move
+it back with bootc and the strict policy, then restart:
 
 ```sh
-apexctl update channel testing     # administrator password (polkit …update.switch-channel)
-apexctl status                     # Staged … locked, "from the testing channel (signed with the CI key, not qualified for stable)"
-apexctl update changes             # optional: what the switch changes
-apexctl update apply               # then restart
+sudo env CONTAINERS_POLICY_JSON=/usr/share/apex/containers/policy.json \
+    bootc switch --enforce-container-sigpolicy ghcr.io/apex-linux/apex:45
 ```
 
-- `update channel` does not change what boots. It downloads the channel's current
-  image and stages it locked, like `apexctl update download`, and prints "Apex now
-  follows the testing channel. Its image … is downloaded and stays locked until you
-  apply it." From then on, checks and downloads use the new channel. The switch takes
-  effect only with `apexctl update apply` and a restart.
-- `apply` installs a stage made by `update channel` even when it is not newer than the
-  running version: the administrator password of the switch is the confirmation. When
-  the stage is the very image that is running (stable builds are testing builds
-  promoted by digest), only the origin changes. `apply` then unlocks it **without
-  arming** the boot count, because this image has already booted here. Otherwise the
-  next boot is counted as after any `apply` (§1).
-- Until the new image has booted, the `Channel` row keeps naming the channel of the
-  running image, for example `stable (running image)`.
-- `update channel` exits 3 when the system already follows that channel. It is refused
-  (exit 2) while an applied update waits for the restart ("An update is already set to
-  install at the next restart. Cancel it first …"; cancel it with §7.1) or while a
-  rollback is queued (§1).
-- Testing images are signed with the CI key and are not qualified for stable. To go
-  back, run `apexctl update channel stable`, then `apexctl update apply`, then restart
-  (§6.2 step 1 explains what that installs).
+This boot is not counted: if the stable image does not start, pick the previous entry
+in the GRUB menu (§1).
 
 ## 8. The kernel pair and Secure Boot
 
