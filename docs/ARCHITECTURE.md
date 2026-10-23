@@ -55,9 +55,10 @@ Non-goals:
 ## 2. The system at a glance
 
 ```
- GitHub (private repository): ci.yml only
+ GitHub (apex-linux, public): ci.yml in every repository; apex-image's vm.yml on a
+ self-hosted runner that reaches the builder VM only through ci-build <sha of main>
 
- Builder VM on the laptop: just publish (S1d)         Upstream inputs, each with a pinned key
+ Builder VM on the build host: just publish (S1d)     Upstream inputs, each with a pinned key
  ┌──────────────────────────────────────────────────┐  registry.fedoraproject.org/fedora-bootc:45@digest
  │ GNOME lane (S1a) apex-lane: gnome-shell          │  Fedora 45 repos, signed SRPMs, Koji (mutter pin)
  │   (+ desktop/shell), mutter pinned, libadwaita,  │  COPR kernel-cachyos SRPM, CachyOS signed tag
@@ -124,16 +125,19 @@ The OS is one OCI image, consumed by `bootc` ([ADR 0001](adr/0001-image-based-bo
 [ADR 0015](adr/0015-cachyos-kernel-and-nvidia.md). This section supersedes
 [ADR 0013](adr/0013-build-pipeline.md).)
 
-While the repository is private, GitHub runs one workflow, `ci.yml`. Packages and
-images are built in the builder VM ([`tools/builder-vm/`](../tools/builder-vm/)) and
-published from it with `just publish` (S1d), by hand or from a daily host timer on AC
-power. The builder VM runs on the laptop: under Ubuntu today, and under Apex once
-Ubuntu is removed. `just check`, `just deny`, `just image-test`, `just layer-test`,
-`just shots-test` and `just privacy` run `ci.yml`'s commands locally.
+Every repository runs its own `ci.yml` on GitHub-hosted runners, with the shared
+actions of apex-ci. Packages and images are built in the builder VM
+([`tools/builder-vm/`](../tools/builder-vm/)) on the build host, the owner's Fedora KVM
+machine, and published from it with `just publish` (S1d). apex-image's `vm.yml` drives
+the builds from a self-hosted runner on that host ([`tools/runner/`](../tools/runner/)):
+one throwaway container per job, whose only way into the VM is a key bound to
+`ci-build <sha>`, so it builds commits of `main` and nothing else. Each repository's
+`just check` runs its `ci.yml` commands locally.
 
 | Step | What it does | Output |
 |---|---|---|
 | `ci.yml` | on every pull request and every push to `main`: fmt, clippy `-D warnings`, `cargo test`, the comment guard (`apex-lint`, [CONTRIBUTING](CONTRIBUTING.md)), `cargo deny`, the RPM `License:` check, shellcheck and actionlint, the script self-tests, `image/tests/run.sh`, the Apex layer's safety net in gjs (`tests/layer/run.sh`), G2's own tests (`tests/shots/selftest.sh`), the privacy guard. To come: ESLint on `desktop/shell/js/` and sassc on the Apex SCSS (S1a), blueprint-compiler (S2c), and nextest with the wall-clock tests in a slow profile (no slice yet) | pass or fail |
+| `vm.yml` | in apex-image, on a push to `main` that touches the image, the lane, the tools or `components.lock`, daily, and on an approved dispatch: `ci-build` in the builder VM runs the packages, the image, G2 twice, G4 when due, and promotes the lane lock when the gates pass | the gates record in the job summary |
 | packages | `apex-lane build <pkg>` for each directory in `packaging/pkgs/` (§4.1), and the kernel pair job (§4.2) | signed RPMs stored by content key; `rpms.lock.next` in the builder VM's store |
 | image | `image.sh context --lane-lock` → `build-rootfs` → build checks (G1) → headless shell (G2) → rechunk with `--previous-build` → push under a unique tag → cosign sign → move `:45` | `ghcr.io/apex-linux/apex:45`, and a public source artifact per digest (§4.2, S1d) |
 
@@ -342,7 +346,7 @@ third-party clauses.
   `sigstoreSigned` for the Apex repository only, and no transport-wide accept rules. The
   general policy used by podman and toolbox stays Fedora's default.
 - Apex holds two persistent keys, the cosign key and the RPM key. Each private key
-  lives in the builder VM on the laptop (§4), with an offline backup. The keys
+  lives in the builder VM on the build host (§4), with an offline backup. The keys
   therefore guard against tampering in the registry and in transit, not against a
   compromised laptop. The table also lists the per-build module key and the Secure Boot
   key that step W3 may add.
