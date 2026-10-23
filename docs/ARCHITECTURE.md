@@ -833,8 +833,9 @@ and mirrored unmodified into `[apex]` (§3).
   `ConditionPathExists=%t/apex-shell-starting`: it runs
   `gsettings set io.github.apex_linux.Apex.Desktop layer-enabled false`, leaves
   `$XDG_STATE_HOME/apex/shell-guard-tripped` for `apex-session-agent`, which then
-  offers to turn the Apex desktop back on (S1b; until then `gsettings`), and removes the
-  layer's file. ADR 0014's second trigger, a second shell failure on the same
+  offers to turn the Apex desktop back on, and removes the layer's file. The agent
+  removes the marker only once `layer-enabled` reads back true, so a lost write is
+  offered again at the next login. ADR 0014's second trigger, a second shell failure on the same
   deployment, needs a counter keyed by the deployment and is not built yet. The unit
   counts exit status 1 as success, so G2 must catch an import error.
 - A shell that cannot start in any mode never keeps the greeter active for 20 s, so the
