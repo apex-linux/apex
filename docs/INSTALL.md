@@ -59,7 +59,7 @@ after the free space, so once Ubuntu is gone the Apex root can grow into it.
 
 Prerequisites:
 
-- A published, signed image: `ghcr.io/sekirokenjii/apex:45` exists, and its digest is
+- A published, signed image: `ghcr.io/apex-linux/apex:45` exists, and its digest is
   the one `just publish` printed in the builder VM (S1d).
 - The real signing keys are committed: in your checkout,
   `grep -rlx APEX-PLACEHOLDER-NOT-A-KEY image/system_files/usr/share/apex/keys` prints
@@ -255,7 +255,7 @@ for k in release release-backup; do
     printf '%-15s ' "$k"; openssl pkey -pubin -in /usr/share/apex/keys/$k.pub -outform DER | sha256sum
 done
 # the same key as GitHub serves it, at the commit you trust:
-curl -fsSL https://raw.githubusercontent.com/sekirokenjii/apex-fedora/<COMMIT>/image/system_files/usr/share/apex/keys/release.pub |
+curl -fsSL https://raw.githubusercontent.com/apex-linux/apex-image/<COMMIT>/image/system_files/usr/share/apex/keys/release.pub |
     openssl pkey -pubin -outform DER | sha256sum
 ```
 
@@ -273,7 +273,7 @@ Choose the digest. Take it from the output of `just publish` in the builder VM (
 then confirm the registry agrees and the version is the one you expect:
 
 ```sh
-IMG=ghcr.io/sekirokenjii/apex
+IMG=ghcr.io/apex-linux/apex
 DIGEST=sha256:<digest from just publish>
 skopeo inspect --format '{{.Digest}} {{index .Labels "org.opencontainers.image.version"}}' docker://$IMG:45
 cosign verify --key /usr/share/apex/keys/release.pub "$IMG@$DIGEST"
@@ -397,7 +397,7 @@ cryptsetup close apex-root
 
 ```sh
 apexctl status                                   # booted digest = $DIGEST; "Channel    stable (running image)"
-sudo bootc status                                # image ghcr.io/sekirokenjii/apex:45, signed transport
+sudo bootc status                                # image ghcr.io/apex-linux/apex:45, signed transport
 cat /proc/cmdline                                # has rd.luks.uuid=… root=UUID=… rootflags=subvol=/root rhgb quiet panic=10 …, in any order
 findmnt /var; findmnt /boot                      # /var: btrfs [/var]; /boot: ext4, ro
 sudo grep -c '^# apex-bootcount v1' /boot/grub2/grub.cfg   # 1 (grub.cfg is mode 0600)

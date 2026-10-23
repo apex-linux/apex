@@ -135,7 +135,7 @@ Ubuntu is removed. `just check`, `just deny`, `just image-test`, `just layer-tes
 |---|---|---|
 | `ci.yml` | on every pull request and every push to `main`: fmt, clippy `-D warnings`, `cargo test`, the comment guard (`apex-lint`, [CONTRIBUTING](CONTRIBUTING.md)), `cargo deny`, the RPM `License:` check, shellcheck and actionlint, the script self-tests, `image/tests/run.sh`, the Apex layer's safety net in gjs (`tests/layer/run.sh`), G2's own tests (`tests/shots/selftest.sh`), the privacy guard. To come: ESLint on `desktop/shell/js/` and sassc on the Apex SCSS (S1a), blueprint-compiler (S2c), and nextest with the wall-clock tests in a slow profile (no slice yet) | pass or fail |
 | packages | `apex-lane build <pkg>` for each directory in `packaging/pkgs/` (§4.1), and the kernel pair job (§4.2) | signed RPMs stored by content key; `rpms.lock.next` in the builder VM's store |
-| image | `image.sh context --lane-lock` → `build-rootfs` → build checks (G1) → headless shell (G2) → rechunk with `--previous-build` → push under a unique tag → cosign sign → move `:45` | `ghcr.io/sekirokenjii/apex:45`, and a public source artifact per digest (§4.2, S1d) |
+| image | `image.sh context --lane-lock` → `build-rootfs` → build checks (G1) → headless shell (G2) → rechunk with `--previous-build` → push under a unique tag → cosign sign → move `:45` | `ghcr.io/apex-linux/apex:45`, and a public source artifact per digest (§4.2, S1d) |
 
 Rules:
 
@@ -150,8 +150,8 @@ Rules:
 - **Monotonic versions.** `:45` moves only to a higher `45.YYYYMMDD.N`, and only after
   G1 and G2 pass. A change to `crates/apex-*`, the kargs, GRUB, the gnome-shell,
   mutter or gdm NVR, or the kernel pair is published only after a G4 run (§11).
-- **Visible state.** The image labels `io.github.sekirokenjii.apex.degraded` and
-  `io.github.sekirokenjii.apex.held` list what is degraded or held; they copy the
+- **Visible state.** The image labels `io.github.apex-linux.apex.degraded` and
+  `io.github.apex-linux.apex.held` list what is degraded or held; they copy the
   `degraded` and `held` fields of the image's manifest (contract §3). `apexctl status`
   and Settings > System > Software Updates show both (S2d). Nothing opens issues.
   `just publish` refuses an image whose degraded set grew, unless the owner passes an
@@ -322,7 +322,7 @@ FEDORA-2026-48a7996f9c (GNOME 51.0, stable since 2026-09-30) and libxml2 2.13.9.
 The update and boot stack is frozen at its current scope. It is the safety net for the
 desktop and kernel work: a shell, greeter or kernel that cannot start never produces a
 session that lives for 20 s, so the counted boot rolls it back. The contract is the
-D-Bus XML `crates/apex-dbus/data/io.github.sekirokenjii.Apex.Update1.xml` together with
+D-Bus XML `crates/apex-dbus/data/io.github.apex_linux.Apex.Update1.xml` together with
 the Rust types.
 
 ### 5.1 Channel, trust and keys
@@ -332,7 +332,7 @@ This section supersedes the signing and repository rules of
 [ADR 0015](adr/0015-cachyos-kernel-and-nvidia.md) amends its Secure Boot and
 third-party clauses.
 
-- One repository, `ghcr.io/sekirokenjii/apex`, with the tags `45` and `45.YYYYMMDD.N`,
+- One repository, `ghcr.io/apex-linux/apex`, with the tags `45` and `45.YYYYMMDD.N`,
   signed with one cosign key. The laptop's policy also lists the public half of the
   key's offline backup. The image package is public, since the image holds no secrets,
   so the laptop pulls without a token.
@@ -825,7 +825,7 @@ and mirrored unmodified into `[apex]` (§3).
   `Before=gnome-session-restart-dbus.service` (the same list restarts the session bus,
   and `gsettings` exits 0 when its write is lost) and
   `ConditionPathExists=%t/apex-shell-starting`: it runs
-  `gsettings set io.github.sekirokenjii.Apex.Desktop layer-enabled false`, leaves
+  `gsettings set io.github.apex_linux.Apex.Desktop layer-enabled false`, leaves
   `$XDG_STATE_HOME/apex/shell-guard-tripped` for `apex-session-agent`, which then
   offers to turn the Apex desktop back on (S1b; until then `gsettings`), and removes the
   layer's file. ADR 0014's second trigger, a second shell failure on the same
@@ -867,7 +867,7 @@ drawn saturation. The values are tokens in `desktop/shell/data/theme/apex/`.
   decision).
 
 **Keybindings** (decision 6, S1b). `toggle-spotlight`, default `['<Super>space']`,
-lives in `io.github.sekirokenjii.Apex.Desktop.Keybindings`. The layer registers it for
+lives in `io.github.apex_linux.Apex.Desktop.Keybindings`. The layer registers it for
 the normal and overview modes.
 `/usr/share/gnome-control-center/keybindings/60-apex.xml` lists it, so Settings >
 Keyboard can change it. A Super tap opens the overview, and Super+A the launcher. Input
@@ -890,7 +890,7 @@ stale copy at user priority never wins. libadwaita reads no Apex schema. Flatpak
 read `apex.css` at start through the system Flatpak override if the Bazaar spike
 passes, and keep libadwaita's 15 px otherwise. Colour variables never go into user CSS.
 
-**Settings.** One schema, `io.github.sekirokenjii.Apex.Desktop`, with a `.Keybindings`
+**Settings.** One schema, `io.github.apex_linux.Apex.Desktop`, with a `.Keybindings`
 child, holds only keys with no upstream home. Every other row of the Apex Desktop panel
 binds a stock GNOME key. Stock panels gain no rows (decision 27). System's Software
 Updates row opens the Apex updates page. "Apex Tweaks" is a `.desktop` entry that runs
@@ -947,7 +947,7 @@ own files (GPL-3.0-or-later, the Apex Symbolic glyphs included) and Colloid (GPL
 | `apex-bootc` | Rust | Lenient serde model of the bootc status API; invocation builder (argv from enums, `env_clear`, fixed `PATH`, strict `CONTAINERS_POLICY_JSON`); process runner |
 | `apex-update` | Rust | Pure engine: snapshot, gates, state derivation, atomic stores, version ordering, `rpmvercmp`, manifest diff |
 | `apex-boot` | Rust | Boot assessment: grubenv codec, decision table, checks with timeouts; binary `apex-boot-assess` |
-| `apex-dbus` | Rust, XML | The `io.github.sekirokenjii.Apex.Update1` contract. The XML also feeds gdbus-codegen in gnome-control-center (S2d). |
+| `apex-dbus` | Rust, XML | The `io.github.apex_linux.Apex.Update1` contract. The XML also feeds gdbus-codegen in gnome-control-center (S2d). |
 | `apex-updated` | Rust | System bus service: one operation queue, polkit (system-bus-name subject), hardened unit |
 | `apex-session-agent` (S1b) | Rust | User unit: writes `apex.css` for the window radius and the Ptyxis accent palette, offers to turn the Apex desktop back on after the crash guard trips, posts update notifications (S2d), points `icon-theme` at the `Apex-<accent>` folder theme for the current accent (S7) |
 | `apexctl` | Rust | CLI: `status` (degraded and held packages, the kernel pair and its hold clock, S2d), `update …`, `hw report`, `major-upgrade` (S6) |
@@ -971,9 +971,9 @@ Rules:
 - **Root daemon hygiene.** It reads only `/usr/share/apex` and `/etc/apex`, never a
   user's home. It has no writable D-Bus properties. bootc argv is built from enums plus
   the compile-time image references. The unit is hardened within what bootc tolerates.
-- **IDs.** One family, prefix `io.github.sekirokenjii.Apex`: bus `…Apex.Update1`,
+- **IDs.** One family, prefix `io.github.apex_linux.Apex`: bus `…Apex.Update1`,
   schemas `…Apex.Desktop` and `…Apex.Desktop.Keybindings`, polkit
-  `io.github.sekirokenjii.apex.update.*`, labels `io.github.sekirokenjii.apex.*`.
+  `io.github.apex-linux.apex.update.*`, labels `io.github.apex-linux.apex.*`.
   There are no extension UUIDs.
 - **Packaging.** Two RPMs come from this repository: `apex` (Rust binaries and units,
   built with `cargo auditable`) and `apex-desktop` (noarch assets; a first build in S1a

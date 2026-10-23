@@ -370,7 +370,7 @@ Reduce Transparency always turns glass off.
 
 | Action | Keys | Where it is set |
 |---|---|---|
-| Spotlight | Super+Space | `toggle-spotlight` in `io.github.sekirokenjii.Apex.Desktop.Keybindings` |
+| Spotlight | Super+Space | `toggle-spotlight` in `io.github.apex_linux.Apex.Desktop.Keybindings` |
 | Next input source (English ↔ Vietnamese Telex) | Super+Alt+Space; XF86Keyboard | `org.gnome.desktop.wm.keybindings switch-input-source`, in the vendor override |
 | Previous input source | Shift+Super+Alt+Space; Shift+XF86Keyboard | `switch-input-source-backward`, in the vendor override |
 | Overview | Super tap; hot corner; Activities pill; three-finger swipe | stock |
@@ -463,7 +463,7 @@ Reduce Transparency always turns glass off.
 
 ### Settings
 
-- One schema, `io.github.sekirokenjii.Apex.Desktop`, with one child schema,
+- One schema, `io.github.apex_linux.Apex.Desktop`, with one child schema,
   `.Keybindings`, holds only keys with no upstream home. The dock's keys live there
   now. Every other row of the Apex Desktop panel binds a stock GNOME key.
 - The Apex Desktop panel is the one home for Apex settings. Stock panels gain no rows
