@@ -3,6 +3,10 @@
 Status: accepted (2026-09-24, revised after design review); amended 2026-09-28: major upgrades
 follow ARCHITECTURE §5.4
 
+Amended 2026-10-23: the channel switch, its `switch-channel` polkit action, the reserved
+`downgrade` action and Cancel (`DiscardStaged`) are removed (ARCHITECTURE §5.2). The
+decisions below keep their original text as history.
+
 ## Context
 
 The stock `bootc-fetch-apply-updates.timer` runs `bootc upgrade --apply`, which reboots.
