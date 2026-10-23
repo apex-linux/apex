@@ -18,8 +18,9 @@ forgotten.
 
 ## The comment guard
 
-`apex-lint` (`crates/apex-lint`) holds every change to the rule. ci.yml runs it in the
-Rust job, and `just check` runs it too. A guard failure is a failing check.
+`apex-lint` ([apex-linux/apex-ci](https://github.com/apex-linux/apex-ci/tree/main/apex-lint))
+holds every change to the rule. Every repository's CI runs it through the shared
+`comments` action. A guard failure is a failing check.
 
 | Rule           | Fails when                                                                  |
 | -------------- | --------------------------------------------------------------------------- |
@@ -64,9 +65,10 @@ JSON, SVG and XML.
 ## Running it
 
 ```bash
-just lint-comments                       # every git-tracked file in scope
-just lint-comments image/ Justfile       # files, or the git-listed files of directories
-cargo run -p apex-lint --locked -- comments --json
+cargo install --locked --git https://github.com/apex-linux/apex-ci apex-lint
+apex-lint comments                       # every git-tracked file in scope
+apex-lint comments image/ Justfile       # files, or the git-listed files of directories
+apex-lint comments --json
 ```
 
 Each violation prints as `path:line: rule: message`. To fix one, rename, extract or
@@ -76,8 +78,8 @@ To check that a comment cleanup changed nothing but comments, compare the file w
 its comment lines before and after:
 
 ```bash
-cargo run -q -p apex-lint -- strip FILE >before
+apex-lint strip FILE >before
 # edit FILE
-cargo run -q -p apex-lint -- strip FILE >after
+apex-lint strip FILE >after
 diff -B before after
 ```

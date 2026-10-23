@@ -7,7 +7,7 @@ M1 but only gates fingerprint unlock (M2); and §4 names the slice that needs ea
 its rows. Run the items on an installed Apex, logged in to GNOME as the owner, on AC
 power unless an item says otherwise. Commands that need root carry `sudo`.
 
-Machine facts come from [hardware/m7400qc/profile.toml](../../hardware/m7400qc/profile.toml).
+Machine facts come from [hardware/m7400qc/profile.toml](https://github.com/apex-linux/apex-system/blob/main/hardware/m7400qc/profile.toml).
 Details and background: [AUDIO.md](AUDIO.md), [FINGERPRINT.md](FINGERPRINT.md),
 [ARCHITECTURE §6](../ARCHITECTURE.md#6-hardware-enablement-m7400qc).
 

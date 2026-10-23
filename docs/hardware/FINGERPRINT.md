@@ -2,7 +2,7 @@
 
 Decision: [ADR 0006](../adr/0006-fingerprint-libfprint-rebuild.md). Architecture:
 [§6.3](../ARCHITECTURE.md#63-fingerprint-elan-04f30c6e). The patches and their exact
-log lines: [packaging/libfprint/patches/README.md](../../packaging/libfprint/patches/README.md).
+log lines: [packaging/libfprint/patches/README.md](https://github.com/apex-linux/apex-kernel/blob/main/packaging/libfprint/patches/README.md).
 Acceptance: [ACCEPTANCE.md](ACCEPTANCE.md) §6.
 
 At M1 the reader enrolls prints in Settings > Users, but **fingerprint is not in PAM**:
@@ -61,7 +61,7 @@ signal.
 Once 0101 is enabled, a capture that starts with the finger already on the key gives
 one `asking to remove the finger (retry N of 3)` line, `frame dropped` lines while the
 finger stays, then the lift, and only then the next calibration. The
-[patches README](../../packaging/libfprint/patches/README.md#which-log-lines-to-look-for)
+[patches README](https://github.com/apex-linux/apex-kernel/blob/main/packaging/libfprint/patches/README.md#which-log-lines-to-look-for)
 lists the exact lines.
 
 ## 3. Privacy rules (normative)
@@ -185,7 +185,7 @@ grep -E 'pre-scan status|finger lifted|transient pre-scan|swipe too short|darker
 ```
 
 What the lines mean is tabulated in
-[packaging/libfprint/patches/README.md](../../packaging/libfprint/patches/README.md#which-log-lines-to-look-for).
+[packaging/libfprint/patches/README.md](https://github.com/apex-linux/apex-kernel/blob/main/packaging/libfprint/patches/README.md#which-log-lines-to-look-for).
 The `pre-scan status` lines are safe to share with upstream (issue #879 or MR !655).
 
 On the Ubuntu dev install, build libfprint with only the elan driver and run the same

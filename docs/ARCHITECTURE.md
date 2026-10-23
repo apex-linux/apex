@@ -127,9 +127,9 @@ The OS is one OCI image, consumed by `bootc` ([ADR 0001](adr/0001-image-based-bo
 
 Every repository runs its own `ci.yml` on GitHub-hosted runners, with the shared
 actions of apex-ci. Packages and images are built in the builder VM
-([`tools/builder-vm/`](../tools/builder-vm/)) on the build host, the owner's Fedora KVM
+([`tools/builder-vm/`](https://github.com/apex-linux/apex-image/tree/main/tools/builder-vm)) on the build host, the owner's Fedora KVM
 machine, and published from it with `just publish` (S1d). apex-image's `vm.yml` drives
-the builds from a self-hosted runner on that host ([`tools/runner/`](../tools/runner/)):
+the builds from a self-hosted runner on that host ([`tools/runner/`](https://github.com/apex-linux/apex-image/tree/main/tools/runner)):
 one throwaway container per job, whose only way into the VM is a key bound to
 `ci-build <sha>`, so it builds commits of `main` and nothing else. Each repository's
 `just check` runs its `ci.yml` commands locally.
@@ -308,7 +308,7 @@ FEDORA-2026-48a7996f9c (GNOME 51.0, stable since 2026-09-30) and libxml2 2.13.9.
   `libxml2_2.13`, which keeps `libxml2.so.2` for the packages that were not rebuilt,
   and whatever else the compose then needs from the update. The four alone are
   admitted and not installed: the image of 2026-09-29 carried `51~rc`
-  ([image/README.md](../image/README.md), Containerfile).
+  ([image/README.md](https://github.com/apex-linux/apex-image/blob/main/image/README.md), Containerfile).
 
 ### 4.4 Release cost
 
@@ -550,7 +550,7 @@ third-party clauses.
 
 ## 6. Hardware enablement (M7400QC)
 
-Machine facts live in [`hardware/m7400qc/profile.toml`](../hardware/m7400qc/profile.toml).
+Machine facts live in [`hardware/m7400qc/profile.toml`](https://github.com/apex-linux/apex-system/blob/main/hardware/m7400qc/profile.toml).
 `hardware/m7400qc/monitors.xml` is a committed static file. Acceptance tests with
 numbers are in [hardware/ACCEPTANCE.md](hardware/ACCEPTANCE.md).
 
