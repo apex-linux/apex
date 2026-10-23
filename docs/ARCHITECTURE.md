@@ -176,7 +176,8 @@ Rules:
   package directory, its Source1 directory (`desktop/shell/` for gnome-shell), the
   lane's source (`crates/apex-lane/src` and its `Cargo.toml`), and
   `packaging/rebuild.sh`, the Bash lane apex-lane replaced, whose history keeps N from
-  dropping. A content key can also change without a commit, when a Fedora update moves
+  dropping. A recipe in its own repository counts there and adds the lane's count, so N
+  only grows. A content key can also change without a commit, when a Fedora update moves
   only the pin (a mutter-only update): each later key of the same Fedora build at
   `.apexN` is `.apexN.M`, M one above the highest stored, so two builds never share a
   NEVRA. In the VM, after the container and before the store, `rpmsign` signs the built
