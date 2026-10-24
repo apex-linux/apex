@@ -127,7 +127,7 @@ The OS is one OCI image, consumed by `bootc` ([ADR 0001](adr/0001-image-based-bo
 
 Every repository runs its own `ci.yml` on GitHub-hosted runners, with the shared
 actions of apex-ci. Packages and images are built in the builder VM
-([`tools/builder-vm/`](https://github.com/apex-linux/apex-image/tree/main/tools/builder-vm)) on the build host, the owner's Fedora KVM
+([`tools/builder-vm/`](https://github.com/apex-linux/apex-image/tree/main/tools/builder-vm)) on the build host, the owner's Ubuntu KVM
 machine, and published from it with `just publish` (S1d). apex-image's `vm.yml` drives
 the builds from a self-hosted runner on that host ([`tools/runner/`](https://github.com/apex-linux/apex-image/tree/main/tools/runner)):
 one throwaway container per job, whose only way into the VM is a key bound to
