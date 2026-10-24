@@ -243,7 +243,8 @@ because there even checking should stop.
 
 **A version Apex kept.** An update installed before the running version passed its
 startup check makes Apex pin the last version known to work, so the boot menu still
-offers it. `apexctl status` shows it with "Kept" and the reason. Apex unpins it itself
+offers it. `apexctl status` shows the reason on its `Rollback` row until the restart,
+then on a "Kept" row once it is no longer the rollback. Apex unpins it itself
 once a later version has passed its check. To unpin it by hand, run
 `ostree admin status`: the kept deployment shows `Pinned: yes`. Count the listed
 deployments from 0, including a staged one at the top, then run
@@ -292,17 +293,14 @@ Decide:
   apexctl update acknowledge     # exit 3 when no failure is recorded
   ```
 
-  It removes the notice and `/var/lib/apex/health-failure.json`, nothing else: nothing
-  is rolled back, and the boot count stays armed. It needs no password in your own
-  active session (polkit `…update.discard`).
+  It removes the notice, `/var/lib/apex/health-failure.json` and the recorded fallback
+  (`last-fallback.json`), nothing else: nothing is rolled back, and the boot count stays
+  armed. It needs no password in your own active session (polkit `…update.discard`).
 
-  Until a green boot confirms the running version, `apexctl update apply` refuses
-  (exit 2) to install another update on top of it. The refusal says that the running
-  version failed its startup check and to go back to the previous version first (while
-  `health-failure.json` names it), or that it has not passed its startup check yet
-  (while grubenv is still armed for it, also after `acknowledge`). Installing another
-  update would remove the last version known to work: after the restart only the new
-  update and the unconfirmed one would remain (M1 contract §5, arming precondition).
+  An update installed before a green boot confirms the running version first pins the
+  last version known to work, so a bad build can be fixed forward with one restart (§2,
+  "A version Apex kept"). `apexctl update apply` refuses only when that pin fails
+  (exit 1).
 
 Related states (`"state"` in `apexctl status --json`):
 

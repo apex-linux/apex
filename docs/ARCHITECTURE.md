@@ -401,9 +401,10 @@ third-party clauses.
     posted once per digest. "Updates Ready" opens Settings' System panel; the others open
     its Software Updates page.
 - `LastFallback` names the build a GRUB fallback set aside; `AcknowledgeHealthFailure`
-  clears it with `HealthFailure`. The agent posts board 26's notice once per build, a
-  fallback first, and the Software Updates page shows the rows and the Keep / Go Back
-  choices.
+  clears it with `HealthFailure` and `HealthFailureChecks` (the failed check names). The
+  agent posts board 26's notice once per build, a fallback first, and the Software
+  Updates page shows the rows and the Keep / Go Back choices. `GetChangesFor(digest)`
+  gives the page the package changes of any listed build.
 - Allowed changes, and only these:
   - pin the last good deployment before arming over an unconfirmed or failed boot, so a
     bad build can be fixed forward (S4). Done on 2026-10-24: `Apply` runs
@@ -418,9 +419,11 @@ third-party clauses.
     next-major label through `Update1` and `apexctl status` (S2d). The lists are done:
     the Booted, Staged and Rollback dicts carry `degraded` and `held` (`as`, copied
     from that deployment's manifest, and absent for Available). Each also carries
-    `holds` (`a(sstbt)`: family, the newer builds held back, held since, security, the
-    hold's limit, 0 when unknown) from the image's lane lock, which is also the kernel
-    hold's clock. Available and Staged carry `download-size`, bootc's rounded new-layer
+    `holds` (`a(sstbts)`: family, the newer builds held back, held since, security, the
+    hold's limit, 0 when unknown, and the side, `kernel`, `kmod` or empty) from the
+    image's lane lock, which is also the kernel hold's clock, and `stock` (`a(ss)`: a
+    family the image ships stock, with the lane lock's reason; the break-glass image
+    says why). Available and Staged carry `download-size`, bootc's rounded new-layer
     size;
   - one shared types crate, only when a schema change would otherwise touch two copies.
 
@@ -438,7 +441,8 @@ third-party clauses.
   the dGPU's runtime PM and, from S1c, a bound NVIDIA driver whose version matches the
   manifest.
 - Green clears the counter. Red with nobody logged in reboots, so the counter moves. Red
-  with a session active notifies and offers "Roll back".
+  with a session active posts board 26's notice, which opens Settings > Software
+  Updates with the Keep / Go Back choices (§5.2).
 - Manual recovery is always the GRUB menu (§5.5) or `bootc rollback`
   ([RECOVERY.md](RECOVERY.md)).
 
