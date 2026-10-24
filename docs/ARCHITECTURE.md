@@ -382,8 +382,9 @@ third-party clauses.
   one queue. It never reboots. The session reboots through
   `org.gnome.SessionManager.Reboot`.
 - State is rebuilt from `bootc status`. Only the user's intent, a denylist of digests
-  that failed health checks, the last check, the last health failure, the last fallback
-  and the Automatic Downloads setting are persisted.
+  that failed health checks, the last check, the last health failure, the last fallback,
+  the Automatic Downloads setting and the pins it made itself (`pinned.json`) are
+  persisted.
 - A timer checks daily. When the gates pass (AC or enough battery, an unmetered network,
   free space, not denylisted, a newer version), it runs `bootc upgrade --download-only`.
 - `Update1` exposes `AutomaticDownloads` (default on, set with `SetAutomaticDownloads`,
@@ -405,7 +406,11 @@ third-party clauses.
   choices.
 - Allowed changes, and only these:
   - pin the last good deployment before arming over an unconfirmed or failed boot, so a
-    bad build can be fixed forward (S4);
+    bad build can be fixed forward (S4). Done on 2026-10-24: `Apply` runs
+    `ostree admin pin rollback`, records the pin in `pinned.json`, and the daily run
+    unpins only its own pins once a later version is confirmed green and the kept one is
+    no longer booted, staged or the rollback. `Update1` shows the pin as `pin-reason`,
+    and in `Kept` while the kept deployment is none of those three;
   - confirm every green boot in grubenv (`apex_ok=1`), not only armed ones, so GRUB can
     hide its menu (§5.5, S4);
   - `apexctl major-upgrade` (§5.4, S6);
