@@ -218,7 +218,8 @@ These are behaviour decisions, kept from the old spec and the owner's decision s
 - Apex Desktop is the first panel, and the sidebar has coloured tiles in a fixed order.
 - Stock panels gain no rows (decision 27); every Apex option lives in the Apex Desktop
   panel. The one exception is Power's "Graphics and Display" group (board 24): the dGPU's
-  state and Lower Refresh Rate on Battery (the owner, 2026-10-24).
+  state and Lower Refresh Rate on Battery (`lower-refresh-rate-on-battery`; the owner,
+  2026-10-24).
 - The System panel's Software Updates row opens an Apex page on `Update1`: state,
   changes, held and degraded packages, and Download, Restart and Roll Back. polkit stays
   in the daemon.
@@ -292,6 +293,7 @@ the next login.
 | `files-details-pane` | `b` | `false` | nautilus |
 | `files-recent-strip` | `b` | `true` | nautilus |
 | `search-hint-shown` | `b` | `false` | layer: set once "Press Super+Space to search" has shown |
+| `lower-refresh-rate-on-battery` | `b` | `true` | apex-session-agent: on battery, the built-in panel's lowest rate of 60 Hz or more at its resolution; plugged in, its highest. Settings' Power panel writes it |
 
 Child schema `io.github.apex_linux.Apex.Desktop.Keybindings`: `toggle-spotlight` (`as`,
 `['<Super>space']`).
