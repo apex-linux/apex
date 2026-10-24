@@ -86,7 +86,7 @@ ordinary updates. The owner can move S4 earlier, to right after S2d (target
 2027-04-05). Then S3a to S3c ship as updates to the daily driver, and the unlock-path
 changes of S3b land on the only machine.
 
-## Progress (2026-10-24, evening)
+## Progress (2026-10-24)
 
 - **S1a:** all of its code is merged, including the last G2 items: python-dbusmock
   fixtures, the fixed clock (`tests/shots/clock.c`), and the enable and disable cycles.
@@ -106,23 +106,31 @@ changes of S3b land on the only machine.
     - `apex-session-agent` v0: the crash-guard offer, `apex.css`, and the Ptyxis
       `apex.palette` whose caret follows the accent;
     - the Flatpak override that shows `apex.css` to Bazaar;
-    - the SCSS for popup menus, the OSD and banners (board 16).
-  - In progress:
-    - the SCSS for Quick Settings (17), the window switcher (15) and the dialogs (13,
-      14), then the calendar, overview and launcher (34–36);
+    - the SCSS for popup menus, the OSD and banners (board 16);
     - the open-terminal palette reload (a Ptyxis hunk, measured at under 0.2 s);
     - the bash exit-status fix that lets the terminal show "failed";
     - the search tooltip and the first-login hint (`search-hint-shown`).
+  - In progress: the SCSS for Quick Settings (17), the window switcher (15) and the
+    dialogs (13, 14), then the calendar, overview and launcher (34–36).
 - **T1:** started on 2026-10-24.
   - Merged: the Ptyxis recipe, and the sessions sidebar of board 32 (7 changed upstream
     lines).
   - In progress: T2's splits and pane headers (board 33).
+- **F1 and C1:** started on 2026-10-24, at the owner's request.
+  - F1: the nautilus recipe (`degraded=files`) is in CI; 0001–0003 follow.
+  - C1: the gnome-control-center recipe (`degraded=settings`) and the Apex Desktop panel.
+  - Landed first: apexctl accepts both degraded names, the image writes them, and G1
+    checks the nautilus family as it checks Ptyxis.
+  - For C2, provider first: Update1's interface as a committed XML file, and
+    `lower-refresh-rate-on-battery` (merged) with the agent's switching.
+- **K1 step 5:** unblocked on 2026-10-24, when the COPR shipped `kernel-cachyos`
+  7.3.0-4.cachyos1 for Fedora 45. NVIDIA 615 is built against it now.
 - **Pulled forward, in parallel with S1b:**
   - from S1d: the Plymouth `apex` theme (boards 01 and 30), the image's default splash
     at `DeviceScale=1`;
   - from S2a: the whole top bar as the layer's `panel` feature: patch 0010, the dots,
     the hot corner, the status-pill filter, the solid bar, the focused app's name and
-    the search button;
+    the search button; then the dock (board 37);
   - from S2d: the "Updates Ready" notification, and the held lists in `Update1` and
     `apexctl status`;
   - from S7: the Apex folders and the nine `Apex-<accent>` folder themes.
