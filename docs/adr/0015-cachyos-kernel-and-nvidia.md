@@ -144,16 +144,19 @@ ADR 0005's objections, checked again:
   The rebuild lets the kernel and the NVIDIA modules share one signing key (§3), lets
   Apex carry a hardware patch (§8), and keeps COPR's build hosts out of the trust chain.
 - `kernel-spec.patch` (fuzz 0) changes only build mechanics:
-  - `Release: cachyos1.apex<N>%{?dist}`, so `uname -r` is
-    `7.2.8-cachyos1.apexN.fc45.x86_64` and no COPR build can satisfy
-    `kernel-uname-r`;
+  - `Release: %{_cachyos_release}.cachyos1.apex%{apex_release}%{?dist}`, so
+    `uname -r` is `7.3.0-4.cachyos1.apexN.fc45.x86_64` and no COPR build can satisfy
+    `kernel-uname-r`. `apex_release` is a required define: `pair.sh` refuses to run
+    without `APEX_RELEASE`, and the lane picks N;
   - `_disable_source_fetch 1`;
   - in `%prep`, before `olddefconfig`, `scripts/config --set-str MODULE_SIG_KEY` names
     the pair's per-build key on a tmpfs (§3);
-  - patches from `series`, if any (§8);
-  - `%posttrans` and `%preun` reduced to `depmod`: no `kernel-install`, no dracut, no
-    copy into `/boot`;
-  - `CC="ccache gcc"`.
+  - after `%autopatch`, the patches named in the `series` file (§8), applied with
+    `patch -p1 --fuzz=0`. `apex_series` is a required define and an empty file is a
+    no-op, so a missing define fails the build instead of dropping the series;
+  - the core and modules `%posttrans` reduced to `depmod -a`, and the core `%preun`
+    emptied: no `kernel-install`, no `weak-modules`, no dracut, no copy into `/boot`.
+- ccache comes from `PATH`, set by `pair.sh` (K1 showed it needs no `CC=` in the spec).
 - CachyOS's configuration is used as shipped. `MODULE_SIG_KEY` is the only change. A
   configuration change between two bumps, other than new symbols, holds the bump for
   the owner's review, because the config comes from an unpinned URL.
