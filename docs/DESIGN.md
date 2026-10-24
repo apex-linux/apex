@@ -34,7 +34,14 @@ rules and the settings contract.
   variant.
 - Accent: one of libadwaita's nine accents (blue `#3584e4` by default, teal, green,
   yellow, orange, red, pink, purple, slate), driven by `accent-color`. It is drawn raw in
-  both variants. White on the accent. Selection tint is the accent at 16 %.
+  both variants. White on the accent; where that text is small, as on Quick Settings'
+  checked toggles, the fill is the accent mixed 25 % toward black, so every one of the
+  nine accents holds 4.5:1. Selection tint is the accent at 16 %.
+- Contrast: WCAG AA in the shell, measured in G2 over the real backdrop, glass
+  included: 4.5:1 for text and 3:1 for glyphs, in light, dark and high contrast, and
+  nothing clipped at Large Text. Where a board value fails, the token changes and the
+  board follows: dim text in light is the foreground at .72 rather than the boards' .62,
+  and the overview's search hint is at .62 (2026-10-24).
 - Wallpaper: Apex Facets, light and dark. It has a flat ground, nested rounded squares
   turned 45° low on the right, and a small pair top left. The sources are
   `desktop/wallpapers/apex-facets-{light,dark}.svg`.
@@ -102,7 +109,8 @@ These are behaviour decisions, kept from the old spec and the owner's decision s
   Mockup text is never shipped.
 - Reduce Transparency swaps the glass tints for solid tokens through an `apex-solid`
   root class and removes every blur effect. High contrast does the same and keeps
-  upstream's colours. `disabled-features=['glass']` removes the effects and keeps the
+  upstream's colours; Apex's own actors (Spotlight and its toast, the dock, the
+  end-session icon) take upstream's high-contrast palette. `disabled-features=['glass']` removes the effects and keeps the
   tints.
 - Reduce Motion sets `enable-animations` (inverted) and the a11y `reduced-motion` key
   together.

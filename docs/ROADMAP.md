@@ -108,10 +108,10 @@ changes of S3b land on the only machine.
     - the Facets wallpapers, fontconfig `ss03`, JetBrains Mono, and the Ptyxis profile
       with `palette='apex'`;
     - the coloured bash prompt (`/etc/profile.d/apex-prompt.sh`);
-    - the `Apex` icon theme, with Colloid app icons and 211 Apex Symbolic glyphs (boards
+    - the `Apex` icon theme, with Colloid app icons and 214 Apex Symbolic glyphs (boards
       31, 31b and 31c). `make check-icons` resolves every symbolic name the shell, GTK,
-      libadwaita and the default apps request: 193 of 275 from Apex, the rest from
-      Adwaita or the toolkit, and 7 known gaps that stock Fedora draws nowhere either;
+      libadwaita and the default apps request: 196 of 275 from Apex, the rest from
+      Adwaita or the toolkit, and 4 known gaps that stock Fedora draws nowhere either;
     - board 27's Projects and Screenshots emblems, set at login by
       `apex-folder-icons.service` when the folders exist;
     - `apex-session-agent` v0: the crash-guard offer, `apex.css`, and the Ptyxis
