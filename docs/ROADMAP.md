@@ -146,7 +146,9 @@ changes of S3b land on the only machine.
   greeter assets are in apex-desktop and pinned: a pre-blurred Facets background and
   the Apex gdm logo, whose `zz_` override sorts after gdm's own, as G1 checks, and the
   greeter's CSS uses them. In progress: the fingerprint states, the polkit dialog
-  (board 13), and the lock in high contrast and large text. The G4 lock matrix (wrong
+  (board 13; one hook in 0017-polkit, captures from a stubbed agent session in CI, and
+  a G4 case that runs `pkexec` through the shell's agent), and the lock in high
+  contrast and large text. The G4 lock matrix (wrong
   password, Esc, blank and wake, suspend, reduced motion, safe mode) is written against
   a fake guest; its first real run waits for the runner. A row that needs a layer feature
   passes with a note while the pinned `apex-gnome` does not list it, and fails when it
@@ -859,9 +861,9 @@ Glass protocol, on the laptop on battery, balanced profile, 90 Hz, 2880×1800:
 - Glass on the overview and launcher scrims and on Spotlight. GNOME hides the window
   group in the overview, so each scrim blurs a non-reactive clone of `window_group`
   (wallpaper and windows) in actor mode, cached until the desktop beneath changes
-  (ADR 0014). The bar and the dock over a scrim blur the scrim's result. Patch 0017
-  puts the same glass on the OSDs, banners, Alt+Tab and the screenshot panel
-  ([DESIGN.md](DESIGN.md)).
+  (ADR 0014). The bar and the dock over a scrim blur the scrim's result. The layer
+  puts the same glass on the OSDs, banners, Alt+Tab and the screenshot panel with no
+  hook of its own ([DESIGN.md](DESIGN.md)).
 - **Exit:**
   - Super+Space opens Spotlight; Up, Down, Enter and Esc work; a provider past a 1 s
     timeout does not hide the other sections;
