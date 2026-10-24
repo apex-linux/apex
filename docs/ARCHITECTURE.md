@@ -353,7 +353,7 @@ third-party clauses.
   therefore guard against tampering in the registry and in transit, not against a
   compromised laptop. The table also lists the per-build module key and the Secure Boot
   key that step W3 may add.
-- The RPM key is OpenPGP Ed25519, `553A 9389 03DF FEEA 647F 7CC4 ABEF 111D 1FCF 882B`,
+- The RPM key is OpenPGP Ed25519, `B9A8 301A 20A1 4E73 2212 A4C5 8DA3 252B D6EF 25FA`,
   without a passphrase so that builds sign unattended. Its private half is the builder
   VM's GnuPG home `~/.local/share/apex/rpm-gnupg`, named by
   `~/.config/apex/rpm-signing.env`; its one offline backup is an armoured export on the
