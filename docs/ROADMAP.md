@@ -108,7 +108,12 @@ changes of S3b land on the only machine.
     - the Facets wallpapers, fontconfig `ss03`, JetBrains Mono, and the Ptyxis profile
       with `palette='apex'`;
     - the coloured bash prompt (`/etc/profile.d/apex-prompt.sh`);
-    - the `Apex` icon theme, with Colloid app icons and the 78 Apex Symbolic glyphs;
+    - the `Apex` icon theme, with Colloid app icons and 211 Apex Symbolic glyphs (boards
+      31, 31b and 31c). `make check-icons` resolves every symbolic name the shell, GTK,
+      libadwaita and the default apps request: 193 of 275 from Apex, the rest from
+      Adwaita or the toolkit, and 7 known gaps that stock Fedora draws nowhere either;
+    - board 27's Projects and Screenshots emblems, set at login by
+      `apex-folder-icons.service` when the folders exist;
     - `apex-session-agent` v0: the crash-guard offer, `apex.css`, and the Ptyxis
       `apex.palette` whose caret follows the accent;
     - the Flatpak override that shows `apex.css` to Bazaar;
@@ -120,8 +125,11 @@ changes of S3b land on the only machine.
     - the search tooltip and the first-login hint (`search-hint-shown`).
     - the overview and the launcher (35, 36) as the layer's `overview` feature, and the
       derived surfaces' tints;
-    - the screenshot UI (19) and the lighter hover on Quick Settings' submenu rows (17).
-  - In progress: the edge-tiling preview (22) and the launcher's app-grid strip.
+    - the screenshot UI (19), the lighter hover on Quick Settings' submenu rows (17),
+      the edge-tiling preview (22) and the launcher's app-grid strip (36);
+    - `disabled-features` with the layer's 13 feature names as choices, so `gsettings`
+      refuses a misspelt one; `apex-image`'s contracts hold the schema's copies equal.
+  - Left: the blur behind the edge-tiling preview, with S2b's glass.
 - **T1 and T2:** done on 2026-10-24: the Ptyxis recipe, the sessions sidebar (board 32),
   the palette reload, and the splits and pane headers (board 33), 19 changed upstream
   lines. The owner signs off the captures.
@@ -149,15 +157,17 @@ changes of S3b land on the only machine.
   greeter assets are in apex-desktop and pinned: a pre-blurred Facets background and
   the Apex gdm logo, whose `zz_` override sorts after gdm's own, as G1 checks, and the
   greeter's CSS uses them. A mocked fprintd shows the fingerprint conversation ending
-  when the screen blanks. In progress: board 20's fingerprint presentation, the polkit
-  dialog (board 13; one hook in 0017-polkit, captured from a stubbed agent session in
-  CI), and the lock in high contrast, whose overlay the high-contrast sheet did not
-  style. The G4 lock matrix (wrong password, Esc, blank and wake, suspend, reduced
-  motion, safe mode) and its polkit rows (`pkexec` through the shell's agent: a wrong
-  password, Esc, the password, and the stock dialog in safe mode) are written against
-  a fake guest; their first real run waits for the runner. A row that needs a layer
-  feature passes with a note while the pinned `apex-gnome` does not list it, and fails
-  when it is listed but never enabled.
+  when the screen blanks, and board 20's fingerprint states in the hint's line, which
+  the conversation drives, so nothing shows until the image enables fingerprint. The
+  lock is legible in high contrast (the overlay that sheet did not style) and lays out
+  with Large Text. In progress: the polkit dialog (board 13; one hook in 0017-polkit,
+  captured from a stubbed agent session in CI). G1 parses every Apex polkit policy
+  strictly and requires vendor Apex. The G4 lock matrix (wrong password, Esc, blank
+  and wake, suspend, reduced motion, safe mode) and its polkit rows (`pkexec` through
+  the shell's agent: a wrong password, Esc, the password, and the stock dialog in safe
+  mode) are written against a fake guest; their first real run waits for the runner. A
+  row that needs a layer feature passes with a note while the pinned `apex-gnome` does
+  not list it, and fails when it is listed but never enabled.
 - **K1 step 5:** done on 2026-10-24, the day the COPR shipped `kernel-cachyos`
   7.3.0-4.cachyos1 for Fedora 45. NVIDIA 615.78.08 builds on it unmodified, with the
   same warnings as on 7.2, and `kernel-spec.patch` still applies at fuzz 0. The full
@@ -182,18 +192,21 @@ changes of S3b land on the only machine.
   - from S2a: the whole top bar as the layer's `panel` feature: patch 0010, the dots,
     the hot corner, the status-pill filter, the solid bar, the focused app's name and
     the search button; then the dock (board 37) with intellihide and the bottom-edge
-    reveal. In progress: the app indicators (board 39, the `indicators` feature);
+    reveal. In progress: the app indicators (board 39, the `indicators` feature, no
+    hook lines);
   - from S2b: patch 0003-blur and its G2 pixel tests against a CPU reference, within the
     two-zone tolerance in ADR 0014; the glass manager, the dock's glass, and the bar's
-    glass paused on the lock screen. In progress: Spotlight's glass, the scrims and the
-    derived glass, after a 50-run crash soak;
+    glass paused on the lock screen, and Spotlight's glass with its toast. In progress:
+    the scrims and the derived glass, after a 50-run crash soak;
   - from S2c: the live radius, measured at 274–304 ms in CI against its 1 s budget, and
     the tiled and fullscreen cases;
   - from S3a: Spotlight (board 38) over the stock providers, opened by the overview's
-    search too, and the overview's thumbnails (board 35). In progress: the launcher's
-    own pill and Settings rows on their panel's tile;
-  - from S3c: the `motion` feature (0016) and `quick-settings` (0011). In progress:
-    shadows, then notifications (0012);
+    search too, Settings rows on their panel's tile, and the overview's thumbnails (board
+    35). In progress: the launcher's own pill;
+  - from S3c: the `motion` feature (0016), `quick-settings` (0011) with board 17's
+    Wi-Fi submenu, and `shadows`, whose second layer sits above its surface so glass
+    never blurs its own shadow. In progress: notifications (0012), the power-off
+    dialog (0018), and the reduced-motion audit;
   - from S4: `apex_ok=1` on every green boot, the `07_apex-menu.cfg` snippet, and pin
     before arm;
   - from S2d: the "Updates Ready" notification, and the held lists in `Update1` and
