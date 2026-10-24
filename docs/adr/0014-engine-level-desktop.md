@@ -238,8 +238,9 @@ and every gate passes. Otherwise the family is held (decision 18).
 |---|---|---|
 | gnome-shell | gnome-shell, gnome-shell-common, mutter, mutter-common | Fedora's gnome-shell and mutter: stock GNOME Shell with no Apex layer, theme, dock or glass until the rebase. Icons, fonts, wallpaper, window radius and the Settings panel stay. |
 | libadwaita | libadwaita | Fedora's libadwaita: the radius changes at the next app start |
-| gnome-control-center | gnome-control-center, its `-filesystem` subpackage | Stock Settings: no Apex Desktop panel, stock sidebar |
-| nautilus | nautilus and its subpackages | Stock Files |
+| gnome-control-center | gnome-control-center, its `-filesystem` subpackage | Stock Settings: no Apex Desktop panel, stock sidebar (`degraded=settings`) |
+| nautilus | nautilus and its subpackages | Stock Files (`degraded=files`) |
+| ptyxis | ptyxis | Stock Ptyxis: tabs, no sessions sidebar, pane headers or live palette reload (`degraded=terminal`) |
 
 - `rpms.lock` does not advance for the family, and the last good builds keep winning
   through `[apex]` priority 1.

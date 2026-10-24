@@ -68,9 +68,9 @@ rules and the settings contract.
 | 34 | Calendar and notifications | S1b (styling), S3c |
 | 35 | Overview | S1b (styling), S3a |
 | 36 | Launcher | S1b (styling), S3a |
-| 11 | Settings: Apex Desktop (top and scrolled) | S2c |
-| 18 | Settings: Software Updates | S2d |
-| 26 | Update health failure | S2d |
+| 11 | Settings: Apex Desktop (top and scrolled) | C1 (S2c) |
+| 18 | Settings: Software Updates | C2 (S2d) |
+| 26 | Update health failure | C2 (S2d) |
 | 22 | Edge tiling | S2a |
 | 15 | Window switcher | S3a |
 | 16 | OSD, banner and popup menu | S3a (glass), S3c |
@@ -80,10 +80,10 @@ rules and the settings contract.
 | 13 | Authentication dialog (polkit) | S3b |
 | 14 | Power off dialog | S3c |
 | 17 | Quick Settings: Wi-Fi submenu | S3c |
-| 23, 24 | Settings: Appearance, Power (stock panels, restyled) | S2c |
+| 23, 24 | Settings: Appearance, Power (stock panels, restyled) | C2 (S2c) |
 | 25 | Fingerprint enrollment | S4 |
 | 21 | Welcome | not scheduled |
-| 27, 28, 29 | Files: Home, list and details, search | S7 (0001–0003 in S2d) |
+| 27, 28, 29 | Files: Home, list and details, search | F1 (0001–0003), F2 (0004–0007) |
 
 The desktop with dock and top bar and Spotlight are drawn on the canvas when their
 slice starts. Until then the rules below and the tokens define them. Board 17 also
