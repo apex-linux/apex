@@ -243,6 +243,13 @@ These are behaviour decisions, kept from the old spec and the owner's decision s
   panel. The one exception is Power's "Graphics and Display" group (board 24): the dGPU's
   state and Lower Refresh Rate on Battery (`lower-refresh-rate-on-battery`; the owner,
   2026-10-24).
+- Boards 23 and 24 restyle the stock panels; they do not restructure them. Power keeps
+  GNOME 51's tabs and rows (General and Power Saving, the charging radio pair, Power
+  Button Behavior, Automatic Screen Brightness, Automatic Power Saver), and the board's
+  one-page layout gives way to them. Nothing stock disappears.
+- The sidebar tiles' colours live in one table, `settings-tiles.json` in apex-gnome's
+  Settings recipe, which Spotlight's Settings rows mirror byte for byte. Where boards
+  disagreed, the Settings boards (11, 18, 23, 24) won.
 - The System panel's Software Updates row opens an Apex page on `Update1`: state,
   changes, held and degraded packages, and Download, Restart and Roll Back. polkit stays
   in the daemon. A downloaded update is never applied before Restart, so "Keep Current
