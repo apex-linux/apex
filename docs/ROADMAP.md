@@ -106,34 +106,47 @@ changes of S3b land on the only machine.
     - `apex-session-agent` v0: the crash-guard offer, `apex.css`, and the Ptyxis
       `apex.palette` whose caret follows the accent;
     - the Flatpak override that shows `apex.css` to Bazaar;
-    - the SCSS for popup menus, the OSD and banners (board 16);
+    - the Apex SCSS for every stock surface so far: popup menus, OSD and banners (16),
+      Quick Settings (17), the window switcher (15), modal dialogs (13, 14), and the
+      calendar and notifications (34, with opaque message cards);
     - the open-terminal palette reload (a Ptyxis hunk, measured at under 0.2 s);
     - the bash exit-status fix that lets the terminal show "failed";
     - the search tooltip and the first-login hint (`search-hint-shown`).
-  - In progress: the SCSS for Quick Settings (17), the window switcher (15) and the
-    dialogs (13, 14), then the calendar, overview and launcher (34–36).
-- **T1:** started on 2026-10-24.
-  - Merged: the Ptyxis recipe, and the sessions sidebar of board 32 (7 changed upstream
-    lines).
-  - In progress: T2's splits and pane headers (board 33).
-- **F1 and C1:** started on 2026-10-24, at the owner's request.
-  - F1: the nautilus recipe (`degraded=files`) is in CI; 0001–0003 follow.
-  - C1: the gnome-control-center recipe (`degraded=settings`) and the Apex Desktop panel.
-  - Landed first: apexctl accepts both degraded names, the image writes them, and G1
-    checks the nautilus family as it checks Ptyxis.
-  - For C2, provider first: Update1's interface as a committed XML file, and
-    `lower-refresh-rate-on-battery` (merged) with the agent's switching.
+  - In progress: the overview and the launcher (35, 36).
+- **T1 and T2:** done on 2026-10-24: the Ptyxis recipe, the sessions sidebar (board 32),
+  the palette reload, and the splits and pane headers (board 33), 19 changed upstream
+  lines. The owner signs off the captures.
+- **F1 and F2:** done on 2026-10-24, at the owner's request: the nautilus recipe
+  (`degraded=files`), the disk footer and count bar, the 72 px grid, the details pane,
+  the recent strip, the search chips and the view toggle, 49 changed upstream lines.
+  The owner signs off the captures beside boards 27–29.
+- **C1:** done on 2026-10-24: the gnome-control-center recipe (`degraded=settings`), the
+  Apex Desktop panel with all 14 rows bound both ways (board 11), and libadwaita in the
+  lane (`degraded=adwaita`) reloading `apex.css` live (53 ms in its test).
+- **C2:** started. Provider first:
+  - in apex-system: Update1's XML held to the code, `lower-refresh-rate-on-battery`
+    with the agent's switching, and next AutomaticDownloads, holds, download sizes,
+    LastFallback and the update notifications;
+  - in apex-image: the contract that compares Settings' copy of the XML;
+  - in apex-gnome: the Software Updates page (0003), then board 26's dialog.
+- **S3b:** started on 2026-10-24: the lock screen and greeter (boards 20, 12) as
+  presentation-only hooks, with a GDM mock in CI. The G4 lock matrix waits for the
+  runner.
 - **K1 step 5:** done on 2026-10-24, the day the COPR shipped `kernel-cachyos`
   7.3.0-4.cachyos1 for Fedora 45. NVIDIA 615.78.08 builds on it unmodified, with the
   same warnings as on 7.2, and `kernel-spec.patch` still applies at fuzz 0. The full
   kernel rebuild's timing stays a builder-VM job. S1c's `kernel.env` and `nvidia.env`
   are in `apex-kernel` as data. negativo17's key has no second source yet (owner).
+- **S1c:** pulled forward. `pair.sh` and `bump.sh` in apex-kernel, and apex-lane builds,
+  holds and locks the pair, with `--allow-degraded` for a `degraded=nvidia` promote. The
+  image integration is in progress behind `/apex/pair-mode`. Nothing builds a pair until
+  the owner decides on negativo17's key and a kernel `pkg.env` lands.
 - **Pulled forward, in parallel with S1b:**
   - from S1d: the Plymouth `apex` theme (boards 01 and 30), the image's default splash
     at `DeviceScale=1`;
   - from S2a: the whole top bar as the layer's `panel` feature: patch 0010, the dots,
     the hot corner, the status-pill filter, the solid bar, the focused app's name and
-    the search button; then the dock (board 37);
+    the search button; then the dock (board 37, in progress);
   - from S2d: the "Updates Ready" notification, and the held lists in `Update1` and
     `apexctl status`;
   - from S7: the Apex folders and the nine `Apex-<accent>` folder themes.
