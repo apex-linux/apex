@@ -679,6 +679,9 @@ The slice (ADR 0015):
   next to the pressure barrier; the status-pill filter (camera, microphone, location,
   remote access, screen recording and sharing, unsafe mode and the input source stay);
   the focused-app name; the search button; the bar solid over maximised windows.
+- App indicators (board 39): the layer's `indicators` feature, a StatusNotifierItem host
+  with DBusMenu menus, symbolic glyphs, at most four shown and the overflow list. Pulled
+  forward on 2026-10-24 at the owner's request.
 - The bar and dock keys of the Apex schema go live: `translucent-top-bar`,
   `show-focused-app-name`, `dock-icon-size`, `dock-intellihide`,
   `dock-running-indicators` and `dock-show-trash`.
@@ -688,9 +691,11 @@ The slice (ADR 0015):
   - "Launch Using Discrete Graphics Card" appears in the dock menu on the laptop, and
     the app runs on NVIDIA;
   - the camera and microphone indicators still show during a Snapshot recording;
-  - the owner signs off the desktop (bar, dock, wallpaper, window corners; drawn on the
-    canvas first) and edge tiling (board 22), light and dark. They become approved
-    goldens.
+  - a StatusNotifierItem app shows its indicator, its menu opens and acts, and a fifth
+    item moves into the overflow list (scripted, against a test item);
+  - the owner signs off the desktop (bar, dock, wallpaper, window corners; board 37),
+    the indicators (board 39) and edge tiling (board 22), light and dark. They become
+    approved goldens.
 - **Owner sees:** the floating Apex dock with its lift and Trash, the workspace dots,
   the app name in the bar, and a bar that turns solid over maximised windows.
 
