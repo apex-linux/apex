@@ -13,6 +13,8 @@ the nautilus budget from 160 to 400 changed lines in upstream files, and flat ic
 the `Apex` theme with nine accent-variant themes. Amended 2026-10-23: the owner's design
 canvas replaces the HTML mockup and `design/SPEC.md` as the standard
 ([DESIGN.md](../DESIGN.md)), and the Apex Symbolic glyphs (decision 11) land in S1b.
+Amended 2026-10-24: at the owner's request, Ptyxis joins the lane with the Apex
+terminal series (canvas boards 32 and 33, ROADMAP T1 and T2).
 
 ## Context
 
@@ -88,7 +90,7 @@ under Deviations.
 | nautilus | Fedora SRPM plus 7 patches: the disk-usage footer; the item-count bar; a 72 px grid zoom level; the details pane; the recent strip; the search chips; the view toggle group | Apex RPM key | At most 400 changed lines in upstream files. The Apex widgets are added files under `src/apex/` and do not count. |
 | gdm | stock. Its greeter runs the rebuilt shell in the gdm mode: Apex CSS, stock JS. | Fedora | 0 |
 | Plymouth | stock, plus the `apex` script theme and the `apex-twostep` fallback theme (data files) | Fedora | 0 |
-| Ptyxis | stock, plus an Apex user palette that `apex-session-agent` writes | Fedora | 0 |
+| Ptyxis | Fedora SRPM rebuilt in the lane, plus the Apex terminal series: a sessions sidebar grouped by host, container and ssh, with each session's status; pane headers and two-pane splits. The colours stay the user palette that `apex-session-agent` writes. | Apex RPM key | At most 400 changed lines in upstream files, in hook hunks. The Apex widgets are added files under `src/apex/` and do not count. |
 | Icons, fonts, wallpaper, defaults | `apex-desktop` noarch RPM: the `Apex` icon theme (app icons from a pinned Colloid commit; flat folder and file icons from Apex templates, with nine `Apex-<accent>` folder themes), fontconfig `ss03`, JetBrains Mono, Apex Facets, `90_apex.gschema.override`, the Apex schema | Apex RPM key | n/a |
 | Kernel and NVIDIA | ADR 0015 | Apex RPM key | ADR 0015 |
 
@@ -262,8 +264,8 @@ named design detail:
 - **mutter joins the lane with a patch.** The one candidate today is exported
   redraw-clip expansion for glass (§Glass, lever 3). mutter then leaves Fedora's
   signature. It is already in the gnome-shell hold family.
-- **Another package is rebuilt**, for example Ptyxis for the accent caret, GTK, or a
-  spec-only rebuild under ADR 0007.
+- **Another package is rebuilt**, for example GTK, or a spec-only rebuild under
+  ADR 0007.
 - **A budget above would be exceeded.**
 - **A hook conflicts at two consecutive point releases.** The owner then picks one:
   upstream the change, reshape the hook, or drop the feature.
@@ -515,9 +517,11 @@ Two gaps have no path: GTK3 and X11 windows keep their own chrome.
 
 ## Consequences
 
-- gnome-shell, libadwaita, gnome-control-center and nautilus carry the Apex RPM
-  signature, not Fedora's. mutter, GTK, gdm, Plymouth and Ptyxis stay Fedora-signed
-  binaries; mutter is pinned to the shell's build.
+- gnome-shell, libadwaita, gnome-control-center, nautilus and Ptyxis carry the Apex RPM
+  signature, not Fedora's. mutter, GTK, gdm and Plymouth stay Fedora-signed binaries;
+  mutter is pinned to the shell's build.
+- Ptyxis is its own hold family. When its series fails to apply, the image keeps the
+  last good build; with none, stock Ptyxis ships and the image is `degraded=terminal`.
 - The lock screen, the polkit agent and the portal helper live in the rebuilt shell.
   Their fixes arrive through the lane: automatically when the series applies and the
   gates pass, otherwise within the hold limits. A failed rebase past 72 h for a

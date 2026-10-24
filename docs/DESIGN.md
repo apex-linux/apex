@@ -63,6 +63,11 @@ rules and the settings contract.
 | 01 | Boot splash: diamond, "Apex" wordmark, progress bar; no footer | S1d |
 | 30 | Disk unlock: the passphrase field in the boot splash | S1d |
 | 31 | Apex Symbolic contact sheet | S1b |
+| 32 | Terminal: sessions | T1 |
+| 33 | Terminal: split panes, needs you | T2 |
+| 34 | Calendar and notifications | S1b (styling), S3c |
+| 35 | Overview | S1b (styling), S3a |
+| 36 | Launcher | S1b (styling), S3a |
 | 11 | Settings: Apex Desktop (top and scrolled) | S2c |
 | 18 | Settings: Software Updates | S2d |
 | 26 | Update health failure | S2d |
@@ -80,9 +85,9 @@ rules and the settings contract.
 | 21 | Welcome | not scheduled |
 | 27, 28, 29 | Files: Home, list and details, search | S7 (0001–0003 in S2d) |
 
-The desktop with dock and top bar, Quick Settings, notifications and calendar,
-Spotlight, the overview, the launcher and the terminal are drawn on the canvas when
-their slice starts. Until then the rules below and the tokens define them.
+The desktop with dock and top bar and Spotlight are drawn on the canvas when their
+slice starts. Until then the rules below and the tokens define them. Board 17 also
+shows the main Quick Settings panel.
 
 ## Product rules
 
@@ -188,7 +193,22 @@ These are behaviour decisions, kept from the old spec and the owner's decision s
 
 **Terminal.**
 
-- Ptyxis, with JetBrains Mono at line height 1.6 (`cell-height-scale` 1.21).
+- Ptyxis, with JetBrains Mono at line height 1.6 (`cell-height-scale` 1.21), rebuilt
+  with the Apex terminal series (boards 32 and 33).
+- A sessions sidebar replaces the tab bar.
+  - Sessions are grouped by where they run: this computer, each toolbox or distrobox
+    container, each ssh host.
+  - Each row shows the title, the program and its state, a relative time and a status:
+    running, done, failed, needs you, or none when idle. Programs that report progress
+    (OSC 9;4) fill the row.
+  - A session needs you when it rang the bell or sent a desktop notification while
+    unfocused. It stays marked until it is focused.
+  - The footer counts the sessions per status.
+- The header bar shows the session's title, its path and a tag naming the foreground
+  program.
+- A session splits right or down into two panes. Each pane has its own header, and the
+  unfocused pane is dimmed.
+- The sidebar is flat, in the window's colours. Glass stays on shell surfaces.
 - A coloured prompt via `/etc/profile.d/apex-prompt.sh`.
 - The caret follows the accent through a user palette written by apex-session-agent.
 
