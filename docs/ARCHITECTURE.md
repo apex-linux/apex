@@ -763,9 +763,9 @@ the symlinks that `systemctl enable`, `mask` and `set-default` create under
 ([ADR 0014](adr/0014-engine-level-desktop.md), [DESIGN.md](DESIGN.md))
 
 gnome-shell is rebuilt with the Apex layer inside it. libadwaita, gnome-control-center
-and nautilus carry small series. mutter, GTK, gdm, Ptyxis and Plymouth stay
-Fedora-signed binaries. mutter is pinned to the exact EVR the shell was built against
-and mirrored unmodified into `[apex]` (§3).
+and nautilus carry small series, and Ptyxis carries the Apex terminal series. mutter,
+GTK, gdm and Plymouth stay Fedora-signed binaries. mutter is pinned to the exact EVR
+the shell was built against and mirrored unmodified into `[apex]` (§3).
 
 | Part | Mechanism | Slice |
 |---|---|---|
@@ -778,7 +778,7 @@ and mirrored unmodified into `[apex]` (§3).
 | Window radius | `apex.css` from `apex-session-agent`, read at app start; a libadwaita patch that makes host apps follow it live | S1b; live S2c |
 | Settings | gnome-control-center, 3 patches: the Apex Desktop panel; coloured sidebar tiles in the design's order; the Software Updates row and page on `Update1` | S2c–S2d |
 | Files | nautilus, 7 patches: the disk-usage footer, the item-count bar, a 72 px grid zoom level (S2d); the details pane, the recent strip, the search chips, the view toggle (S7). Flat folder and file icons, with folders in the accent | S2d; S7 |
-| Terminal | Ptyxis; `apex-session-agent` writes a user palette whose cursor is the accent | S1b |
+| Terminal | Ptyxis rebuilt in the lane: the sessions sidebar with each session's status (T1); pane headers and splits (T2). `apex-session-agent` writes a user palette whose cursor is the accent (S1b) | S1b; T1–T2 |
 | Boot splash | Plymouth script theme `apex`: rounded bar, @2x assets, its own LUKS prompt. The two-step `apex-twostep` theme stays installed as the fallback. | S1d |
 | GRUB | Menu hidden unless the last boot failed (§5.5) | S4 |
 | Assets | the `apex-desktop` noarch RPM | S1b |

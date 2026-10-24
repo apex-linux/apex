@@ -58,6 +58,8 @@ answers: about 11 weeks of owner time. The re-baseline of 2026-10-23 moves it to
 | S1a | A rebuilt gnome-shell with its safety net and dev loop, in the desktop VM | Oct 5 – Oct 23 | L |
 | M | The design reset and the move to the `apex-linux` organisation | Oct 26 – Nov 6 | M |
 | S1b | The Apex theme, assets, Apex Symbolic and Super+Space, in the desktop VM | Nov 9 – Nov 27 | L |
+| T1 | The Apex terminal: the sessions sidebar with each session's status | Oct 26 – Nov 13, in parallel | L |
+| T2 | The Apex terminal: pane headers and splits | Nov 16 – Dec 4, in parallel | L |
 | S1c | The CachyOS kernel and NVIDIA pair in every image | Nov 30 – Dec 11 | L |
 | S1d | Apex on the laptop from the USB SSD | Dec 14 – Jan 8 | L |
 | S2a | The Apex dock and top bar | Jan 11 – Jan 29 | L |
@@ -72,6 +74,7 @@ answers: about 11 weeks of owner time. The re-baseline of 2026-10-23 moves it to
 | S6 | Fedora 46 and GNOME 52 | Jun 28 – Jul 23, 2027 | L |
 | W | Windows removal | owner-triggered; W1 and W4 done 2026-09-29; W2 in S4; W5 after the owner's speaker test | S to M |
 
+T1 and T2 run beside the S slices in their own session, so they move no other date.
 S3c runs during S4's two weeks of use, so its changes reach the daily driver as
 ordinary updates. The owner can move S4 earlier, to right after S2d (target
 2027-04-05). Then S3a to S3c ship as updates to the daily driver, and the unlock-path
@@ -101,6 +104,8 @@ changes of S3b land on the only machine.
   - The canvas has the boards S1b signs off against: 17 (Quick Settings), 31 (Apex
     Symbolic), 32 and 33 (terminal), 34 (calendar and notifications), 35 (overview) and
     36 (launcher).
+- **T1:** started on 2026-10-24, when the owner asked for the terminal of boards 32
+  and 33. Ptyxis joins the lane (ADR 0014, amended).
 - **Pulled forward, in parallel with S1b:** the Plymouth `apex` theme (boards 01 and 30,
   from S1d) and S2a's top-bar hooks (patch 0010). Their exit checks stay with their own
   slices.
@@ -398,6 +403,37 @@ the safety net come before the first Apex pixel.
 - **Owner sees:** the Apex skin on every stock surface, Colloid and Apex Symbolic icons,
   JetBrains Mono,
   the wallpaper, Super+Space for search, and the accent caret in the terminal.
+
+## T: The Apex terminal (T1 Oct 26 – Nov 13, T2 Nov 16 – Dec 4, L each)
+
+Ptyxis is rebuilt in the lane with the Apex terminal series, as boards 32 and 33 draw
+it ([DESIGN.md](DESIGN.md), Terminal). The series lives in `apex-gnome`
+(`packaging/pkgs/ptyxis/`, with the Apex widgets in `desktop/ptyxis/`). Its budget is in
+ADR 0014.
+
+- **T1:**
+  - the recipe: Fedora's SRPM, its own hold family, and a CI build of the series;
+  - the sessions sidebar in place of the tab bar, grouped by host, container and ssh;
+  - each session's status from shell integration and the exit status: running, done,
+    failed, needs you; the OSC 9;4 progress fill; the footer counts;
+  - the header bar's path and program tag.
+- **T2:** two-pane splits, right and down, with pane headers and the dimmed unfocused
+  pane.
+- **Exit, T1:**
+  - in the desktop VM, Ptyxis is the `.apexN` build and opens with the sidebar;
+  - a scripted session runs a passing command, a failing one, and rings the bell while
+    unfocused. Its row shows done, failed and needs you within 1 s, and needs you
+    clears on focus;
+  - with the family held and no good build, stock Ptyxis runs and the image says
+    `degraded=terminal`;
+  - the owner signs off captures next to board 32, light and dark.
+- **Exit, T2:**
+  - splitting, moving focus and closing a pane work from the header buttons and their
+    shortcuts, and each pane keeps its own status;
+  - the owner signs off captures next to board 33, light and dark.
+- **Owner sees:** the Apex terminal: every session in one sidebar, with what is running,
+  what failed, and what is waiting for an answer.
+- S6 rebases the series onto the Fedora 46 Ptyxis.
 
 ## S1c: The kernel and dGPU pair (Nov 30 – Dec 11, L)
 
@@ -886,6 +922,8 @@ rows in stock panels (27). The privacy indicators in the status pill stay.
 |---|---|---|
 | Boot bar with radius 2 (Plymouth script theme, own LUKS prompt) | S1d | M |
 | Terminal accent caret | S1b | S |
+| Terminal sessions sidebar and status (Ptyxis series) | T1 | L |
+| Terminal pane headers and splits | T2 | L |
 | Dock: lift, order, 40 px separator, full-colour Show Apps | S2a (own dock) | L |
 | Workspace dots | S2a | S |
 | Hot corner 4×4 | S2a | S |
