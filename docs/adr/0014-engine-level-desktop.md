@@ -312,7 +312,7 @@ byte-identical to Fedora's, so the unlock dialog and any other caller are unchan
 | a | `saturation` (1.0) | A snippet in the final pass: `c.rgb = clamp(mix(vec3(dot(c.rgb, vec3(0.213, 0.715, 0.072))), c.rgb, s), 0.0, c.a)`. This is CSS's `saturate()` matrix (https://www.w3.org/TR/filter-effects-1/), applied after the blur as in CSS, in the pass that already applies brightness. It adds no pass. |
 | b | `corner-radius` (0) | Antialiased rounded-rect coverage in the same pass, for the drawn radii 18 to 26 |
 | c | `follow-opacity` (false) | Background mode uses the actor's paint opacity. Stock forces 255 (`:642`), which pops an opaque blurred rectangle in at the start of every fade. |
-| d | `fine` (false) | Downscale to the smallest power of two with σ / ds ≤ 4 and a texture side of at least 4 px, without the 256 px floor. The reduction is box-filtered (a mipmapped sample of the blit, or chained halving if Cogl's mipmaps fail the pixel test), so moving content does not shimmer. |
+| d | `fine` (false) | Downscale to the smallest power of two with σ / ds ≤ 4 and a texture side of at least 4 px, without the 256 px floor. The reduction is box-filtered in one pass whose taps sit on 2×2 texel corners, the exact mean of the ds×ds footprint that chained halving gives (Cogl's mipmaps go stale after a blit), so moving content does not shimmer. |
 | e | `fine` | In background mode, re-blur only when the frame's redraw clip covers the whole actor box. Otherwise draw the last result and queue a redraw of the box. A blit then never reads pixels this frame did not repaint, which is where the documented artifacts come from. Correctness never depends on JavaScript finding every source of damage. |
 | f | `fine` | The last result is kept per stage view. |
 
@@ -359,7 +359,7 @@ in S3a, and again after any change to patch 0003 or the glass manager:
 | Sysprof, 60 s of mutter frame marks, in three scenarios. A: a 1080p60 video in a window that overlaps the dock, with Quick Settings open over it. B: a window dragged under the dock and the popovers for 30 s. C: 20 overview and app-grid toggles over a playing video. | p99 frame time ≤ 11.1 ms; dropped frames ≤ 1 %; p50 within 0.5 ms of Reduce Transparency |
 | amdgpu `gpu_busy_percent`, sampled at 10 Hz in scenario A | mean delta ≤ 5 points |
 | Power: `upower` energy rate every 10 s, three alternating 10-minute runs each, brightness 50 %, Wi-Fi off | idle delta ≤ 0.3 W; scenario A delta ≤ 0.5 W |
-| Correctness | the G2 pixel test passes; 5 minutes of `CLUTTER_PAINT=damage-region` stress show no stale or black region |
+| Correctness | the G2 pixel test passes (per channel: max 4/255 more than ds/2 px inside the box, max 12/255 within ds/2 of its edge, mean 1/255 over the box; llvmpipe as the reference renderer); 5 minutes of the glass stress show no stale or black frame; a `CLUTTER_PAINT=damage-region` run shows the forwarded damage covering each glass box |
 
 If a row fails, the levers in order:
 
