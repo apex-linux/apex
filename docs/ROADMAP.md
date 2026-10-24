@@ -77,6 +77,38 @@ ordinary updates. The owner can move S4 earlier, to right after S2d (target
 2027-04-05). Then S3a to S3c ship as updates to the daily driver, and the unlock-path
 changes of S3b land on the only machine.
 
+## Progress (2026-10-24)
+
+- **S1a:** all of its code is merged, including the last G2 items: python-dbusmock
+  fixtures, the fixed clock (`tests/shots/clock.c`), and the enable and disable cycles.
+  The exit waits for a green G2 in the builder VM.
+- **M:** started on 2026-10-23, three days early.
+  - Done: the design reset, the `apex-linux` names, the seams, and the split into seven
+    public repositories. Every repository's CI is green, and `apex-image`'s contracts
+    check passes against the pins.
+  - Left: the self-hosted runner (owner), two green VM runs, and the archive.
+- **S1b:** started on 2026-10-23, about two weeks early.
+  - Merged:
+    - the full Apex schema, its keybindings child schema and Super+Space;
+    - the Facets wallpapers, fontconfig `ss03`, JetBrains Mono and the Ptyxis profile;
+    - the `Apex` icon theme, with Colloid app icons and the 78 Apex Symbolic glyphs;
+    - `apex-session-agent` v0: the crash-guard offer and `apex.css`.
+  - In progress:
+    - the SCSS for the stock surfaces;
+    - the Ptyxis palette and its reload spike;
+    - the Bazaar spike;
+    - the first-login hint.
+  - The canvas has the boards S1b signs off against: 17 (Quick Settings), 31 (Apex
+    Symbolic), 32 and 33 (terminal), 34 (calendar and notifications), 35 (overview) and
+    36 (launcher).
+- **Pulled forward, in parallel with S1b:** the Plymouth `apex` theme (boards 01 and 30,
+  from S1d) and S2a's top-bar hooks (patch 0010). Their exit checks stay with their own
+  slices.
+- **Debt cleared:**
+  - the ARCHITECTURE §5.2 daemon removals and the two-channel leftovers;
+  - zbus 6;
+  - eslint and sassc in `apex-gnome`'s CI.
+
 ## Gates
 
 Gates stay proportionate for one owner. ARCHITECTURE §11 has the details.
