@@ -62,8 +62,8 @@ answers: about 11 weeks of owner time. The re-baseline of 2026-10-23 moves it to
 | T2 | The Apex terminal: pane headers and splits | Nov 16 – Dec 4, in parallel | L |
 | F1 | The Apex Files: nautilus in the lane, the disk footer, item count and 72 px zoom | Oct 26 – Nov 6, in parallel | M |
 | F2 | The Apex Files: details pane, recent strip, search chips, view toggle | Nov 9 – Nov 27, in parallel | L |
-| C1 | The Apex Settings: gnome-control-center in the lane, the Apex Desktop panel, live radius | on the owner's go-ahead, about 3 weeks | L |
-| C2 | The Apex Settings: Software Updates, coloured tiles, restyled Appearance and Power | after C1, about 3 weeks | L |
+| C1 | The Apex Settings: gnome-control-center in the lane, the Apex Desktop panel, live radius | Oct 26 – Nov 13, in parallel | L |
+| C2 | The Apex Settings: Software Updates, coloured tiles, restyled Appearance and Power | Nov 16 – Dec 4, in parallel | L |
 | S1c | The CachyOS kernel and NVIDIA pair in every image | Nov 30 – Dec 11 | L |
 | S1d | Apex on the laptop from the USB SSD | Dec 14 – Jan 8 | L |
 | S2a | The Apex dock and top bar | Jan 11 – Jan 29 | L |
@@ -475,11 +475,12 @@ early; the Apex folder and file icons it shows already ship in `apex-desktop`.
   27, 28 and 29, light and dark, for the owner's sign-off; with the schema missing,
   Files starts with the details pane closed and the strip shown.
 
-## C: The Apex Settings (planned; C1 starts on the owner's go-ahead)
+## C: The Apex Settings (C1 Oct 26 – Nov 13, C2 Nov 16 – Dec 4, L each)
 
 gnome-control-center is rebuilt in the lane with the Apex Settings series, as boards 11,
 18, 23, 24 and 26 draw it ([DESIGN.md](DESIGN.md), Settings). It takes S2c's and S2d's
-Settings work early. The series would live in `apex-gnome`
+Settings work early. On 2026-10-24 the owner chose to patch gnome-control-center
+rather than write a new app, and to start C1 at once. The series lives in `apex-gnome`
 (`packaging/pkgs/gnome-control-center/`, the panels as added files under
 `desktop/control-center/`), within ADR 0014's budget of 150 changed lines in upstream
 files.
@@ -497,12 +498,11 @@ files.
     `apex-gnome` and checked by `apex-image`'s contracts job like the schema copies;
   - the health-failure dialog (board 26);
   - patch 0002: the coloured sidebar tiles in the design's order;
-  - the restyled Appearance and Power panels (boards 23, 24).
-- **Open for the owner before C2:** board 24 adds a "Graphics and Display" group to the
-  stock Power panel (the dGPU's state, a lower refresh rate on battery). Decision 27 says
-  stock panels gain no rows. Either the decision makes room for that group, the rows move
-  to the Apex Desktop panel, or the group is dropped. The lower refresh rate is also a
-  feature nothing builds yet.
+  - the restyled Appearance and Power panels (boards 23, 24), with Power's "Graphics and
+    Display" group: the dGPU's state and Lower Refresh Rate on Battery. The owner kept
+    the group in Power on 2026-10-24, the one exception to decision 27. The refresh-rate
+    switch itself is `apex-session-agent`'s work, through mutter's display
+    configuration on a power-source change.
 - **Exits:** S2c's and S2d's Settings rows. The S2d update applied from Settings still
   needs `just publish` (S1d).
 

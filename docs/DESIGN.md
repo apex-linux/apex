@@ -217,7 +217,8 @@ These are behaviour decisions, kept from the old spec and the owner's decision s
 
 - Apex Desktop is the first panel, and the sidebar has coloured tiles in a fixed order.
 - Stock panels gain no rows (decision 27); every Apex option lives in the Apex Desktop
-  panel.
+  panel. The one exception is Power's "Graphics and Display" group (board 24): the dGPU's
+  state and Lower Refresh Rate on Battery (the owner, 2026-10-24).
 - The System panel's Software Updates row opens an Apex page on `Update1`: state,
   changes, held and degraded packages, and Download, Restart and Roll Back. polkit stays
   in the daemon.

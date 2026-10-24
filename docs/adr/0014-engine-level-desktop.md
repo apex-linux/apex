@@ -14,7 +14,10 @@ the `Apex` theme with nine accent-variant themes. Amended 2026-10-23: the owner'
 canvas replaces the HTML mockup and `design/SPEC.md` as the standard
 ([DESIGN.md](../DESIGN.md)), and the Apex Symbolic glyphs (decision 11) land in S1b.
 Amended 2026-10-24: at the owner's request, Ptyxis joins the lane with the Apex
-terminal series (canvas boards 32 and 33, ROADMAP T1 and T2).
+terminal series (canvas boards 32 and 33, ROADMAP T1 and T2). Amended 2026-10-24 again:
+the owner chose to patch nautilus and gnome-control-center rather than write new apps
+(ROADMAP F and C), and decision 27 makes one exception, Power's "Graphics and Display"
+group (board 24).
 
 ## Context
 
@@ -509,7 +512,7 @@ Design details the build does not follow. Each is settled by an owner decision:
 | The Mail tile | 10 | No GTK4 GNOME mail client exists. |
 | Hugeicons glyphs | 11 | Resolved 2026-10-23: Apex Symbolic, drawn in-house, ships in S1b; app icons stay Colloid |
 | The "Apex Fedora" name | 19 | Fedora's trademark rules; the product is "Apex" |
-| Rows in stock Settings panels | 27 | One home: the Apex Desktop panel |
+| Rows in stock Settings panels | 27 | One home: the Apex Desktop panel, except Power's "Graphics and Display" group (board 24) |
 | Ctrl+Space or Alt+Space for search | 6 | IDE completion and mutter's window menu; Super+Space instead |
 | A status pill with only network, volume and battery | 26 | Built, except that the camera, microphone, location, remote-access and screen-sharing indicators still show while active: they are a safety signal |
 | No input-source indicator in the bar | 6 | The en/vi indicator stays: with two sources switched per window, it is the only visible sign that Telex is on |
