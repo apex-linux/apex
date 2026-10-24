@@ -108,10 +108,11 @@ changes of S3b land on the only machine.
     - the Facets wallpapers, fontconfig `ss03`, JetBrains Mono, and the Ptyxis profile
       with `palette='apex'`;
     - the coloured bash prompt (`/etc/profile.d/apex-prompt.sh`);
-    - the `Apex` icon theme, with Colloid app icons and 214 Apex Symbolic glyphs (boards
-      31, 31b and 31c). `make check-icons` resolves every symbolic name the shell, GTK,
-      libadwaita and the default apps request: 196 of 275 from Apex, the rest from
-      Adwaita or the toolkit, and 4 known gaps that stock Fedora draws nowhere either;
+    - the `Apex` icon theme, with Colloid app icons and 286 Apex Symbolic glyphs (boards
+      31, 31b, 31c and 31d). `make check-icons` resolves every symbolic name the shell,
+      GTK, libadwaita and the default apps request: 268 of 275 from Apex, none from
+      Adwaita, 3 from the toolkit's own bundles, and 4 known gaps that stock Fedora draws
+      nowhere either; G1 checks that each theme's icon cache lists exactly its files;
     - board 27's Projects and Screenshots emblems, set at login by
       `apex-folder-icons.service` when the folders exist;
     - `apex-session-agent` v0: the crash-guard offer, `apex.css`, and the Ptyxis
@@ -160,19 +161,25 @@ changes of S3b land on the only machine.
   when the screen blanks, and board 20's fingerprint states in the hint's line, which
   the conversation drives, so nothing shows until the image enables fingerprint. The
   lock is legible in high contrast (the overlay that sheet did not style) and lays out
-  with Large Text. In progress: the polkit dialog (board 13; one hook in 0017-polkit,
-  captured from a stubbed agent session in CI). G1 parses every Apex polkit policy
+  with Large Text. The polkit dialog (board 13; one hook in 0017-polkit, captured from a
+  stubbed agent session in CI) merged the same day. G1 parses every Apex polkit policy
   strictly and requires vendor Apex. The G4 lock matrix (wrong password, Esc, blank
   and wake, suspend, reduced motion, safe mode) and its polkit rows (`pkexec` through
   the shell's agent: a wrong password, Esc, the password, and the stock dialog in safe
   mode) are written against a fake guest; their first real run waits for the runner. A
   row that needs a layer feature passes with a note while the pinned `apex-gnome` does
-  not list it, and fails when it is listed but never enabled.
+  not list it, and fails when it is listed but never enabled; the stock polkit row
+  fails if the safe login enabled the feature.
 - **K1 step 5:** done on 2026-10-24, the day the COPR shipped `kernel-cachyos`
   7.3.0-4.cachyos1 for Fedora 45. NVIDIA 615.78.08 builds on it unmodified, with the
   same warnings as on 7.2, and `kernel-spec.patch` still applies at fuzz 0. The full
   kernel rebuild's timing stays a builder-VM job. S1c's `kernel.env` and `nvidia.env`
   are in `apex-kernel` as data. negativo17's key has no second source yet (owner).
+- **N6, N8 and K7:** pulled forward. Every pair leaves its public source set in
+  `OUT/source` (both SRPMs, the recipe, the licences and `SHA256SUMS`), checked by
+  `source-check.sh` before any lock is written; `OUT/timings` records each stage;
+  `bump.sh nvidia-env` prints the candidate `nvidia.env`, and a newer negativo17 build
+  waits `soak_days` (7) before it is offered. The first real driver bump is then a copy.
 - **S1c:** pulled forward. `pair.sh` and `bump.sh` in apex-kernel, and apex-lane builds,
   holds and locks the pair, with `--allow-degraded` for a `degraded=nvidia` promote. The
   image side is merged behind `/apex/pair-mode`, off: the device-ignore rule, the G1
@@ -192,8 +199,9 @@ changes of S3b land on the only machine.
   - from S2a: the whole top bar as the layer's `panel` feature: patch 0010, the dots,
     the hot corner, the status-pill filter, the solid bar, the focused app's name and
     the search button; then the dock (board 37) with intellihide and the bottom-edge
-    reveal. In progress: the app indicators (board 39, the `indicators` feature, no
-    hook lines);
+    reveal; then the app indicators (board 39), the `indicators` feature, a
+    StatusNotifierItem host with no hook lines. In progress: its privacy group, the
+    recording pill and the screen-sharing stop pill;
   - from S2b: patch 0003-blur and its G2 pixel tests against a CPU reference, within the
     two-zone tolerance in ADR 0014; the glass manager, the dock's glass, and the bar's
     glass paused on the lock screen, and Spotlight's glass with its toast. In progress:
@@ -202,15 +210,17 @@ changes of S3b land on the only machine.
     the tiled and fullscreen cases;
   - from S3a: Spotlight (board 38) over the stock providers, opened by the overview's
     search too, Settings rows on their panel's tile, and the overview's thumbnails (board
-    35). In progress: the launcher's own pill;
+    35), and the launcher's own pill. G2's `spotlight_keys` case drives the keys and
+    the 1 s budgets;
   - from S3c: the `motion` feature (0016), `quick-settings` (0011) with board 17's
     Wi-Fi submenu, and `shadows`, whose second layer sits above its surface so glass
-    never blurs its own shadow. In progress: notifications (0012), the power-off
-    dialog (0018), and the reduced-motion audit;
+    never blurs its own shadow; the power-off dialog (0018); and a G2 reduced-motion
+    audit, in which nothing, Apex's or stock's, lasts with animations off. In progress:
+    notifications (0012), the idle-repaint check, and the shell's WCAG AA audit in G2;
   - from S4: `apex_ok=1` on every green boot, the `07_apex-menu.cfg` snippet, and pin
     before arm;
   - from S2d: the "Updates Ready" notification, and the held lists in `Update1` and
-    `apexctl status`;
+    `apexctl status`. In progress: board 14's update card;
   - from S7: the Apex folders and the nine `Apex-<accent>` folder themes.
 
   Their exit checks stay with their own slices.
