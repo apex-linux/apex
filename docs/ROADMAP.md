@@ -843,6 +843,9 @@ Glass protocol, on the laptop on battery, balanced profile, 90 Hz, 2880×1800:
 - `Update1` and `apexctl status` expose the held and degraded lists from the image
   label, including a kernel hold with its 72 h clock and `degraded=nvidia`.
 - `apex-session-agent`: the "Updates Ready" notification.
+- The power-off dialog's update card ("Start the new version next time", with the staged
+  version) and "Restart & Update" (board 14), read from `Update1`'s staged deployment.
+  S3c builds the rest of the dialog; stock's PackageKit checkbox never shows on bootc.
 - nautilus in the lane: 0002 the disk footer and the item-count bar, 0003 a 72 px grid
   zoom level (F1 brings them early).
 - A hold drill: break a gnome-control-center patch on a branch and build the image.
@@ -962,9 +965,13 @@ It runs during S4's two weeks of use and ships as updates.
   window and overview durations. With `enable-animations=false` every transition takes
   0 ms, except stock's required eases (Locate Pointer's ripple), which keep their
   duration.
+- The power-off dialog (board 14, 0018-end-session): the icon circle, Restart beside
+  Power Off, the confirming button in red in every end-session dialog, and stock's
+  translated countdown.
 - Two-layer shadows through shadow-layer actors under the popovers, Spotlight, the toast
   and window previews, with the boards' values. The dock keeps its one layer, and the
-  active thumbnail has only its accent ring (board 35).
+  active thumbnail has only its accent ring (board 35). The second layer sits above its surface,
+  outside the rounded shape, so a glass surface never blurs its own shadow.
 - **Exit:**
   - the power-profile indicator stays out of the status pill, and the toggle still
     switches between Balanced and the last profile;
