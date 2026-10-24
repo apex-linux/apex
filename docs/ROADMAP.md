@@ -123,8 +123,11 @@ changes of S3b land on the only machine.
     checks the nautilus family as it checks Ptyxis.
   - For C2, provider first: Update1's interface as a committed XML file, and
     `lower-refresh-rate-on-battery` (merged) with the agent's switching.
-- **K1 step 5:** unblocked on 2026-10-24, when the COPR shipped `kernel-cachyos`
-  7.3.0-4.cachyos1 for Fedora 45. NVIDIA 615 is built against it now.
+- **K1 step 5:** done on 2026-10-24, the day the COPR shipped `kernel-cachyos`
+  7.3.0-4.cachyos1 for Fedora 45. NVIDIA 615.78.08 builds on it unmodified, with the
+  same warnings as on 7.2, and `kernel-spec.patch` still applies at fuzz 0. The full
+  kernel rebuild's timing stays a builder-VM job. S1c's `kernel.env` and `nvidia.env`
+  are in `apex-kernel` as data. negativo17's key has no second source yet (owner).
 - **Pulled forward, in parallel with S1b:**
   - from S1d: the Plymouth `apex` theme (boards 01 and 30), the image's default splash
     at `DeviceScale=1`;
@@ -475,8 +478,9 @@ ADR 0014's: at most 400 changed lines in upstream files, the Apex widgets not co
 The owner asked for it on 2026-10-24. It takes S2d's nautilus 0001–0003 and S7's 0004–0007
 early; the Apex folder and file icons it shows already ship in `apex-desktop`.
 
-- **F1:** the recipe with its own hold family (`degraded=files`), and 0001 the disk footer
-  for the filesystem holding `$HOME`, 0002 the item-count bar, 0003 the 72 px grid zoom.
+- **F1:** the recipe with its own hold family (`degraded=files`) and 0001-build, then 0002
+  the disk footer for the filesystem holding `$HOME` and the item-count bar, on one hook,
+  and 0003 the 72 px grid zoom.
 - **F2:** 0004 the details pane, 0005 the recent strip, 0006 the search chips, 0007 the
   grid and list toggle, with their two Apex schema keys.
 - **Exits:** S2d's and S7's Files rows, checked in the desktop VM; captures beside boards
@@ -596,7 +600,7 @@ The slice (ADR 0015):
     G1;
   - a cold pair build takes at most 2 h and a warm one at most 1 h, without OOM;
   - the break-glass image boots in the builder VM.
-- **Owner sees:** `uname -r` reading `7.3.y-cachyos1.apexN.fc45.x86_64` in the desktop
+- **Owner sees:** `uname -r` reading `7.3.y-N.cachyos1.apexN.fc45.x86_64` in the desktop
   VM, and the first automatic kernel bump.
 
 ## S1d: Apex on the laptop (Dec 14 – Jan 8, with a year-end break, L)
@@ -759,8 +763,8 @@ Glass protocol, on the laptop on battery, balanced profile, 90 Hz, 2880×1800:
 - `Update1` and `apexctl status` expose the held and degraded lists from the image
   label, including a kernel hold with its 72 h clock and `degraded=nvidia`.
 - `apex-session-agent`: the "Updates Ready" notification.
-- nautilus in the lane: 0001 the disk footer, 0002 the item-count bar, 0003 a 72 px grid
-  zoom level.
+- nautilus in the lane: 0002 the disk footer and the item-count bar, 0003 a 72 px grid
+  zoom level (F1 brings them early).
 - A hold drill: break a gnome-control-center patch on a branch and build the image.
 - **Exit:**
   - System shows the real update count, and one update from `just publish` is applied
