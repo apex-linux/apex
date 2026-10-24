@@ -785,7 +785,7 @@ the shell was built against and mirrored unmodified into `[apex]` (§3).
 | Greeter | The rebuilt shell with the Apex CSS and stock JS | S3b |
 | Window radius | `apex.css` from `apex-session-agent`, read at app start; a libadwaita patch that makes host apps follow it live | S1b; live S2c |
 | Settings | gnome-control-center rebuilt in the lane (`degraded=settings`), 3 patches: the Apex Desktop panel; coloured sidebar tiles in the design's order; the Software Updates row and page on `Update1` | C1–C2 (S2c–S2d) |
-| Files | nautilus rebuilt in the lane (`degraded=files`), 7 patches: the disk-usage footer, the item-count bar, a 72 px grid zoom level (F1); the details pane, the recent strip, the search chips, the view toggle (F2). Flat folder and file icons, with folders in the accent | F1–F2 |
+| Files | nautilus rebuilt in the lane (`degraded=files`), up to 7 patches, one window hook for most features: the disk-usage footer, the item-count bar, a 72 px grid zoom level (F1); the details pane, the recent strip, the search chips, the view toggle (F2). Flat folder and file icons, with folders in the accent | F1–F2 |
 | Terminal | Ptyxis rebuilt in the lane: the sessions sidebar with each session's status (T1); pane headers and splits (T2). `apex-session-agent` writes a user palette whose cursor is the accent (S1b) | S1b; T1–T2 |
 | Boot splash | Plymouth script theme `apex`: rounded bar, @2x assets, its own LUKS prompt. The two-step `apex-twostep` theme stays installed as the fallback. | S1d |
 | GRUB | Menu hidden unless the last boot failed (§5.5) | S4 |
