@@ -145,8 +145,9 @@ per concern, so a rebase conflict names its feature.
 | 0015-lock | `js/ui/unlockDialog.js`, `js/ui/userWidget.js`, `js/gdm/authPrompt.js` | Single stage; blur values; the field's glass; the initial-letter avatar; "Enter Password". The patch carries the review label "unlock path". |
 | 0016-motion | `js/ui/environment.js`, `js/ui/windowManager.js`, `js/ui/overview.js`, `js/ui/overviewControls.js`, `js/ui/boxpointer.js` | The EASE curve for every `ease()` that asks for it; the drawn durations |
 | 0017-polkit | `js/ui/components/polkitAgent.js` | One behaviour hook after `AuthenticationDialog._init`: board 13's shield, the "Administrator" subtitle and the Details expander (action id and vendor). The fingerprint hint is upstream's info message, restyled |
+| 0018-end-session | `js/ui/endSessionDialog.js` | One behaviour hook after `_updateButtons`: board 14's icon circle, Restart beside Power Off through stock's `ConfirmedReboot`, and the button row's gap and widths. The countdown keeps stock's translated text |
 
-The plan touches 28 upstream files besides the two C files, which leaves five in
+The plan touches 29 upstream files besides the two C files, which leaves four in
 reserve. Estimate: 250 to 330 lines of hunks, about 250 lines of C, 5,000 to 6,000
 lines of Apex JS, and about 1,500 lines of SCSS.
 
