@@ -290,6 +290,7 @@ the next login.
 | `disabled-features` | `as` | `[]` | layer: `glass`, `dock`, `spotlight`, `lock`, `motion`, `notifications`, `overview`, `panel`, `quick-settings`, `shadows` |
 | `files-details-pane` | `b` | `false` | nautilus |
 | `files-recent-strip` | `b` | `true` | nautilus |
+| `search-hint-shown` | `b` | `false` | layer: set once "Press Super+Space to search" has shown |
 
 Child schema `io.github.apex_linux.Apex.Desktop.Keybindings`: `toggle-spotlight` (`as`,
 `['<Super>space']`).

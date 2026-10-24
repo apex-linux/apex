@@ -760,7 +760,9 @@ format follow the locale. The values are in [DESIGN.md](DESIGN.md#vendor-default
 The only files Apex places in `/etc` are `/etc/xdg/monitors.xml`, the fontconfig links,
 `/etc/plymouth/plymouthd.conf` (written by `plymouth-set-default-theme`, plus
 `DeviceScale=1`), `/etc/profile.d/apex-prompt.sh` (the terminal prompt colours,
-S1b), `/etc/tuned/ppd.conf` (tuned-ppd reads its profile mapping only from there), and
+S1b; it sorts before `vte.sh`, which wraps it), `/etc/profile.d/zz-apex-shell-status.sh`
+(each command's real exit status for the terminal; it sorts after `vte.sh`, whose
+precmd it replaces), `/etc/tuned/ppd.conf` (tuned-ppd reads its profile mapping only from there), and
 the symlinks that `systemctl enable`, `mask` and `set-default` create under
 `/etc/systemd/system`.
 
