@@ -154,7 +154,7 @@ way on every boot. Pick one of these instead:
       'mount -n -o remount,rw /boot && exec grub2-editenv /boot/grub2/grubenv unset apex_target apex_counter'
   sudo grub2-editenv /boot/grub2/grubenv list      # no apex_target, no apex_counter
   sudo bootc rollback                              # prints "notice: Reverting queued rollback state"
-  sudo systemctl disable --now apex-update-auto.timer
+  apexctl update auto off                          # pause automatic downloads (§2)
   ```
 
   Do not restart until the disarm and `bootc rollback` have both succeeded; if one
@@ -231,9 +231,15 @@ and print that a reboot is needed. Then restart from the GNOME menu.
   (bootc-rollback(8)): for example new Wi-Fi connections or a changed password. `/var`,
   including `/var/home`, is not affected.
 - The daemon offers a digest again unless it is denylisted. After a rollback without
-  `--mark-bad` from a bad update, pause automatic downloads until a newer build
-  exists: `sudo systemctl disable --now apex-update-auto.timer` (undo with
-  `enable --now`).
+  `--mark-bad` from a bad update, pause automatic downloads until a newer build exists.
+
+**Pause automatic downloads.** Run `apexctl update auto off` (it asks for an
+administrator password). The daily check keeps running and still reports new versions,
+but nothing is downloaded until you run `apexctl update download`, or turn downloads
+back on with `apexctl update auto on`. `apexctl update auto status` shows the setting,
+and Settings > System > Software Updates has the same switch. Leave
+`apex-update-auto.timer` enabled; the key-compromise steps in §6 disable it instead,
+because there even checking should stop.
 
 **A version Apex kept.** An update installed before the running version passed its
 startup check makes Apex pin the last version known to work, so the boot menu still
