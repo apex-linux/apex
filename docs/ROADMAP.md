@@ -914,8 +914,8 @@ Series 0015-lock carries the review label "unlock path".
 
 It runs during S4's two weeks of use and ships as updates.
 
-- Notifications: a 38 px app-icon column and a flat list (groups expanded, headers
-  hidden); Clear always visible, on the right; the Do Not Disturb footer switch.
+- Notifications: a 32 px app-icon column (board 34) and a flat list (groups expanded,
+  headers hidden); Clear always visible, on the right; the Do Not Disturb footer switch.
 - Quick Settings: Power Mode lit at Balanced through an `apex-lit` class (`checked` and
   the indicator binding stay stock); VPN after Airplane Mode; On/Off subtitles.
 - Motion: an `environment.js` hook maps Apex's ease to `CUBIC_BEZIER` (.2,.8)(.2,1);
