@@ -705,8 +705,9 @@ The slice (ADR 0015):
   - a saturation property, CSS's matrix in the existing final pass;
   - a corner-radius property;
   - background mode follows the actor's paint opacity;
-  - downscale without the 256 px floor, box-filtered (a mipmapped sample, or chained
-    halving if Cogl's mipmaps fail the pixel test);
+  - downscale without the 256 px floor, box-filtered (one pass whose taps sit on 2×2
+    texel corners, the exact mean chained halving gives; Cogl's mipmaps go stale after a
+    blit);
   - the redraw-clip rule: re-blur only when the frame's redraw clip covers the whole
     glass box, otherwise draw the last result and queue a redraw of the box. This is
     the guard against the artifacts Blur my Shell documents, and it does not depend on
@@ -719,10 +720,15 @@ The slice (ADR 0015):
   solid. `disabled-features=['glass']` does the same for glass alone.
 - A first performance run on the laptop (protocol below), scenarios A and B.
 - **Exit:**
-  - the G2 pixel test passes (a pattern under glass with partial damage, against a CPU
-    reference blur); its first run fixes the tolerance, starting at a maximum error of
-    3/255 and a mean of 1/255 per channel;
-  - 5 minutes of `CLUTTER_PAINT=damage-region` stress show no stale or black regions;
+  - the G2 pixel test passes (a pattern under glass with partial damage, against a
+    full-resolution CPU reference blur, llvmpipe as the reference renderer). Its first
+    run (2026-10-24) fixed the tolerance per channel in two zones, since the edge error
+    is the downscale's own: more than ds/2 device px inside the box, max 4/255; within
+    ds/2 of its edge, max 12/255; over the whole box, a mean of 1/255. The band follows
+    the ds the effect chose. Stock's blur in the same clipped frame fails all three;
+  - 5 minutes of the glass stress show no stale or black frame, and a
+    `CLUTTER_PAINT=damage-region` run shows the forwarded damage covering each glass box
+    (mutter 51 repaints the whole view in that mode, so it cannot show staleness);
   - the stock unlock blur at default properties differs by 0 pixels from Fedora's build;
   - with Reduce Transparency on, G2 finds no blur effect on any actor;
   - scenarios A and B meet the glass thresholds below. If not, the levers apply here,
