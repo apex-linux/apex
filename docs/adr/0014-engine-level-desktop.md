@@ -304,6 +304,8 @@ it, live, and pays only when that changes.
   damaged under the scrim updates the blur.
 - **Glass over glass.** The bar and the dock over a scrim blur the scrim's result, as
   drawn. The scrim is cached, so this costs about 0.3 ms per scrim change.
+- **Shadows.** The `shadows` feature's second layer is an actor above its surface,
+  clipped to outside the rounded shape, so a glass surface never blurs its own shadow.
 
 Patch 0003 to `ShellBlurEffect`. At default property values the effect is
 byte-identical to Fedora's, so the unlock dialog and any other caller are unchanged.
