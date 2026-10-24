@@ -138,7 +138,7 @@ per concern, so a rebase conflict names its feature.
 | 0002-loader | `js/ui/main.js`, `js/ui/sessionMode.js` | A static import of `ui/apex/hooks.js`; an awaited dynamic import of `ui/apex/layer.js` in `try/catch` before `LayoutManager` is built; `enable()` at `startup-prepared`; in safe mode, stylesheets come from `theme/stock/`; `colorScheme: 'prefer-light'` for the user and unlock-dialog modes |
 | 0003-blur | `src/shell-blur-effect.{c,h}` | §Glass |
 | 0010-panel | `js/ui/panel.js`, `js/ui/layout.js` | Workspace dots; the status-pill filter; the 4×4 hot-corner hover zone |
-| 0011-quick-settings | `js/ui/panel.js`, `js/ui/status/powerProfiles.js` | VPN after Airplane Mode; a per-item hook for On/Off subtitles; the `apex-lit` class on Power Mode, leaving `checked` stock (`powerProfiles.js:127`) |
+| 0011-quick-settings | `js/ui/panel.js`, `js/ui/status/powerProfiles.js`, `js/ui/quickSettings.js`, `js/ui/status/network.js` | VPN after Airplane Mode; a per-item hook for On/Off subtitles; the `apex-lit` class on Power Mode, leaving `checked` stock (`powerProfiles.js:127`); two constructor hooks for board 17: the toggle menu's header subtitle on the title's row, and the active Wi-Fi row's `:checked` from the start with its lock after the name |
 | 0012-message-list | `js/ui/messageList.js`, `js/ui/calendar.js` | 32 px icon column (board 34); flat list; Clear always visible, on the right; the Do Not Disturb footer switch |
 | 0013-overview | `js/ui/overview.js`, `js/ui/overviewControls.js`, `js/ui/searchController.js`, `js/ui/workspace.js`, `js/ui/windowPreview.js`, `js/ui/workspaceThumbnail.js`, `js/ui/appDisplay.js` | The scrim over a clone of the desktop; thumbnails; always-visible titles; no workspace background cards; typing goes to Spotlight, or to the launcher's own pill while the app grid shows (`searchController.js:156`); the 7×88 grid |
 | 0014-dash | `js/ui/dash.js` | ApexDock: fixed icon sizes, the order's tail, a full-colour Show Apps icon |
@@ -147,7 +147,7 @@ per concern, so a rebase conflict names its feature.
 | 0017-polkit | `js/ui/components/polkitAgent.js` | One behaviour hook after `AuthenticationDialog._init`: board 13's shield, the "Administrator" subtitle and the Details expander (action id and vendor). The fingerprint hint is upstream's info message, restyled |
 | 0018-end-session | `js/ui/endSessionDialog.js` | One behaviour hook after `_updateButtons`: board 14's icon circle, Restart beside Power Off through stock's `ConfirmedReboot`, and the button row's gap and widths. The countdown keeps stock's translated text |
 
-The plan touches 29 upstream files besides the two C files, which leaves four in
+The plan touches 31 upstream files besides the two C files, which leaves two in
 reserve. Estimate: 250 to 330 lines of hunks, about 250 lines of C, 5,000 to 6,000
 lines of Apex JS, and about 1,500 lines of SCSS.
 
