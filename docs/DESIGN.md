@@ -200,12 +200,13 @@ These are behaviour decisions, kept from the old spec and the owner's decision s
     container, each ssh host.
   - Each row shows the title, the program and its state, a relative time and a status:
     running, done, failed, needs you, or none when idle. Programs that report progress
-    (OSC 9;4) fill the row.
+    (OSC 9;4) draw a 2 px accent bar along the row's bottom edge.
   - A session needs you when it rang the bell or sent a desktop notification while
     unfocused. It stays marked until it is focused.
   - The footer counts the sessions per status.
-- The header bar shows the session's title, its path and a tag naming the foreground
-  program.
+- The sidebar's header holds New session and the main menu. The content header shows
+  the session's title, its path, a tag naming the foreground program, and the session
+  menu (⋮).
 - A session splits right or down into two panes. Each pane has its own header, and the
   unfocused pane is dimmed.
 - The sidebar is flat, in the window's colours. Glass stays on shell surfaces.
