@@ -255,7 +255,9 @@ the safety net come before the first Apex pixel.
 - **Exit:**
   - an `.apexN` gnome-shell is built from the F45 SRPM; `rpm -qp --requires` shows
     `mutter = <EVR>`;
-  - with the empty layer, G2 captures equal Fedora's stock shell outside the masks;
+  - with the empty layer, G2's desktop captures equal Fedora's stock shell outside the
+    masks, and its overview lays out below the 32 px bar (upstream's bar is 2.2em of the
+    vendor font, so the overview is not compared pixel for pixel);
   - the safe G2 run asserts the stock values;
   - on the shipped build, with `APEX_SHELL_TEST_FAULT=enable` in the shell's
     environment, a feature that throws at enable is off for that session while the rest
