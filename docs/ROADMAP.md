@@ -60,6 +60,10 @@ answers: about 11 weeks of owner time. The re-baseline of 2026-10-23 moves it to
 | S1b | The Apex theme, assets, Apex Symbolic and Super+Space, in the desktop VM | Nov 9 – Nov 27 | L |
 | T1 | The Apex terminal: the sessions sidebar with each session's status | Oct 26 – Nov 13, in parallel | L |
 | T2 | The Apex terminal: pane headers and splits | Nov 16 – Dec 4, in parallel | L |
+| F1 | The Apex Files: nautilus in the lane, the disk footer, item count and 72 px zoom | Oct 26 – Nov 6, in parallel | M |
+| F2 | The Apex Files: details pane, recent strip, search chips, view toggle | Nov 9 – Nov 27, in parallel | L |
+| C1 | The Apex Settings: gnome-control-center in the lane, the Apex Desktop panel, live radius | Oct 26 – Nov 13, in parallel | L |
+| C2 | The Apex Settings: Software Updates, coloured tiles, restyled Appearance and Power | Nov 16 – Dec 4, in parallel | L |
 | S1c | The CachyOS kernel and NVIDIA pair in every image | Nov 30 – Dec 11 | L |
 | S1d | Apex on the laptop from the USB SSD | Dec 14 – Jan 8 | L |
 | S2a | The Apex dock and top bar | Jan 11 – Jan 29 | L |
@@ -74,7 +78,9 @@ answers: about 11 weeks of owner time. The re-baseline of 2026-10-23 moves it to
 | S6 | Fedora 46 and GNOME 52 | Jun 28 – Jul 23, 2027 | L |
 | W | Windows removal | owner-triggered; W1 and W4 done 2026-09-29; W2 in S4; W5 after the owner's speaker test | S to M |
 
-T1 and T2 run beside the S slices in their own session, so they move no other date.
+T1 and T2, F1 and F2, and C1 and C2 run beside the S slices, each in its own session, so
+they move no other date. F and C take S2c's, S2d's and S7's app work early; those slices
+keep their exits.
 S3c runs during S4's two weeks of use, so its changes reach the daily driver as
 ordinary updates. The owner can move S4 earlier, to right after S2d (target
 2027-04-05). Then S3a to S3c ship as updates to the daily driver, and the unlock-path
@@ -451,6 +457,54 @@ ADR 0014.
 - **Owner sees:** the Apex terminal: every session in one sidebar, with what is running,
   what failed, and what is waiting for an answer.
 - S6 rebases the series onto the Fedora 46 Ptyxis.
+
+## F: The Apex Files (F1 Oct 26 – Nov 6, M; F2 Nov 9 – Nov 27, L)
+
+nautilus is rebuilt in the lane with the Apex Files series, as boards 27, 28 and 29 draw
+it ([DESIGN.md](DESIGN.md), Files). The series lives in `apex-gnome`
+(`packaging/pkgs/nautilus/`, with the Apex widgets in `desktop/nautilus/`). Its budget is
+ADR 0014's: at most 400 changed lines in upstream files, the Apex widgets not counted.
+The owner asked for it on 2026-10-24. It takes S2d's nautilus 0001–0003 and S7's 0004–0007
+early; the Apex folder and file icons it shows already ship in `apex-desktop`.
+
+- **F1:** the recipe with its own hold family (`degraded=files`), and 0001 the disk footer
+  for the filesystem holding `$HOME`, 0002 the item-count bar, 0003 the 72 px grid zoom.
+- **F2:** 0004 the details pane, 0005 the recent strip, 0006 the search chips, 0007 the
+  grid and list toggle, with their two Apex schema keys.
+- **Exits:** S2d's and S7's Files rows, checked in the desktop VM; captures beside boards
+  27, 28 and 29, light and dark, for the owner's sign-off; with the schema missing,
+  Files starts with the details pane closed and the strip shown.
+
+## C: The Apex Settings (C1 Oct 26 – Nov 13, C2 Nov 16 – Dec 4, L each)
+
+gnome-control-center is rebuilt in the lane with the Apex Settings series, as boards 11,
+18, 23, 24 and 26 draw it ([DESIGN.md](DESIGN.md), Settings). It takes S2c's and S2d's
+Settings work early. On 2026-10-24 the owner chose to patch gnome-control-center
+rather than write a new app, and to start C1 at once. The series lives in `apex-gnome`
+(`packaging/pkgs/gnome-control-center/`, the panels as added files under
+`desktop/control-center/`), within ADR 0014's budget of 150 changed lines in upstream
+files.
+
+- **C1:**
+  - the recipe and its hold family (`degraded=settings`);
+  - patch 0001: the Apex Desktop panel (board 11, both scroll positions), every row of
+    [DESIGN.md](DESIGN.md#apex-desktop-panel-rows) bound to its key and live, the
+    version header, and the launcher's "Apex Tweaks";
+  - libadwaita in the lane, with its one patch that reloads `apex.css` live (S2c).
+- **C2:**
+  - patch 0003: the Software Updates row in System and its page on `Update1` (board 18):
+    state, changes, held and degraded packages, Download, Restart and Roll Back, with
+    polkit in the daemon. The page's D-Bus code comes from `apex-dbus`'s XML, copied into
+    `apex-gnome` and checked by `apex-image`'s contracts job like the schema copies;
+  - the health-failure dialog (board 26);
+  - patch 0002: the coloured sidebar tiles in the design's order;
+  - the restyled Appearance and Power panels (boards 23, 24), with Power's "Graphics and
+    Display" group: the dGPU's state and Lower Refresh Rate on Battery. The owner kept
+    the group in Power on 2026-10-24, the one exception to decision 27. The refresh-rate
+    switch itself is `apex-session-agent`'s work, through mutter's display
+    configuration on a power-source change.
+- **Exits:** S2c's and S2d's Settings rows. The S2d update applied from Settings still
+  needs `just publish` (S1d).
 
 ## S1c: The kernel and dGPU pair (Nov 30 – Dec 11, L)
 
