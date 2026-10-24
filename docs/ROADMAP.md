@@ -810,9 +810,9 @@ Glass protocol, on the laptop on battery, balanced profile, 90 Hz, 2880×1800:
     timeout does not hide the other sections;
   - with one busy workspace and the empty one, the thumbnails show;
   - the glass protocol passes scenarios A, B and C with every glass surface on;
-  - the owner signs off Spotlight, the overview and the launcher (drawn on the canvas
-    first), the window switcher, the OSD and banner glass and the screenshot UI (boards
-    15, 16, 19), light and dark. They become approved goldens.
+  - the owner signs off Spotlight, the overview and the launcher (boards 38, 35, 36), the
+    window switcher, the OSD and banner glass and the screenshot UI (boards 15, 16, 19),
+    light and dark. They become approved goldens.
 - **Owner sees:** the Spotlight popup as drawn, overview titles and thumbnails,
   the launcher's own search, and glass everywhere without dropped frames.
 

@@ -69,6 +69,7 @@ rules and the settings contract.
 | 35 | Overview | S1b (styling), S3a |
 | 36 | Launcher | S1b (styling), S3a |
 | 37 | Desktop: dock and top bar (desktop, maximised, revealed) | S2a |
+| 38 | Spotlight (search, calculator, copied, empty) | S3a |
 | 11 | Settings: Apex Desktop (top and scrolled) | C1 (S2c) |
 | 18 | Settings: Software Updates | C2 (S2d) |
 | 26 | Update health failure | C2 (S2d) |
@@ -86,8 +87,7 @@ rules and the settings contract.
 | 21 | Welcome | not scheduled |
 | 27, 28, 29 | Files: Home, list and details, search | F1 (0001–0003), F2 (0004–0007) |
 
-Spotlight is drawn on the canvas when its slice starts. Until then the rules below and the
-tokens define it. Board 17 also shows the main Quick Settings panel.
+Board 17 also shows the main Quick Settings panel.
 
 ## Product rules
 
@@ -182,7 +182,10 @@ These are behaviour decisions, kept from the old spec and the owner's decision s
   overview. The Super tap still opens the overview.
 - Sections and caps: Calculator 1, Applications 4, Settings 3, Files 4.
 - Each provider has a 1 s budget; a slow section is left out of that query.
-- Enter on a calculator result copies it and shows a toast.
+- Enter on a calculator result copies it, closes Spotlight and shows a "Copied" toast
+  above the dock. A sum also offers Calculator as the first application.
+- Up and Down move the selection across sections; Esc closes. An empty query shows only
+  the field; a query with no results says so.
 
 **Overview and launcher.**
 
