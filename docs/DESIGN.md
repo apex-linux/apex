@@ -222,14 +222,27 @@ These are behaviour decisions, kept from the old spec and the owner's decision s
   2026-10-24).
 - The System panel's Software Updates row opens an Apex page on `Update1`: state,
   changes, held and degraded packages, and Download, Restart and Roll Back. polkit stays
-  in the daemon.
+  in the daemon. A downloaded update is never applied before Restart, so "Keep Current
+  Version" only dismisses; there is no discard.
+- Update notifications come from `apex-session-agent` as "Apex Updates", once per image
+  digest, and their action opens the Software Updates page:
+
+  | When | Title | Body |
+  |---|---|---|
+  | Automatic Downloads off and an update is available | Update Available | `<version>` is ready to download. |
+  | `HealthFailure` set (board 26) | Update Failed Its Startup Check | `<booted>` is running, but a required check did not pass. Going back to the version you had before is the safe choice. Nothing restarts until you say so. |
+  | `LastFallback` set (board 26) | Apex Went Back to the Previous Version | The update did not start properly three times in a row, so Apex started the version you had before. That build will not be offered again; a newer one will be. |
+
+  The page shows board 26's rows and buttons as a dialog: Failed check, Running and
+  Previous with Keep This Version and Go Back… after a failed check; Running, Set aside
+  and "Your files: unchanged" with Show Changes and OK after a fallback.
 - The Apex Desktop header shows the booted image version, the GNOME Shell version and
   session, and the Fedora version. The launcher's "Apex Tweaks" opens the panel.
 
 **Files.**
 
 - Adds a disk footer for the filesystem holding `$HOME` (not composefs `/`), an
-  item-count bar and a 72 px default zoom (0001–0003).
+  item-count bar and a 72 px default zoom (F1).
 - The recent strip shows the four newest existing recent items on Home in grid view. It
   hides when empty or when `files-recent-strip` is off.
 - The details pane is the end pane of an overlay split view, so below 900 px it overlays
