@@ -107,8 +107,8 @@ changes of S3b land on the only machine.
 - **T1:** started on 2026-10-24, when the owner asked for the terminal of boards 32
   and 33. Ptyxis joins the lane (ADR 0014, amended).
 - **Pulled forward, in parallel with S1b:** the Plymouth `apex` theme (boards 01 and 30,
-  from S1d) and S2a's top-bar hooks (patch 0010). Their exit checks stay with their own
-  slices.
+  from S1d), the image's default splash at `DeviceScale=1` since 2026-10-24, and S2a's
+  top-bar hooks (patch 0010). Their exit checks stay with their own slices.
 - **Debt cleared:**
   - the ARCHITECTURE §5.2 daemon removals and the two-channel leftovers;
   - zbus 6;
@@ -551,8 +551,8 @@ The slice (ADR 0015):
   - the laptop boots Apex from the USB SSD, and `apexctl update check` finds a newer
     `:45` that `just publish` signed;
   - the owner signs off the boot splash and disk unlock (boards 01, 30) on the laptop:
-    sharp at DeviceScale 2, round
-    bar ends, LUKS unlock works;
+    sharp at DeviceScale 1, with the Esc text view at full size, round bar ends, LUKS
+    unlock works;
   - ACCEPTANCE §4 rows 4.1 to 4.5, 4.7 and 4.8 pass: RTD3 "Enabled (fine-grained)";
     at least 95 % runtime-suspended over 10 idle minutes; D3cold with video memory
     off; Vulkan, EGL and GLX offload through `switcherooctl` and the GNOME menu, then
