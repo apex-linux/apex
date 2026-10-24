@@ -415,8 +415,9 @@ ADR 0014.
   - the recipe: Fedora's SRPM, its own hold family, and a CI build of the series;
   - the sessions sidebar in place of the tab bar, grouped by host, container and ssh;
   - each session's status from shell integration and the exit status: running, done,
-    failed, needs you; the OSC 9;4 progress fill; the footer counts;
-  - the header bar's path and program tag.
+    failed, needs you; the OSC 9;4 progress bar; the footer counts;
+  - the sidebar header (New session, main menu) and the content header (path, program
+    tag, session menu).
 - **T2:** two-pane splits, right and down, with pane headers and the dimmed unfocused
   pane.
 - **Exit, T1:**
