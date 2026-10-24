@@ -86,7 +86,7 @@ ordinary updates. The owner can move S4 earlier, to right after S2d (target
 2027-04-05). Then S3a to S3c ship as updates to the daily driver, and the unlock-path
 changes of S3b land on the only machine.
 
-## Progress (2026-10-24, night)
+## Progress (2026-10-24)
 
 - **S1a:** all of its code is merged, including the last G2 items: python-dbusmock
   fixtures, the fixed clock (`tests/shots/clock.c`), and the enable and disable cycles.
