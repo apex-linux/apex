@@ -859,6 +859,19 @@ Glass protocol, on the laptop on battery, balanced profile, 90 Hz, 2880×1800:
 - The power-off dialog's update card ("Start the new version next time", with the staged
   version) and "Restart & Update" (board 14), read from `Update1`'s staged deployment.
   S3c builds the rest of the dialog; stock's PackageKit checkbox never shows on bootc.
+  - The card shows in Power Off and Restart, never in Log Out, and only while State is
+    `staged` or `ready-for-reboot`. With no bus, or no answer within 1 s, the dialog is
+    stock.
+  - DiscardStaged is gone (ARCHITECTURE §5.2), so the switch works through the locked
+    stage. While `staged` it is on by default: confirming calls `Apply` with the staged
+    digest, then acts; off leaves the stage locked, so it boots nothing and Settings can
+    still apply it.
+  - While `ready-for-reboot` there is nothing to undo: the switch shows on and
+    insensitive.
+  - When `Apply` fails after a press, the dialog stays open with the error in the
+    card's subtitle. When the countdown expires, the action goes ahead without the
+    update.
+  - The subtitle is the staged version, then GNOME, Linux and Mesa from `GetChanges`.
 - nautilus in the lane: 0002 the disk footer and the item-count bar, 0003 a 72 px grid
   zoom level (F1 brings them early).
 - A hold drill: break a gnome-control-center patch on a branch and build the image.
