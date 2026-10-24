@@ -68,6 +68,7 @@ rules and the settings contract.
 | 34 | Calendar and notifications | S1b (styling), S3c |
 | 35 | Overview | S1b (styling), S3a |
 | 36 | Launcher | S1b (styling), S3a |
+| 37 | Desktop: dock and top bar (desktop, maximised, revealed) | S2a |
 | 11 | Settings: Apex Desktop (top and scrolled) | C1 (S2c) |
 | 18 | Settings: Software Updates | C2 (S2d) |
 | 26 | Update health failure | C2 (S2d) |
@@ -85,9 +86,8 @@ rules and the settings contract.
 | 21 | Welcome | not scheduled |
 | 27, 28, 29 | Files: Home, list and details, search | F1 (0001–0003), F2 (0004–0007) |
 
-The desktop with dock and top bar and Spotlight are drawn on the canvas when their
-slice starts. Until then the rules below and the tokens define them. Board 17 also
-shows the main Quick Settings panel.
+Spotlight is drawn on the canvas when its slice starts. Until then the rules below and the
+tokens define it. Board 17 also shows the main Quick Settings panel.
 
 ## Product rules
 
