@@ -274,9 +274,8 @@ in, Apex does not reboot under you. `apex-boot-assess` records the failure,
 `apex-updated` publishes it, and the laptop keeps running the new deployment.
 
 ```sh
-apexctl status                                         # "The last update failed its health checks." and the digest
-apexctl status --json                                  # "health_failure": "sha256:…" (null when none)
-sudo cat /var/lib/apex/health-failure.json             # {"digest": …, "failed_checks": [...], "at": …}
+apexctl status                                         # "… failed its health checks after it was applied (session, …)."
+apexctl status --json                                  # "health_failure": "sha256:…", "health_failure_checks": [...]
 journalctl -b -u apex-boot-assess.service              # what failed and why
 ```
 

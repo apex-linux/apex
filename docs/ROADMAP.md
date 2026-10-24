@@ -132,11 +132,16 @@ changes of S3b land on the only machine.
     `HealthFailureChecks`, `GetChangesFor` and the update notifications;
   - in apex-image: the contract that compares Settings' copy of the XML, and the pins
     that move both sides together;
-  - in apex-gnome: the Software Updates page (0003) and its C2 rows.
-  - In progress: the coloured sidebar tiles (0002), then Appearance and Power with the
-    stock structure and the Graphics and Display group.
-- **S3b:** started on 2026-10-24: the lock screen and greeter (boards 20, 12) as
-  presentation-only hooks, with a GDM mock in CI. The G4 lock matrix (wrong password,
+  - in apex-gnome: the Software Updates page (0003) and its C2 rows, the coloured
+    sidebar tiles (0002), and Appearance (board 23: accent rings, the active
+    wallpaper's name and note).
+  - In progress: Power with the stock structure and the Graphics and Display group
+    (board 24).
+- **S3b:** the lock screen and greeter's unlock path (boards 20, 12) merged on
+  2026-10-24 as presentation-only hooks (0015-lock), with a GDM mock in CI. Board 12's
+  greeter assets are in apex-desktop and pinned: a pre-blurred Facets background and
+  the Apex gdm logo, whose `zz_` override sorts after gdm's own, as G1 checks. The
+  greeter's CSS is in progress. The G4 lock matrix (wrong password,
   Esc, blank and wake, suspend, reduced motion, safe mode) is written against a fake
   guest; its first real run waits for the runner. A row that needs a layer feature
   passes with a note while the pinned `apex-gnome` does not list it, and fails when it
@@ -151,8 +156,14 @@ changes of S3b land on the only machine.
   image side is merged behind `/apex/pair-mode`, off: the device-ignore rule, the G1
   pair rows, the module-count gate, the key-expiry hold, retention, `GL.nvidia`, and the
   break-glass `just image KERNEL=fedora` that labels `degraded=nvidia` and never
-  promotes. Nothing builds a pair until the owner decides on negativo17's key and a
-  kernel `pkg.env` lands.
+  promotes. `kernel-spec.patch` carries ADR 0015's hunks (the `.apexN` release, the
+  series, `depmod`-only scriptlets), `pair.sh` holds a kernel without BTF, and the lane
+  numbers rebuilds from a ledger that never reuses an N. Nothing builds a pair until
+  the owner decides on negativo17's key and a kernel `pkg.env` lands.
+- **S1d:** pulled forward where no laptop is needed: `just publish` with its rehearsal
+  against a local registry and a throwaway key, and G4's LUKS2 layout (INSTALL §5) with
+  the counted rollback through the disk prompt. The real key, ghcr and the laptop stay
+  the owner's.
 - **Pulled forward, in parallel with S1b:**
   - from S1d: the Plymouth `apex` theme (boards 01 and 30), the image's default splash
     at `DeviceScale=1`;
