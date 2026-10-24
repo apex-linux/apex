@@ -389,8 +389,11 @@ third-party clauses.
   counter and runs `bootc upgrade --from-downloaded`. What gets applied is what the user
   saw.
 - Front ends: Settings > System > Software Updates (S2d), the "Updates Ready"
-  notification from `apex-session-agent` (S2d), and `apexctl`. Settings and
-  `apexctl status` also list degraded and held packages (S2d).
+  notification from `apex-session-agent`, and `apexctl`. Settings and `apexctl status`
+  also list degraded and held packages.
+  - The notification and `apexctl status`'s lists landed early, on 2026-10-24. The
+    notification is posted once per staged digest, and its action opens Settings'
+    System panel until the Software Updates page exists (S2d).
 - Allowed changes, and only these:
   - pin the last good deployment before arming over an unconfirmed or failed boot, so a
     bad build can be fixed forward (S4);
@@ -398,7 +401,10 @@ third-party clauses.
     hide its menu (§5.5, S4);
   - `apexctl major-upgrade` (§5.4, S6);
   - expose the degraded and held package lists, the kernel hold clock and the
-    next-major label through `Update1` and `apexctl status` (S2d);
+    next-major label through `Update1` and `apexctl status` (S2d). The lists are done:
+    the Booted, Staged and Rollback dicts carry `degraded` and `held` (`as`, copied
+    from that deployment's manifest, and absent for Available). The kernel clock will
+    be `hold-since` (`a{st}`, family to the Unix second its hold began, S1c);
   - one shared types crate, only when a schema change would otherwise touch two copies.
 
 ### 5.3 Boot assessment and rollback
