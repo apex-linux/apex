@@ -70,6 +70,7 @@ rules and the settings contract.
 | 36 | Launcher | S1b (styling), S3a |
 | 37 | Desktop: dock and top bar (desktop, maximised, revealed) | S2a |
 | 38 | Spotlight (search, calculator, copied, empty) | S3a |
+| 39 | Top bar: indicators (everyday, in a call, recording, menu, overflow, everything) | S2a |
 | 11 | Settings: Apex Desktop (top and scrolled) | C1 (S2c) |
 | 18 | Settings: Software Updates | C2 (S2d) |
 | 26 | Update health failure | C2 (S2d) |
@@ -141,7 +142,26 @@ These are behaviour decisions, kept from the old spec and the owner's decision s
   Not Disturb is off.
 - Search button (Super+Space). The status pill shows network, volume and battery only.
   The privacy, recording, unsafe-mode, input-source and accessibility indicators still
-  show (decision 26).
+  show (decision 26), as board 39 draws them:
+  - privacy (camera, microphone, location, remote desktop, screen sharing) is an orange
+    group at the start of the status pill, with white glyphs;
+  - screen recording is its own red pill with the timer and a stop square;
+  - the input source is a text chip ("EN", "VI") before the status pill, shown only
+    with two or more sources.
+- App indicators (owner, 2026-10-24): the layer's `indicators` feature is a
+  StatusNotifierItem host with DBusMenu menus. There is no XEmbed tray.
+  - They sit left of the search button, after a thin divider, in the order the items
+    registered.
+  - Each is a 16 px glyph in the bar's colour: the item's `-symbolic` icon when the
+    theme has one, otherwise its icon as a one-colour mask. `NeedsAttention` adds an
+    accent dot; `Passive` items are hidden.
+  - Up to four show. With more, three show and a "‹ +N" button lists the rest; each row
+    opens that item's menu.
+  - Primary click activates the item, or opens its menu when the item is only a menu;
+    secondary click opens the menu; middle click and scrolling go to the item. Menus are
+    popup menus (solid, radius 14, rows 34) titled with the item's name, with switches
+    for toggles and shortcuts on the right.
+  - Safe mode and `disabled-features=['indicators']` show none.
 - A 4 × 4 hot corner, with the stock barrier kept. Both follow `enable-hot-corners`.
 
 **Dock.**
@@ -305,7 +325,7 @@ the next login.
 | `window-corner-radius` | `u`, 0 to 20 | `14` | apex-session-agent |
 | `reduce-transparency` | `b` | `false` | layer |
 | `layer-enabled` | `b` | `true` | layer; the crash guard sets it to `false` |
-| `disabled-features` | `as` | `[]` | layer: `glass`, `dock`, `spotlight`, `lock`, `motion`, `notifications`, `overview`, `panel`, `quick-settings`, `shadows` |
+| `disabled-features` | `as` | `[]` | layer: `glass`, `dock`, `indicators`, `spotlight`, `lock`, `motion`, `notifications`, `overview`, `panel`, `quick-settings`, `shadows` |
 | `files-details-pane` | `b` | `false` | nautilus |
 | `files-recent-strip` | `b` | `true` | nautilus |
 | `search-hint-shown` | `b` | `false` | layer: set once "Press Super+Space to search" has shown |
