@@ -181,6 +181,8 @@ changes of S3b land on the only machine.
   `source-check.sh` before any lock is written; `OUT/timings` records each stage;
   `bump.sh nvidia-env` prints the candidate `nvidia.env`, and a newer negativo17 build
   waits `soak_days` (7) before it is offered. The first real driver bump is then a copy.
+  `apex-lane sources` publishes that set as it is, after running `source-check.sh`
+  again.
 - **S1c:** pulled forward. `pair.sh` and `bump.sh` in apex-kernel, and apex-lane builds,
   holds and locks the pair, with `--allow-degraded` for a `degraded=nvidia` promote. The
   image side is merged behind `/apex/pair-mode`, off: the device-ignore rule, the G1
@@ -201,12 +203,16 @@ changes of S3b land on the only machine.
     the hot corner, the status-pill filter, the solid bar, the focused app's name and
     the search button; then the dock (board 37) with intellihide and the bottom-edge
     reveal; then the app indicators (board 39), the `indicators` feature, a
-    StatusNotifierItem host with no hook lines. In progress: its privacy group, the
-    recording pill and the screen-sharing stop pill;
+    StatusNotifierItem host with no hook lines, with its privacy group, the recording
+    pill, the screen-sharing stop pill and the input chip;
   - from S2b: patch 0003-blur and its G2 pixel tests against a CPU reference, within the
     two-zone tolerance in ADR 0014; the glass manager, the dock's glass, and the bar's
     glass paused on the lock screen, and Spotlight's glass with its toast. In progress:
-    the scrims and the derived glass, after a 50-run crash soak;
+    the scrims and the derived glass, after a 50-run crash soak; a fix for a repaint
+    loop between neighbouring glass surfaces (Quick Settings over a still desktop drew
+    about 58 frames a second), which G2's new load cases found; and those load cases,
+    which count re-blurs and extra frames against Reduce Transparency in scenarios A to
+    C;
   - from S2c: the live radius, measured at 274–304 ms in CI against its 1 s budget, and
     the tiled and fullscreen cases;
   - from S3a: Spotlight (board 38) over the stock providers, opened by the overview's
@@ -216,13 +222,24 @@ changes of S3b land on the only machine.
   - from S3c: the `motion` feature (0016), `quick-settings` (0011) with board 17's
     Wi-Fi submenu, and `shadows`, whose second layer sits above its surface so glass
     never blurs its own shadow; the power-off dialog (0018); and a G2 reduced-motion
-    audit, in which nothing, Apex's or stock's, lasts with animations off. In progress:
-    notifications (0012), the idle-repaint check, and the shell's WCAG AA audit in G2;
+    audit, in which nothing, Apex's or stock's, lasts with animations off;
+    notifications (0012) with board 34's 32 px icon; and G2's idle check, in which an
+    idle desktop with every feature on paints nothing for 10 s; and board 34's card
+    layout, the icon in its own column beside the header, title and body;
+  - the shell's WCAG AA checks in G2, over the real backdrop with glass, in light, dark,
+    high contrast and Large Text: every surface passes or is a named upstream gap, and
+    Apex's own actors take upstream's high-contrast palette. In progress: the tokens the
+    checks moved (light dim text, the checked toggles' fill, the search hint, Quick
+    Settings' width);
   - from S4: `apex_ok=1` on every green boot, the `07_apex-menu.cfg` snippet, and pin
     before arm;
   - from S2d: the "Updates Ready" notification, and the held lists in `Update1` and
     `apexctl status`. In progress: board 14's update card;
-  - from S7: the Apex folders and the nine `Apex-<accent>` folder themes.
+  - from S7: the Apex folders and the nine `Apex-<accent>` folder themes; a slides kind
+    for presentations, folder-remote with the network emblem, a flat Trash, and
+    `inode-directory` drawn as the accent folder so Spotlight's folders follow the
+    accent too. In progress: the CI job that times an accent change in Files, the file
+    chooser and Spotlight against 1 s.
 
   Their exit checks stay with their own slices.
 - **GNOME 51.1:** in Fedora 45's updates-testing on 2026-10-24. `just lane-absorb-report`
