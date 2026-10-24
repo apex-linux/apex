@@ -235,6 +235,14 @@ and print that a reboot is needed. Then restart from the GNOME menu.
   exists: `sudo systemctl disable --now apex-update-auto.timer` (undo with
   `enable --now`).
 
+**A version Apex kept.** An update installed before the running version passed its
+startup check makes Apex pin the last version known to work, so the boot menu still
+offers it. `apexctl status` shows it with "Kept" and the reason. Apex unpins it itself
+once a later version has passed its check. To unpin it by hand, run
+`ostree admin status`: the kept deployment shows `Pinned: yes`. Count the listed
+deployments from 0, including a staged one at the top, then run
+`sudo ostree admin pin --unpin <index>`. Apex forgets its record at the next daily run.
+
 If `apex-updated` itself is broken, use bootc directly; rollback does not pull, so it
 needs no signature policy. `bootc rollback` does not touch grubenv, so disarm a pending
 boot count first: an armed count at `0` would otherwise start the deployment you are
