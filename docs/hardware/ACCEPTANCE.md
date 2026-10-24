@@ -104,16 +104,16 @@ Setup for 4.x:
 ```sh
 dev=/sys/bus/pci/devices/0000:01:00.0
 gpu=/proc/driver/nvidia/gpus/0000:01:00.0
-d3cold_within() {  # d3cold_within SECONDS: polls sysfs only, which never wakes the GPU
-    local s
-    for ((s = 0; s <= $1; s++)); do
-        [ "$(<"$dev/power_state")" = D3cold ] && { echo "D3cold after $s s"; return 0; }
-        sleep 1
-    done
-    echo "FAIL: $(<"$dev/power_state") after $1 s"
-    return 1
-}
 ```
+
+The rows measure the dGPU with two `apexctl` commands, which read only cached sysfs
+attributes and never wake the GPU. Neither needs root:
+
+- `apexctl hw dgpu-idle [--seconds N] [--json]`: the runtime-suspended share over an idle
+  window, the wakes seen and the mean battery power. It prints `PASS`, or exits 1 below
+  95.0 %;
+- `apexctl hw dgpu-d3cold [--within S] [--json]`: prints `D3cold after N s`, or
+  `FAIL: <state> after S s` and exits 1.
 
 4.4 needs `vulkaninfo`, `eglinfo` and `glxinfo`, which the image does not ship. Install
 them into a transient `/usr` overlay, which the next boot discards:
@@ -122,59 +122,25 @@ them into a transient `/usr` overlay, which the next boot discards:
 | # | Check | Command | Pass |
 |---|---|---|---|
 | 4.1 | Driver bound, fine-grained RTD3, modules signed by this kernel's key | `readlink $dev/driver; cat $dev/power/control`<br>`grep 'Runtime D3 status' $gpu/power`<br>`grep '^DynamicPowerManagement:' /proc/driver/nvidia/params`<br>`lsmod \| grep -cE '^(nouveau\|nova_core) '`<br>`modinfo -F signer nvidia amdgpu; cat /sys/module/module/parameters/sig_enforce` | path ends in `/nvidia`; `auto`; `Enabled (fine-grained)`; `DynamicPowerManagement: 2`; `0`; two equal lines, `Apex kernel <uname -r> <content key>`, then `Y`. On the break-glass image the two signers differ (`amdgpu` carries Fedora's) and `sig_enforce` is `N`; record that ([RECOVERY §8.2](../RECOVERY.md#82-the-break-glass-image-fedoras-kernel-s1c)) |
-| 4.2 | Idle share | `bash dgpu-idle.sh 600` under the idle conditions below | suspended share ≥ 95.0 % |
-| 4.3 | Power state and video memory after idle | printed by the script; then `grep 'Video Memory' $gpu/power` | `runtime_status=suspended`, `power_state=D3cold`; `Video Memory: Off` |
-| 4.4 | Offload: Vulkan, EGL and GLX, and the GNOME menu | `switcherooctl list`<br>`switcherooctl launch vulkaninfo --summary \| grep deviceName`<br>`switcherooctl launch eglinfo -B \| grep -c 'RTX 3050'`<br>`switcherooctl launch glxinfo -B \| grep -c 'RTX 3050'`<br>`d3cold_within 30`<br>then right-click Text Editor in the app grid, "Launch using Discrete Graphics Card"; `nvidia-smi`; close Text Editor; `d3cold_within 30` | two devices, the NVIDIA one with `Default: no`; one `deviceName`, the RTX 3050; both counts ≥ 1; D3cold within 30 s; `nvidia-smi` lists a `gnome-text-editor` process; D3cold within 30 s after it closes |
-| 4.5 | HDMI hotplug stays on the iGPU | `udevadm info -q property /dev/dri/by-path/pci-0000:01:00.0-card \| grep -c mutter-device-ignore`<br>`journalctl -b -o cat _COMM=gnome-shell \| grep -E 'selected as primary\|Added device'`<br>plug in an HDMI display and wait until it shows the desktop; `d3cold_within 60`; unplug it; `d3cold_within 60` | ≥ 1; the primary GPU is the card whose `Added device` line names `amdgpu`, and no line names the NVIDIA card; D3cold within 60 s after the plug and after the unplug |
-| 4.6 | s2idle with the driver bound | `grep -E '^(UseKernelSuspendNotifiers\|EnableS0ixPowerManagement\|PreserveVideoMemoryAllocations):' /proc/driver/nvidia/params`<br>`systemctl list-unit-files 'nvidia-suspend*' 'nvidia-resume*' 'nvidia-hibernate*'`<br>`d3cold_within 60`; close the lid for at least 5 minutes, open it and unlock; `d3cold_within 60`; the `glxinfo` line of 4.4 | three lines ending in `: 1`; `0 unit files listed.`; D3cold before the lid closes; D3cold within 60 s after resume; `glxinfo` still counts ≥ 1 |
-| 4.7 | A Flatpak app on the dGPU | `v=$(tr . - </sys/module/nvidia/version)`<br>`flatpak list --runtime --columns=application \| grep '^org.freedesktop.Platform.GL.nvidia-'`<br>right-click Bazaar in the app grid, "Launch using Discrete Graphics Card"; `nvidia-smi`; close Bazaar; `d3cold_within 30` | exactly one line, `org.freedesktop.Platform.GL.nvidia-$v`; `nvidia-smi` lists a `bazaar` process; D3cold within 30 s after it closes |
-| 4.8 | `nvidia-smi` and one driver version | `nvidia-smi -L`<br>`nvidia-smi --query-gpu=driver_version --format=csv,noheader; cat /sys/module/nvidia/version`<br>`rpm -q --qf '%{VERSION}\n' nvidia-driver nvidia-kmod-common kmod-nvidia-$(uname -r)`<br>`d3cold_within 30` | `GPU 0: NVIDIA GeForce RTX 3050 …`; the five versions are equal; D3cold within 30 s |
-| 4.9 | Dynamic Boost costs no idle power | on battery: `systemctl is-active nvidia-powerd`; `bash dgpu-idle.sh 600`<br>then `sudo systemctl stop nvidia-powerd`; `bash dgpu-idle.sh 600`; `sudo systemctl start nvidia-powerd`<br>after each run: `grep . /sys/devices/system/cpu/cpufreq/policy*/{scaling,cpuinfo}_max_freq` | `active`; both runs pass 4.2; the mean battery power with `nvidia-powerd` is at most 0.1 W above the run without it; after each run, every `scaling_max_freq` equals its `cpuinfo_max_freq`. If a criterion fails, `nvidia-powerd` is turned off (ADR 0015 §6) |
+| 4.2 | Idle share | `apexctl hw dgpu-idle --seconds 600` under the idle conditions below | `PASS`: suspended share ≥ 95.0 % |
+| 4.3 | Power state and video memory after idle | the `now:` line of the 4.2 run; then `grep 'Video Memory' $gpu/power` | `runtime_status=suspended`, `power_state=D3cold`; `Video Memory: Off` |
+| 4.4 | Offload: Vulkan, EGL and GLX, and the GNOME menu | `switcherooctl list`<br>`switcherooctl launch vulkaninfo --summary \| grep deviceName`<br>`switcherooctl launch eglinfo -B \| grep -c 'RTX 3050'`<br>`switcherooctl launch glxinfo -B \| grep -c 'RTX 3050'`<br>`apexctl hw dgpu-d3cold --within 30`<br>then right-click Text Editor in the app grid, "Launch using Discrete Graphics Card"; `nvidia-smi`; close Text Editor; `apexctl hw dgpu-d3cold --within 30` | two devices, the NVIDIA one with `Default: no`; one `deviceName`, the RTX 3050; both counts ≥ 1; D3cold within 30 s; `nvidia-smi` lists a `gnome-text-editor` process; D3cold within 30 s after it closes |
+| 4.5 | HDMI hotplug stays on the iGPU | `udevadm info -q property /dev/dri/by-path/pci-0000:01:00.0-card \| grep -c mutter-device-ignore`<br>`journalctl -b -o cat _COMM=gnome-shell \| grep -E 'selected as primary\|Added device'`<br>plug in an HDMI display and wait until it shows the desktop; `apexctl hw dgpu-d3cold --within 60`; unplug it; `apexctl hw dgpu-d3cold --within 60` | ≥ 1; the primary GPU is the card whose `Added device` line names `amdgpu`, and no line names the NVIDIA card; D3cold within 60 s after the plug and after the unplug |
+| 4.6 | s2idle with the driver bound | `grep -E '^(UseKernelSuspendNotifiers\|EnableS0ixPowerManagement\|PreserveVideoMemoryAllocations):' /proc/driver/nvidia/params`<br>`systemctl list-unit-files 'nvidia-suspend*' 'nvidia-resume*' 'nvidia-hibernate*'`<br>`apexctl hw dgpu-d3cold --within 60`; close the lid for at least 5 minutes, open it and unlock; `apexctl hw dgpu-d3cold --within 60`; the `glxinfo` line of 4.4 | three lines ending in `: 1`; `0 unit files listed.`; D3cold before the lid closes; D3cold within 60 s after resume; `glxinfo` still counts ≥ 1 |
+| 4.7 | A Flatpak app on the dGPU | `v=$(tr . - </sys/module/nvidia/version)`<br>`flatpak list --runtime --columns=application \| grep '^org.freedesktop.Platform.GL.nvidia-'`<br>right-click Bazaar in the app grid, "Launch using Discrete Graphics Card"; `nvidia-smi`; close Bazaar; `apexctl hw dgpu-d3cold --within 30` | exactly one line, `org.freedesktop.Platform.GL.nvidia-$v`; `nvidia-smi` lists a `bazaar` process; D3cold within 30 s after it closes |
+| 4.8 | `nvidia-smi` and one driver version | `nvidia-smi -L`<br>`nvidia-smi --query-gpu=driver_version --format=csv,noheader; cat /sys/module/nvidia/version`<br>`rpm -q --qf '%{VERSION}\n' nvidia-driver nvidia-kmod-common kmod-nvidia-$(uname -r)`<br>`apexctl hw dgpu-d3cold --within 30` | `GPU 0: NVIDIA GeForce RTX 3050 …`; the five versions are equal; D3cold within 30 s |
+| 4.9 | Dynamic Boost costs no idle power | on battery: `systemctl is-active nvidia-powerd`; `apexctl hw dgpu-idle --seconds 600 --json`<br>then `sudo systemctl stop nvidia-powerd`; `apexctl hw dgpu-idle --seconds 600 --json`; `sudo systemctl start nvidia-powerd`<br>after each run: `grep . /sys/devices/system/cpu/cpufreq/policy*/{scaling,cpuinfo}_max_freq` | `active`; both runs have `"pass": true`; `battery_mw` with `nvidia-powerd` is at most 100 above the run without it; after each run, every `scaling_max_freq` equals its `cpuinfo_max_freq`. If a criterion fails, `nvidia-powerd` is turned off (ADR 0015 §6) |
 
 Idle conditions: logged in, one Ptyxis window and one Nautilus window open, nothing
 else started, laptop not touched during the window (the screen may blank). Wait 60 s
-after opening the windows, then run the script. **Do not** run `nvidia-smi`, `nvtop`,
+after opening the windows, then run 4.2. **Do not** run `nvidia-smi`, `nvtop`,
 `vulkaninfo` or `lspci -v` (config-space reads wake the device) during the window, and
 read nothing under `/proc/driver/nvidia`. Read `$gpu/power` only before and after it.
 
-```bash
-#!/usr/bin/env bash
-# dgpu-idle.sh [SECONDS]: the dGPU's runtime-suspended share over an idle window, the
-# wakes seen and the mean battery power. Reads only sysfs; nothing here wakes the GPU.
-set -euo pipefail
-dev=/sys/bus/pci/devices/0000:01:00.0
-bat=/sys/class/power_supply/BAT0
-secs=${1:-600}
-read_pm() { printf '%s %s\n' "$(<"$dev/power/runtime_active_time")" "$(<"$dev/power/runtime_suspended_time")"; }
-read_uw() {  # battery power in µW; meaningful on battery only
-    if [ -r "$bat/power_now" ]; then cat "$bat/power_now"
-    else echo $(($(<"$bat/current_now") * $(<"$bat/voltage_now") / 1000000)); fi
-}
-printf 'control=%s driver=%s\n' "$(<"$dev/power/control")" "$(basename "$(readlink "$dev/driver" 2>/dev/null || echo none)")"
-read -r a0 s0 < <(read_pm)
-wakes=0 uw=0 n=0 prev=$(<"$dev/power/runtime_status")
-for ((t = 1; t <= secs; t++)); do
-    sleep 1
-    cur=$(<"$dev/power/runtime_status")
-    [[ $prev == suspended && $cur != suspended ]] && wakes=$((wakes + 1))
-    prev=$cur
-    if ((t % 10 == 0)); then uw=$((uw + $(read_uw))) n=$((n + 1)); fi
-done
-read -r a1 s1 < <(read_pm)
-da=$((a1 - a0)) ds=$((s1 - s0)) total=$((da + ds))
-((total > 0)) || { echo "FAIL: no runtime PM accounting (is power/control 'auto'?)"; exit 1; }
-share=$((ds * 1000 / total))
-printf 'window %d s: active %d ms, suspended %d ms, suspended share %d.%d %%\n' \
-    "$secs" "$da" "$ds" $((share / 10)) $((share % 10))
-printf 'wakes seen (1 s sampling): %d, %d per hour\n' "$wakes" $((wakes * 3600 / secs))
-((n == 0)) || printf 'battery (%s): %d mW mean\n' "$(<"$bat/status")" $((uw / n / 1000))
-printf 'now: runtime_status=%s power_state=%s\n' "$(<"$dev/power/runtime_status")" "$(<"$dev/power_state")"
-if ((share >= 950)); then echo PASS; else echo "FAIL: below 95.0 %"; exit 1; fi
-```
-
-Run it as `bash dgpu-idle.sh 600` (no root needed). The wake count is informative:
-record it per idle hour, with `nvidia-powerd` on and off, in S4 (ROADMAP N10). A wake
-shorter than 1 s can fall between two samples; the active time still counts it.
+The wake count is informative: record `apexctl hw dgpu-idle --seconds 3600 --json` per
+idle hour, with `nvidia-powerd` on and off, in S4 (ROADMAP N10), keeping
+`wakes_per_hour`, `suspended_permille` and `battery_mw`. A wake shorter than 1 s can
+fall between two samples; the active time still counts it.
 
 **No driver bound.** No driver binds the GPU on images before the pair ships (S1c),
 in the S1d fallback on Fedora's kernel, with `degraded=nvidia`, and on the break-glass
