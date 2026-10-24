@@ -98,7 +98,9 @@ changes of S3b land on the only machine.
   - Ready for the runner: `just runner-preflight` checks the KVM host before setup;
     `vm.yml`'s steps are tested against canned results; G4's screendumps, journals and
     serial logs come back as the `vm-logs-<sha>` artifact; the daily run adds the
-    absorption report and size metrics, and every run records boot times.
+    absorption report and size metrics, and every run records boot times. Provisioning
+    installs cosign and cryptsetup, the preflight checks the builder VM's host key, and a
+    stale `ci-build` key warns before a run.
   - Left: the self-hosted runner (owner), two green VM runs, and the archive.
 - **S1b:** started on 2026-10-23, about two weeks early.
   - Merged:
@@ -117,8 +119,9 @@ changes of S3b land on the only machine.
     - the bash exit-status fix that lets the terminal show "failed";
     - the search tooltip and the first-login hint (`search-hint-shown`).
     - the overview and the launcher (35, 36) as the layer's `overview` feature, and the
-      derived surfaces' tints.
-  - In progress: the edge-tiling preview (22) and the screenshot UI (19).
+      derived surfaces' tints;
+    - the screenshot UI (19) and the lighter hover on Quick Settings' submenu rows (17).
+  - In progress: the edge-tiling preview (22) and the launcher's app-grid strip.
 - **T1 and T2:** done on 2026-10-24: the Ptyxis recipe, the sessions sidebar (board 32),
   the palette reload, and the splits and pane headers (board 33), 19 changed upstream
   lines. The owner signs off the captures.
@@ -145,14 +148,16 @@ changes of S3b land on the only machine.
   2026-10-24 as presentation-only hooks (0015-lock), with a GDM mock in CI. Board 12's
   greeter assets are in apex-desktop and pinned: a pre-blurred Facets background and
   the Apex gdm logo, whose `zz_` override sorts after gdm's own, as G1 checks, and the
-  greeter's CSS uses them. In progress: the fingerprint states, the polkit dialog
-  (board 13; one hook in 0017-polkit, captures from a stubbed agent session in CI, and
-  a G4 case that runs `pkexec` through the shell's agent), and the lock in high
-  contrast and large text. The G4 lock matrix (wrong
-  password, Esc, blank and wake, suspend, reduced motion, safe mode) is written against
-  a fake guest; its first real run waits for the runner. A row that needs a layer feature
-  passes with a note while the pinned `apex-gnome` does not list it, and fails when it
-  is listed but never enabled.
+  greeter's CSS uses them. A mocked fprintd shows the fingerprint conversation ending
+  when the screen blanks. In progress: board 20's fingerprint presentation, the polkit
+  dialog (board 13; one hook in 0017-polkit, captured from a stubbed agent session in
+  CI), and the lock in high contrast, whose overlay the high-contrast sheet did not
+  style. The G4 lock matrix (wrong password, Esc, blank and wake, suspend, reduced
+  motion, safe mode) and its polkit rows (`pkexec` through the shell's agent: a wrong
+  password, Esc, the password, and the stock dialog in safe mode) are written against
+  a fake guest; their first real run waits for the runner. A row that needs a layer
+  feature passes with a note while the pinned `apex-gnome` does not list it, and fails
+  when it is listed but never enabled.
 - **K1 step 5:** done on 2026-10-24, the day the COPR shipped `kernel-cachyos`
   7.3.0-4.cachyos1 for Fedora 45. NVIDIA 615.78.08 builds on it unmodified, with the
   same warnings as on 7.2, and `kernel-spec.patch` still applies at fuzz 0. The full
@@ -176,16 +181,17 @@ changes of S3b land on the only machine.
     at `DeviceScale=1`;
   - from S2a: the whole top bar as the layer's `panel` feature: patch 0010, the dots,
     the hot corner, the status-pill filter, the solid bar, the focused app's name and
-    the search button; then the dock (board 37). In progress: intellihide, then the app
-    indicators (board 39, the `indicators` feature);
+    the search button; then the dock (board 37) with intellihide and the bottom-edge
+    reveal. In progress: the app indicators (board 39, the `indicators` feature);
   - from S2b: patch 0003-blur and its G2 pixel tests against a CPU reference, within the
     two-zone tolerance in ADR 0014; the glass manager, the dock's glass, and the bar's
     glass paused on the lock screen. In progress: Spotlight's glass, the scrims and the
     derived glass, after a 50-run crash soak;
   - from S2c: the live radius, measured at 274–304 ms in CI against its 1 s budget, and
     the tiled and fullscreen cases;
-  - from S3a: Spotlight (board 38) over the stock providers, and the overview's
-    thumbnails (board 35);
+  - from S3a: Spotlight (board 38) over the stock providers, opened by the overview's
+    search too, and the overview's thumbnails (board 35). In progress: the launcher's
+    own pill and Settings rows on their panel's tile;
   - from S3c: the `motion` feature (0016) and `quick-settings` (0011). In progress:
     shadows, then notifications (0012);
   - from S4: `apex_ok=1` on every green boot, the `07_apex-menu.cfg` snippet, and pin
@@ -197,9 +203,11 @@ changes of S3b land on the only machine.
   Their exit checks stay with their own slices.
 - **GNOME 51.1:** in Fedora 45's updates-testing on 2026-10-24. `just lane-absorb-report`
   found every Apex series applying at fuzz 0 except one hunk of 0015-lock, which was
-  rebased the same day to apply to 51.0 and 51.1 alike. The report runs daily.
+  rebased the same day to apply to 51.0 and 51.1 alike, and `apex-image` pins it. The
+  report runs daily.
 - **CI:** apex-gnome's lane jobs reuse a build whose content key is unchanged, so an
-  untouched family takes about a minute instead of 14.
+  untouched family takes about a minute instead of 14. A weekly run rebuilds every lane
+  without the cache, which also covers the buildroot.
 - **Parked for S6:** the next-major label. The proposed design: a `next_major` image
   reference in the manifest, copied to `io.github.apex-linux.apex.next-major`, and a
   `next-major` key in Update1's Booted dict. It matters only once F46 images exist.
