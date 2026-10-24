@@ -111,8 +111,9 @@ changes of S3b land on the only machine.
     - the `Apex` icon theme, with Colloid app icons and 286 Apex Symbolic glyphs (boards
       31, 31b, 31c and 31d). `make check-icons` resolves every symbolic name the shell,
       GTK, libadwaita and the default apps request: 268 of 275 from Apex, none from
-      Adwaita, 3 from the toolkit's own bundles, and 4 known gaps that stock Fedora draws
-      nowhere either; G1 checks that each theme's icon cache lists exactly its files;
+      Adwaita, 3 from GTK's, libadwaita's and Epiphany's own resources, and 4 known
+      gaps that stock Fedora draws nowhere either. G1 checks that each theme's icon
+      cache lists exactly its files;
     - board 27's Projects and Screenshots emblems, set at login by
       `apex-folder-icons.service` when the folders exist;
     - `apex-session-agent` v0: the crash-guard offer, `apex.css`, and the Ptyxis
