@@ -382,18 +382,27 @@ third-party clauses.
   one queue. It never reboots. The session reboots through
   `org.gnome.SessionManager.Reboot`.
 - State is rebuilt from `bootc status`. Only the user's intent, a denylist of digests
-  that failed health checks, the last check and the last health failure are persisted.
+  that failed health checks, the last check, the last health failure, the last fallback
+  and the Automatic Downloads setting are persisted.
 - A timer checks daily. When the gates pass (AC or enough battery, an unmetered network,
   free space, not denylisted, a newer version), it runs `bootc upgrade --download-only`.
+- `Update1` exposes `AutomaticDownloads` (default on, set with `SetAutomaticDownloads`,
+  polkit `update.configure`, auth_admin). Off, the daily `Automatic` still checks and
+  publishes `Available` but never downloads, and `apex-session-agent` posts "Update
+  Available" once per found build.
 - `Apply(expected_digest)` checks the staged digest and its version, arms the boot
   counter and runs `bootc upgrade --from-downloaded`. What gets applied is what the user
   saw.
-- Front ends: Settings > System > Software Updates (S2d), the "Updates Ready"
-  notification from `apex-session-agent`, and `apexctl`. Settings and `apexctl status`
-  also list degraded and held packages.
-  - The notification and `apexctl status`'s lists landed early, on 2026-10-24. The
-    notification is posted once per staged digest, and its action opens Settings'
-    System panel until the Software Updates page exists (S2d).
+- Front ends: Settings > System > Software Updates (S2d), the update notices from
+  `apex-session-agent` ("Updates Ready", "Update Available" and board 26's), and
+  `apexctl`. Settings and `apexctl status` also list degraded and held packages.
+  - The notices and `apexctl status`'s lists landed early, on 2026-10-24. Each notice is
+    posted once per digest. "Updates Ready" opens Settings' System panel; the others open
+    its Software Updates page.
+- `LastFallback` names the build a GRUB fallback set aside; `AcknowledgeHealthFailure`
+  clears it with `HealthFailure`. The agent posts board 26's notice once per build, a
+  fallback first, and the Software Updates page shows the rows and the Keep / Go Back
+  choices.
 - Allowed changes, and only these:
   - pin the last good deployment before arming over an unconfirmed or failed boot, so a
     bad build can be fixed forward (S4);
@@ -403,8 +412,11 @@ third-party clauses.
   - expose the degraded and held package lists, the kernel hold clock and the
     next-major label through `Update1` and `apexctl status` (S2d). The lists are done:
     the Booted, Staged and Rollback dicts carry `degraded` and `held` (`as`, copied
-    from that deployment's manifest, and absent for Available). The kernel clock will
-    be `hold-since` (`a{st}`, family to the Unix second its hold began, S1c);
+    from that deployment's manifest, and absent for Available). Each also carries
+    `holds` (`a(sstbt)`: family, the newer builds held back, held since, security, the
+    hold's limit, 0 when unknown) from the image's lane lock, which is also the kernel
+    hold's clock. Available and Staged carry `download-size`, bootc's rounded new-layer
+    size;
   - one shared types crate, only when a schema change would otherwise touch two copies.
 
 ### 5.3 Boot assessment and rollback
