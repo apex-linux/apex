@@ -143,7 +143,7 @@ per concern, so a rebase conflict names its feature.
 | 0013-overview | `js/ui/overview.js`, `js/ui/overviewControls.js`, `js/ui/searchController.js`, `js/ui/workspace.js`, `js/ui/windowPreview.js`, `js/ui/workspaceThumbnail.js`, `js/ui/appDisplay.js` | The scrim over a clone of the desktop; thumbnails; always-visible titles; no workspace background cards; typing goes to Spotlight, or to the launcher's own pill while the app grid shows (`searchController.js:156`); the 7×88 grid |
 | 0014-dash | `js/ui/dash.js` | ApexDock: fixed icon sizes, the order's tail, a full-colour Show Apps icon |
 | 0015-lock | `js/ui/unlockDialog.js`, `js/ui/userWidget.js`, `js/gdm/authPrompt.js` | Single stage; blur values; the field's glass; the initial-letter avatar; "Enter Password". The patch carries the review label "unlock path". |
-| 0016-motion | `js/ui/environment.js`, `js/ui/windowManager.js`, `js/ui/overview.js`, `js/ui/boxpointer.js` | The EASE curve for every `ease()` that asks for it; the drawn durations |
+| 0016-motion | `js/ui/environment.js`, `js/ui/windowManager.js`, `js/ui/overview.js`, `js/ui/overviewControls.js`, `js/ui/boxpointer.js` | The EASE curve for every `ease()` that asks for it; the drawn durations |
 | 0017-derived-glass | `js/ui/osdWindow.js`, `js/ui/messageTray.js`, `js/ui/switcherPopup.js`, `js/ui/screenshot.js` | Glass on the transient surfaces that copy a drawn glass surface: OSDs, banners, Alt+Tab and the screenshot panel (SPEC §3.17) |
 
 The plan touches 31 upstream files besides the two C files, which leaves two in
