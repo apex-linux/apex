@@ -784,8 +784,8 @@ the shell was built against and mirrored unmodified into `[apex]` (§3).
 | Lock screen | Single stage, date above time, blur σ 30 with saturation, the field's glass, an initial-letter avatar, "Enter Password" for PAM's exact `Password:` question only | S3b |
 | Greeter | The rebuilt shell with the Apex CSS and stock JS | S3b |
 | Window radius | `apex.css` from `apex-session-agent`, read at app start; a libadwaita patch that makes host apps follow it live | S1b; live S2c |
-| Settings | gnome-control-center, 3 patches: the Apex Desktop panel; coloured sidebar tiles in the design's order; the Software Updates row and page on `Update1` | S2c–S2d |
-| Files | nautilus, 7 patches: the disk-usage footer, the item-count bar, a 72 px grid zoom level (S2d); the details pane, the recent strip, the search chips, the view toggle (S7). Flat folder and file icons, with folders in the accent | S2d; S7 |
+| Settings | gnome-control-center rebuilt in the lane (`degraded=settings`), 3 patches: the Apex Desktop panel; coloured sidebar tiles in the design's order; the Software Updates row and page on `Update1` | C1–C2 (S2c–S2d) |
+| Files | nautilus rebuilt in the lane (`degraded=files`), 7 patches: the disk-usage footer, the item-count bar, a 72 px grid zoom level (F1); the details pane, the recent strip, the search chips, the view toggle (F2). Flat folder and file icons, with folders in the accent | F1–F2 |
 | Terminal | Ptyxis rebuilt in the lane: the sessions sidebar with each session's status (T1); pane headers and splits (T2). `apex-session-agent` writes a user palette whose cursor is the accent (S1b) | S1b; T1–T2 |
 | Boot splash | Plymouth script theme `apex`: rounded bar, @2x assets, its own LUKS prompt. The two-step `apex-twostep` theme stays installed as the fallback. | S1d |
 | GRUB | Menu hidden unless the last boot failed (§5.5) | S4 |
@@ -907,9 +907,19 @@ passes, and keep libadwaita's 15 px otherwise. Colour variables never go into us
 
 **Settings.** One schema, `io.github.apex_linux.Apex.Desktop`, with a `.Keybindings`
 child, holds only keys with no upstream home. Every other row of the Apex Desktop panel
-binds a stock GNOME key. Stock panels gain no rows (decision 27). System's Software
-Updates row opens the Apex updates page. "Apex Tweaks" is a `.desktop` entry that runs
-`gnome-control-center apex`. There is no separate Updates app.
+binds a stock GNOME key. Stock panels gain no rows (decision 27), except Power's
+"Graphics and Display" group: the dGPU's state and Lower Refresh Rate on Battery. System's
+Software Updates row opens the Apex updates page, whose D-Bus code comes from a copy of
+apex-dbus's `io.github.apex_linux.Apex.Update1.xml`; apex-image's contracts job compares
+the copy. "Apex Tweaks" is a `.desktop` entry that runs `gnome-control-center apex`.
+There is no separate Updates app.
+
+**Refresh rate on battery.** `apex-session-agent` lowers the built-in panel's refresh
+rate on battery (`lower-refresh-rate-on-battery`, default on): the lowest mode of 60 Hz
+or more at the current resolution while UPower reports `OnBattery`, the highest on AC.
+It applies mutter's temporary configuration, so `monitors.xml` keeps the user's choice,
+and it restores only a rate it lowered; a mode picked in Displays stands until the next
+power or key change, or a hotplug. On the M7400QC panel that is 90 → 60 Hz.
 
 **apex-desktop** (noarch, built from `desktop/` except `desktop/shell/`) holds the
 `Apex` icon theme from a pinned Colloid commit (`Inherits=Adwaita,hicolor`) with flat
@@ -967,7 +977,7 @@ own files (GPL-3.0-or-later, the Apex Symbolic glyphs included) and Colloid (GPL
 | `apex-boot` | Rust | Boot assessment: grubenv codec, decision table, checks with timeouts; binary `apex-boot-assess` |
 | `apex-dbus` | Rust, XML | The `io.github.apex_linux.Apex.Update1` contract. The XML also feeds gdbus-codegen in gnome-control-center (S2d). |
 | `apex-updated` | Rust | System bus service: one operation queue, polkit (system-bus-name subject), hardened unit |
-| `apex-session-agent` (S1b) | Rust | User unit: writes `apex.css` for the window radius and the Ptyxis accent palette, offers to turn the Apex desktop back on after the crash guard trips, posts update notifications (S2d), points `icon-theme` at the `Apex-<accent>` folder theme for the current accent (S7) |
+| `apex-session-agent` (S1b) | Rust | User unit: writes `apex.css` for the window radius and the Ptyxis accent palette, lowers the panel's refresh rate on battery, offers to turn the Apex desktop back on after the crash guard trips, posts update notifications (S2d), points `icon-theme` at the `Apex-<accent>` folder theme for the current accent (S7) |
 | `apexctl` | Rust | CLI: `status` (degraded and held packages, the kernel pair and its hold clock, S2d), `update …`, `hw report`, `major-upgrade` (S6) |
 | `apex-lane` | Rust | The rebuild lane (§4.1): the `pkg.env`, `series` and `spec-edit` parsers, the content key, the `.apexN.M` release rule, the store and the locks, the hold policy; a dev tool built and run in the builder VM, never shipped |
 | Apex layer (S1a–S3c) | GJS, C | `desktop/shell/`: shell behaviour, ApexDock, the glass manager; the `ShellBlurEffect` patch |
