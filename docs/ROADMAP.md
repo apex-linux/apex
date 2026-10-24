@@ -224,8 +224,8 @@ changes of S3b land on the only machine.
     never blurs its own shadow; the power-off dialog (0018); and a G2 reduced-motion
     audit, in which nothing, Apex's or stock's, lasts with animations off;
     notifications (0012) with board 34's 32 px icon; and G2's idle check, in which an
-    idle desktop with every feature on paints nothing for 10 s. In progress: board 34's
-    card layout;
+    idle desktop with every feature on paints nothing for 10 s; and board 34's card
+    layout, the icon in its own column beside the header, title and body;
   - the shell's WCAG AA checks in G2, over the real backdrop with glass, in light, dark,
     high contrast and Large Text: every surface passes or is a named upstream gap, and
     Apex's own actors take upstream's high-contrast palette. In progress: the tokens the
