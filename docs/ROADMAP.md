@@ -112,7 +112,9 @@ changes of S3b land on the only machine.
     - the open-terminal palette reload (a Ptyxis hunk, measured at under 0.2 s);
     - the bash exit-status fix that lets the terminal show "failed";
     - the search tooltip and the first-login hint (`search-hint-shown`).
-  - In progress: the overview and the launcher (35, 36).
+    - the overview and the launcher (35, 36) as the layer's `overview` feature, and the
+      derived surfaces' tints.
+  - In progress: the edge-tiling preview (22) and the screenshot UI (19).
 - **T1 and T2:** done on 2026-10-24: the Ptyxis recipe, the sessions sidebar (board 32),
   the palette reload, and the splits and pane headers (board 33), 19 changed upstream
   lines. The owner signs off the captures.
@@ -123,15 +125,22 @@ changes of S3b land on the only machine.
 - **C1:** done on 2026-10-24: the gnome-control-center recipe (`degraded=settings`), the
   Apex Desktop panel with all 14 rows bound both ways (board 11), and libadwaita in the
   lane (`degraded=adwaita`) reloading `apex.css` live (53 ms in its test).
-- **C2:** started. Provider first:
+- **C2:** most of it is merged. Provider first:
   - in apex-system: Update1's XML held to the code, `lower-refresh-rate-on-battery`
-    with the agent's switching, and next AutomaticDownloads, holds, download sizes,
-    LastFallback and the update notifications;
-  - in apex-image: the contract that compares Settings' copy of the XML;
-  - in apex-gnome: the Software Updates page (0003), then board 26's dialog.
+    with the agent's switching, AutomaticDownloads (`apexctl update auto`), holds with
+    their side and the stock list, download sizes, LastFallback, `Kept`,
+    `HealthFailureChecks`, `GetChangesFor` and the update notifications;
+  - in apex-image: the contract that compares Settings' copy of the XML, and the pins
+    that move both sides together;
+  - in apex-gnome: the Software Updates page (0003) and its C2 rows.
+  - In progress: the coloured sidebar tiles (0002), then Appearance and Power with the
+    stock structure and the Graphics and Display group.
 - **S3b:** started on 2026-10-24: the lock screen and greeter (boards 20, 12) as
-  presentation-only hooks, with a GDM mock in CI. The G4 lock matrix waits for the
-  runner.
+  presentation-only hooks, with a GDM mock in CI. The G4 lock matrix (wrong password,
+  Esc, blank and wake, suspend, reduced motion, safe mode) is written against a fake
+  guest; its first real run waits for the runner. A row that needs a layer feature
+  passes with a note while the pinned `apex-gnome` does not list it, and fails when it
+  is listed but never enabled.
 - **K1 step 5:** done on 2026-10-24, the day the COPR shipped `kernel-cachyos`
   7.3.0-4.cachyos1 for Fedora 45. NVIDIA 615.78.08 builds on it unmodified, with the
   same warnings as on 7.2, and `kernel-spec.patch` still applies at fuzz 0. The full
@@ -139,14 +148,27 @@ changes of S3b land on the only machine.
   are in `apex-kernel` as data. negativo17's key has no second source yet (owner).
 - **S1c:** pulled forward. `pair.sh` and `bump.sh` in apex-kernel, and apex-lane builds,
   holds and locks the pair, with `--allow-degraded` for a `degraded=nvidia` promote. The
-  image integration is in progress behind `/apex/pair-mode`. Nothing builds a pair until
-  the owner decides on negativo17's key and a kernel `pkg.env` lands.
+  image side is merged behind `/apex/pair-mode`, off: the device-ignore rule, the G1
+  pair rows, the module-count gate, the key-expiry hold, retention, `GL.nvidia`, and the
+  break-glass `just image KERNEL=fedora` that labels `degraded=nvidia` and never
+  promotes. Nothing builds a pair until the owner decides on negativo17's key and a
+  kernel `pkg.env` lands.
 - **Pulled forward, in parallel with S1b:**
   - from S1d: the Plymouth `apex` theme (boards 01 and 30), the image's default splash
     at `DeviceScale=1`;
   - from S2a: the whole top bar as the layer's `panel` feature: patch 0010, the dots,
     the hot corner, the status-pill filter, the solid bar, the focused app's name and
-    the search button; then the dock (board 37, in progress);
+    the search button; then the dock (board 37). In progress: intellihide, then the app
+    indicators (board 39, the `indicators` feature);
+  - from S2b: patch 0003-blur and its G2 pixel tests against a CPU reference, within the
+    two-zone tolerance in ADR 0014. In progress: the glass manager, then the scrims;
+  - from S2c: the live radius, measured at 274–304 ms in CI against its 1 s budget, and
+    the tiled and fullscreen cases;
+  - from S3a: Spotlight (board 38) over the stock providers, and the overview's
+    thumbnails (board 35);
+  - from S3c: the `motion` feature (0016), in progress;
+  - from S4: `apex_ok=1` on every green boot, the `07_apex-menu.cfg` snippet, and pin
+    before arm;
   - from S2d: the "Updates Ready" notification, and the held lists in `Update1` and
     `apexctl status`;
   - from S7: the Apex folders and the nine `Apex-<accent>` folder themes.
