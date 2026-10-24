@@ -913,7 +913,13 @@ Series 0015-lock carries the review label "unlock path".
   `bootc install`.
 - Pin before arm: when applying over an unconfirmed or failed booted deployment, pin the
   last good deployment first.
-- Fingerprint unlock through the authselect vendor profile, if the score test passed.
+- Fingerprint unlock through the authselect vendor profile, if the score test passed:
+  one image PR turns on `authselect enable-feature with-fingerprint`, enables
+  `fprintd.service`, and sets `org.gnome.login-screen enable-fingerprint-authentication`;
+  the lock then takes board 20's fingerprint presentation (one hint line with the print
+  icon, "Fingerprint not recognized. Try again." in its place), replacing upstream's
+  message line and indicator. The mocked conversation (it ends at blank, a failed scan
+  stays locked) is already tested in apex-gnome's `tests/shell`.
 - K4: the status views show a kernel hold and its clock.
 - N10, measured during the two weeks of use: s2idle rows, `nvidia-powerd` on and off,
   `NVreg_EnableS0ixPowerManagement`, the wake counter per idle hour. Add a post-resume
