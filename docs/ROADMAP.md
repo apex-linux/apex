@@ -795,9 +795,9 @@ Glass protocol, on the laptop on battery, balanced profile, 90 Hz, 2880×1800:
 - Spotlight in `js/ui/apex/spotlight/`: Apex's own rows over the stock search
   providers, with the drawn sections and caps (Calculator 1, Applications 4, Settings 3,
   Files 4), and the calculator copy toast. Super+Space now opens it.
-- Overview: always-visible window titles; no workspace background cards; thumbnails
-  150×94, shown from two workspaces (scale 0.104, threshold 1); the "No open windows"
-  label.
+- Overview: always-visible window titles; no workspace background cards; thumbnails as
+  board 35 draws them (112×70 on its 1440×900 frame, about .081 of the work area), shown
+  from two workspaces (threshold 1); the "No open windows" label.
 - Launcher: 7 columns and 88 px; its own apps-only search pill.
 - Glass on the overview and launcher scrims and on Spotlight. GNOME hides the window
   group in the overview, so each scrim blurs a non-reactive clone of `window_group`
@@ -887,9 +887,11 @@ It runs during S4's two weeks of use and ships as updates.
   the indicator binding stay stock); VPN after Airplane Mode; On/Off subtitles.
 - Motion: an `environment.js` hook maps Apex's ease to `CUBIC_BEZIER` (.2,.8)(.2,1);
   window and overview durations. With `enable-animations=false` every transition takes
-  0 ms.
-- Two-layer shadows through shadow-layer actors under the popovers, Spotlight, the
-  toast, the dock, window previews and the active thumbnail.
+  0 ms, except stock's required eases (Locate Pointer's ripple), which keep their
+  duration.
+- Two-layer shadows through shadow-layer actors under the popovers, Spotlight, the toast
+  and window previews, with the boards' values. The dock keeps its one layer, and the
+  active thumbnail has only its accent ring (board 35).
 - **Exit:**
   - the power-profile indicator stays out of the status pill, and the toggle still
     switches between Balanced and the last profile;
@@ -1034,7 +1036,7 @@ rows in stock panels (27). The privacy indicators in the status pill stay.
 | Files grid/list toggle group (nautilus 0007) | S7 | S |
 | Flat Files icons, folders in the accent | S7 | M |
 | Spotlight sections and caps | S3a | L |
-| Thumbnails 150×94 from two workspaces | S3a | S |
+| Thumbnails as board 35 draws them, from two workspaces | S3a | S |
 | Overview: always-visible titles, no workspace background cards | S3a | S |
 | Overview and launcher scrims that blur the desktop with its windows | S3a | M |
 | Launcher search pill | S3a | M |
