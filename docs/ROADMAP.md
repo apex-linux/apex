@@ -277,6 +277,10 @@ changes of S3b land on the only machine.
 - **Sign-offs:** the owner decides on each shell board's captures (boards 12–39) on a
   sign-off page beside the canvas. A decision holds for the captures it was made on, so
   new captures reopen only their own board.
+  Approved captures become the goldens: `goldens.sh import` commits them to apex-gnome's
+  `goldens` branch, which `tests/shots/goldens.lock` pins. signoff.yml captures every push
+  to main that touches the shell, daily, and PRs labelled `goldens`, and fails on any pixel
+  that differs outside a named mask; the only one is board 17's Wi-Fi scan spinner.
 - **Debt cleared:**
   - the ARCHITECTURE §5.2 daemon removals and the two-channel leftovers;
   - zbus 6;
