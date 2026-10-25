@@ -128,8 +128,9 @@ changes of S3b land on the only machine.
     - the Flatpak override that shows `apex.css` to Bazaar;
     - the Apex SCSS for every stock surface so far: popup menus, OSD and banners (16),
       Quick Settings (17), the window switcher (15), modal dialogs (13, 14), and the
-      calendar and notifications (34, with opaque message cards, and day numbers drawn
-      as labels so Dark Style recolours them);
+      calendar and notifications (34, with opaque message cards, day numbers drawn as
+      labels so Dark Style recolours them, and the World Clocks and Weather rows as the
+      board's 40 px cards);
     - the open-terminal palette reload (a Ptyxis hunk, measured at under 0.2 s);
     - the bash exit-status fix that lets the terminal show "failed";
     - the search tooltip and the first-login hint (`search-hint-shown`).
@@ -232,8 +233,9 @@ changes of S3b land on the only machine.
   - from S3a: Spotlight (board 38) over the stock providers, opened by the overview's
     search too, Settings rows on their panel's tile, and the overview's thumbnails (board
     35) with the wallpaper in them, captions that clear the next row and the dock, and
-    the launcher's own pill. G2's `spotlight_keys` case drives the keys and the 1 s
-    budgets;
+    the launcher's own pill (with a 1 px minimum on the window picker, so the launcher's
+    0-high workspace never gives the previews a NaN box; G2 fails any case that logs
+    one). G2's `spotlight_keys` case drives the keys and the 1 s budgets;
   - from S3c: the `motion` feature (0016), `quick-settings` (0011) with board 17's
     Wi-Fi submenu, and `shadows`, whose second layer sits above its surface so glass
     never blurs its own shadow; the power-off dialog (0018); and a G2 reduced-motion
