@@ -43,7 +43,7 @@ rules and the settings contract.
   nothing clipped at Large Text. Where a board value fails, the token changes and the
   board follows: dim text in light is the foreground at .72 rather than the boards' .62;
   over the overview's scrim the search hint is the foreground at .68 and "No open
-  windows" at .80; the calendar's other-month days are at .64 in light and .55 in dark
+  windows" at .80 in light (.64 in dark); the calendar's other-month days are at .64 in light and .55 in dark
   (2026-10-25). G2 measures over Facets and over GNOME's `#013b88` fallback, and every
   value holds over both.
 - Wallpaper: Apex Facets, light and dark. It has a flat ground, nested rounded squares
