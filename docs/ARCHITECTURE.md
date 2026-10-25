@@ -736,12 +736,13 @@ out.
 
 | Area | Apex default | Channel |
 |---|---|---|
-| Core | GNOME Shell, Settings, Nautilus + Sushi, Ptyxis, Text Editor, Loupe, Papers, Showtime, Decibels, Music, Maps, Snapshot, System Monitor, Baobab, Calculator, Characters, Clocks, Calendar, Contacts, Weather, Font Viewer, Logs, Yelp, Extensions | image RPM |
+| Core | GNOME Shell, Settings, Nautilus + Sushi, Ptyxis, Text Editor, Loupe, Papers, Showtime, Decibels, Maps, Snapshot, System Monitor, Baobab, Calculator, Characters, Clocks, Calendar, Contacts, Weather, Font Viewer, Logs, Yelp, Extensions | image RPM |
+| Music | GNOME Music, preinstalled: Fedora's gnome-music needs grilo, whose main package ships a GTK3 test tool, and the legacy allowlist only shrinks (ADR 0007) | Flatpak |
 | Browser | Epiphany (GTK4) in the image; Firefox installed on request | RPM / Flatpak |
-| Apps | Bazaar (GNOME Circle), preinstalled; Flathub remote configured | Flatpak |
+| Apps | Bazaar (GNOME Circle), preinstalled; Flathub remote configured. Every dock favourite is an image app or a preinstall (apex-image's contracts) | Flatpak |
 | Disks | gnome-disk-utility 46 (GTK3, allowlisted until GDU 51 ships as GTK4) | image RPM |
 | Secrets | oo7 (daemon, PAM, portal); Key Rack via Flathub | RPM |
-| Never shipped | gnome-terminal, gedit, eog, evince, totem, cheese, rhythmbox, seahorse, gnome-keyring, gnome-classic-session, the Xorg server, PackageKit, gnome-software | none |
+| Never shipped | gnome-terminal, gedit, eog, evince, totem, cheese, rhythmbox, seahorse, gnome-keyring, gnome-classic-session, gnome-tour, the Xorg server, PackageKit, gnome-software | none |
 
 - **Flatpaks.** Preinstalls come from `/usr/share/flatpak/preinstall.d` through a
   network-online oneshot, plus a retry timer that covers a first boot without network.

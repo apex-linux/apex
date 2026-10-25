@@ -108,12 +108,17 @@ changes of S3b land on the only machine.
     - the Facets wallpapers, fontconfig `ss03`, JetBrains Mono, and the Ptyxis profile
       with `palette='apex'`;
     - the coloured bash prompt (`/etc/profile.d/apex-prompt.sh`);
-    - the `Apex` icon theme, with Colloid app icons and 286 Apex Symbolic glyphs (boards
+    - the `Apex` icon theme, with Colloid app icons and 287 Apex Symbolic glyphs (boards
       31, 31b, 31c and 31d). `make check-icons` resolves every symbolic name the shell,
-      GTK, libadwaita and the default apps request: 268 of 275 from Apex, none from
-      Adwaita, 3 from GTK's, libadwaita's and Epiphany's own resources, and 4 known
-      gaps that stock Fedora draws nowhere either. G1 checks that each theme's icon
-      cache lists exactly its files;
+      GTK, libadwaita and the default apps (Maps included) request: 274 of 281 from
+      Apex, none from Adwaita, 3 from GTK's, libadwaita's and Epiphany's own resources,
+      and 4 known gaps that stock Fedora draws nowhere either. check-theme fails on a
+      glyph that draws nothing, and G1 checks that each theme's icon cache lists
+      exactly its files;
+    - answer 10's app set, in part: Maps in the image and Music preinstalled from
+      Flathub (its RPM would add GTK3 through grilo), with a contract that every dock
+      favourite is an image app or a preinstall. Dropping gnome-tour and the Firefox
+      preinstall (Firefox on request) is in progress;
     - board 27's Projects and Screenshots emblems, set at login by
       `apex-folder-icons.service` when the folders exist;
     - `apex-session-agent` v0: the crash-guard offer, `apex.css`, and the Ptyxis
@@ -211,16 +216,21 @@ changes of S3b land on the only machine.
     repaint loop between neighbouring glass surfaces (Quick Settings over a still
     desktop drew about 58 frames a second): rule e queues nothing for a clip that only
     meets a box's shadow, and the manager forwards damage to the box alone, which takes
-    0003 to its 300-line C budget. In progress: the scrims and the derived glass; G2's
-    load cases, which found the loop and count re-blurs and extra frames against Reduce
-    Transparency in scenarios A to C; and a laptop kit that runs the glass protocol's
-    scenarios and power runs and scores them against the thresholds below;
+    0003 to its 300-line C budget; G2's load cases, which found the loop and count
+    re-blurs and extra frames against Reduce Transparency in scenarios A to C, its glass
+    stress on the real boxes, and an idle desktop that paints nothing for 10 s with
+    Quick Settings or the overview open; the dock's fix for a full repaint about 20 s
+    after login (the hidden overview Dash now stays current); and the laptop kit, which
+    runs the protocol below and scores it: `just glass-protocol run`, then `power idle`
+    and `power A`, with unsafe mode turned on in Looking Glass first and other monitors
+    unplugged. In progress: the scrims and the derived glass;
   - from S2c: the live radius, measured at 274–304 ms in CI against its 1 s budget, and
     the tiled and fullscreen cases;
   - from S3a: Spotlight (board 38) over the stock providers, opened by the overview's
     search too, Settings rows on their panel's tile, and the overview's thumbnails (board
-    35), and the launcher's own pill. G2's `spotlight_keys` case drives the keys and
-    the 1 s budgets;
+    35) with the wallpaper in them, captions that clear the next row and the dock, and
+    the launcher's own pill. G2's `spotlight_keys` case drives the keys and the 1 s
+    budgets;
   - from S3c: the `motion` feature (0016), `quick-settings` (0011) with board 17's
     Wi-Fi submenu, and `shadows`, whose second layer sits above its surface so glass
     never blurs its own shadow; the power-off dialog (0018); and a G2 reduced-motion
