@@ -115,10 +115,10 @@ changes of S3b land on the only machine.
       and 4 known gaps that stock Fedora draws nowhere either. check-theme fails on a
       glyph that draws nothing, and G1 checks that each theme's icon cache lists
       exactly its files;
-    - answer 10's app set, in part: Maps in the image and Music preinstalled from
-      Flathub (its RPM would add GTK3 through grilo), with a contract that every dock
-      favourite is an image app or a preinstall. Dropping gnome-tour and the Firefox
-      preinstall (Firefox on request) is in progress;
+    - answer 10's app set: Maps in the image and Music preinstalled from Flathub (its
+      RPM would add GTK3 through grilo), with a contract that every dock favourite is an
+      image app or a preinstall; gnome-tour and cheese excluded and Firefox only on
+      request, with a check that `exclude.txt` holds every banned package;
     - board 27's Projects and Screenshots emblems, set at login by
       `apex-folder-icons.service` when the folders exist;
     - `apex-session-agent` v0: the crash-guard offer, `apex.css`, and the Ptyxis
@@ -126,7 +126,8 @@ changes of S3b land on the only machine.
     - the Flatpak override that shows `apex.css` to Bazaar;
     - the Apex SCSS for every stock surface so far: popup menus, OSD and banners (16),
       Quick Settings (17), the window switcher (15), modal dialogs (13, 14), and the
-      calendar and notifications (34, with opaque message cards);
+      calendar and notifications (34, with opaque message cards, and day numbers drawn
+      as labels so Dark Style recolours them);
     - the open-terminal palette reload (a Ptyxis hunk, measured at under 0.2 s);
     - the bash exit-status fix that lets the terminal show "failed";
     - the search tooltip and the first-login hint (`search-hint-shown`).
@@ -246,12 +247,12 @@ changes of S3b land on the only machine.
   - from S4: `apex_ok=1` on every green boot, the `07_apex-menu.cfg` snippet, and pin
     before arm;
   - from S2d: the "Updates Ready" notification, and the held lists in `Update1` and
-    `apexctl status`. In progress: board 14's update card;
+    `apexctl status`, and board 14's update card;
   - from S7: the Apex folders and the nine `Apex-<accent>` folder themes; a slides kind
     for presentations, folder-remote with the network emblem, a flat Trash, and
     `inode-directory` drawn as the accent folder so Spotlight's folders follow the
-    accent too. In progress: the CI job that times an accent change in Files, the file
-    chooser and Spotlight against 1 s.
+    accent too; and the CI job that times an accent change in Files, the file chooser
+    and Spotlight against 1 s (`tests/s7/accent-test.sh`).
 
   Their exit checks stay with their own slices.
 - **GNOME 51.1:** in Fedora 45's updates-testing on 2026-10-24. `just lane-absorb-report`
