@@ -241,7 +241,8 @@ changes of S3b land on the only machine.
     notifications (0012) with board 34's 32 px icon; and G2's idle check, in which an
     idle desktop with every feature on paints nothing for 10 s; and board 34's card
     layout, the icon in its own column beside the header, title and body;
-  - the shell's WCAG AA checks in G2, over the real backdrop with glass, in light, dark,
+  - the shell's WCAG AA checks in G2, over the real backdrop with glass (pinned to Facets,
+    checked as painted, and repeated over GNOME's `#013b88` fallback), in light, dark,
     high contrast and Large Text: every surface passes or is a named upstream gap, and
     Apex's own actors take upstream's high-contrast palette. In progress: the tokens the
     checks moved (light dim text, the checked toggles' fill, the search hint, Quick
