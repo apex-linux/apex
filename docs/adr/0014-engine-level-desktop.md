@@ -316,7 +316,7 @@ byte-identical to Fedora's, so the unlock dialog and any other caller are unchan
 | b | `corner-radius` (0) | Antialiased rounded-rect coverage in the same pass, for the drawn radii 18 to 26 |
 | c | `follow-opacity` (false) | Background mode uses the actor's paint opacity. Stock forces 255 (`:642`), which pops an opaque blurred rectangle in at the start of every fade. |
 | d | `fine` (false) | Downscale to the smallest power of two with σ / ds ≤ 4 and a texture side of at least 4 px, without the 256 px floor. The reduction is box-filtered in one pass whose taps sit on 2×2 texel corners, the exact mean of the ds×ds footprint that chained halving gives (Cogl's mipmaps go stale after a blit), so moving content does not shimmer. |
-| e | `fine` | In background mode, re-blur only when the frame's redraw clip covers the whole actor box. Otherwise draw the last result and queue a redraw of the box. A blit then never reads pixels this frame did not repaint, which is where the documented artifacts come from. Correctness never depends on JavaScript finding every source of damage. |
+| e | `fine` | In background mode, re-blur only when the frame's redraw clip covers the whole actor box. Otherwise draw the last result, and queue a redraw only when the clip reaches into the box: a clip that meets only the paint volume (a box-shadow) changed nothing behind it. A blit then never reads pixels this frame did not repaint, which is where the documented artifacts come from, and two glass surfaces whose shadows reach each other's boxes never queue each other's redraws (G2's load cases found that loop at about 58 Hz). Correctness never depends on JavaScript finding every source of damage. |
 | f | `fine` | The last result is kept per stage view. |
 
 The glass manager (`js/ui/apex/glass/`):
@@ -326,9 +326,10 @@ The glass manager (`js/ui/apex/glass/`):
   fullscreen windows; popovers blur only while mapped;
 - forwards damage, for latency only: a window actor's `damaged` signal (mutter
   `src/compositor/meta-window-actor.c:250-262`), its position, size and stacking
-  changes, and background changes queue a redraw of every glass box they touch. The
-  re-blur then lands in the same frame. A missed source costs one frame of lag, never a
-  wrong frame;
+  changes, and background changes queue a redraw of every glass box they touch, the
+  box alone (`queue_redraw_with_clip`), never its paint volume, whose shadow would
+  re-blur the glass beside it. The re-blur then lands in the same frame. A missed
+  source costs one frame of lag, never a wrong frame;
 - turns glass off for Reduce Transparency (effects removed; a root style class swaps
   the tokens to their solid values), for high contrast, and for
   `disabled-features=['glass']`.

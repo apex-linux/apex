@@ -207,12 +207,14 @@ changes of S3b land on the only machine.
     pill, the screen-sharing stop pill and the input chip;
   - from S2b: patch 0003-blur and its G2 pixel tests against a CPU reference, within the
     two-zone tolerance in ADR 0014; the glass manager, the dock's glass, and the bar's
-    glass paused on the lock screen, and Spotlight's glass with its toast. In progress:
-    the scrims and the derived glass, after a 50-run crash soak; a fix for a repaint
-    loop between neighbouring glass surfaces (Quick Settings over a still desktop drew
-    about 58 frames a second), which G2's new load cases found; and those load cases,
-    which count re-blurs and extra frames against Reduce Transparency in scenarios A to
-    C;
+    glass paused on the lock screen, and Spotlight's glass with its toast; the fix for a
+    repaint loop between neighbouring glass surfaces (Quick Settings over a still
+    desktop drew about 58 frames a second): rule e queues nothing for a clip that only
+    meets a box's shadow, and the manager forwards damage to the box alone, which takes
+    0003 to its 300-line C budget. In progress: the scrims and the derived glass; G2's
+    load cases, which found the loop and count re-blurs and extra frames against Reduce
+    Transparency in scenarios A to C; and a laptop kit that runs the glass protocol's
+    scenarios and power runs and scores them against the thresholds below;
   - from S2c: the live radius, measured at 274–304 ms in CI against its 1 s budget, and
     the tiled and fullscreen cases;
   - from S3a: Spotlight (board 38) over the stock providers, opened by the overview's
@@ -249,9 +251,19 @@ changes of S3b land on the only machine.
 - **CI:** apex-gnome's lane jobs reuse a build whose content key is unchanged, so an
   untouched family takes about a minute instead of 14. A weekly run rebuilds every lane
   without the cache, which also covers the buildroot.
+- **S6 groundwork:** the `next` lane is in `apex-image`. `APEX_FEDORA=46` builds from
+  `image/fedora/46.env` (rawhide digests until the branch point, Fedora 46's key) with a
+  store of its own, never promotes or publishes, and labels its image `lane=next`.
+  `apex-kernel`'s pair reads `fedora-46/` pins and refuses without them. A family that
+  fails on 46 falls back to Fedora's build and the run goes on, so one report lists the
+  port's work. vm.yml's report-only `next-compose` stays off until the branch point,
+  and needs the owner's `just vm-ci-install` for its `ci-build next`.
 - **Parked for S6:** the next-major label. The proposed design: a `next_major` image
   reference in the manifest, copied to `io.github.apex-linux.apex.next-major`, and a
   `next-major` key in Update1's Booted dict. It matters only once F46 images exist.
+- **Sign-offs:** the owner decides on each shell board's captures (boards 12–39) on a
+  sign-off page beside the canvas. A decision holds for the captures it was made on, so
+  new captures reopen only their own board.
 - **Debt cleared:**
   - the ARCHITECTURE §5.2 daemon removals and the two-channel leftovers;
   - zbus 6;
