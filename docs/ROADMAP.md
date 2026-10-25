@@ -118,7 +118,9 @@ changes of S3b land on the only machine.
     - answer 10's app set: Maps in the image and Music preinstalled from Flathub (its
       RPM would add GTK3 through grilo), with a contract that every dock favourite is an
       image app or a preinstall; gnome-tour and cheese excluded and Firefox only on
-      request, with a check that `exclude.txt` holds every banned package;
+      request, with a check that `exclude.txt` holds every banned package; G1's
+      `mime.sh` resolves each of the owner's default apps with `gio mime` in the image,
+      so a gnome-session update that moves one fails;
     - board 27's Projects and Screenshots emblems, set at login by
       `apex-folder-icons.service` when the folders exist;
     - `apex-session-agent` v0: the crash-guard offer, `apex.css`, and the Ptyxis
