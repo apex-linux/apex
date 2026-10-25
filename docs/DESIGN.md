@@ -35,13 +35,17 @@ rules and the settings contract.
 - Accent: one of libadwaita's nine accents (blue `#3584e4` by default, teal, green,
   yellow, orange, red, pink, purple, slate), driven by `accent-color`. It is drawn raw in
   both variants. White on the accent; where that text is small, as on Quick Settings'
-  checked toggles, the fill is the accent mixed 25 % toward black, so every one of the
+  checked toggles, the calendar's today, a dialog's default button and the polkit
+  dialog's initial, the fill is the accent mixed 25 % toward black, so every one of the
   nine accents holds 4.5:1. Selection tint is the accent at 16 %.
 - Contrast: WCAG AA in the shell, measured in G2 over the real backdrop, glass
   included: 4.5:1 for text and 3:1 for glyphs, in light, dark and high contrast, and
   nothing clipped at Large Text. Where a board value fails, the token changes and the
-  board follows: dim text in light is the foreground at .72 rather than the boards' .62,
-  and the overview's search hint is at .62 (2026-10-24).
+  board follows: dim text in light is the foreground at .72 rather than the boards' .62;
+  over the overview's scrim the search hint is the foreground at .68 and "No open
+  windows" at .80; the calendar's other-month days are at .64 in light and .55 in dark
+  (2026-10-25). G2 measures over Facets and over GNOME's `#013b88` fallback, and every
+  value holds over both.
 - Wallpaper: Apex Facets, light and dark. It has a flat ground, nested rounded squares
   turned 45° low on the right, and a small pair top left. The sources are
   `desktop/wallpapers/apex-facets-{light,dark}.svg`.
