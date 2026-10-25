@@ -270,7 +270,8 @@ changes of S3b land on the only machine.
   apex-gnome's CI also runs G2's patched-shell cases on every PR: every a11y case and its
   `-solid` twin, plus dock, indicators, no-dock, safe-env, layer-disabled and fault (about
   16 minutes after the lane); the full set runs on push to main and daily (about 27
-  minutes, 1306 checks on its first run). The a11y pass
+  minutes, 1306 checks on its first run; about 9 and 20 minutes once a late probe start
+  counts as normal, with the action mode checked on every case). The a11y pass
   takes about 18 s, so every case fits G2's shared 150 s limit.
 - **S6 groundwork:** the `next` lane is in `apex-image`. `APEX_FEDORA=46` builds from
   `image/fedora/46.env` (rawhide digests until the branch point, Fedora 46's key) with a
