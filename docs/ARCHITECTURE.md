@@ -830,7 +830,7 @@ the shell was built against and mirrored unmodified into `[apex]` (§3).
 - The series holds hook hunks only, one patch per concern: build, loader, blur, panel,
   Quick Settings, message list, overview, dash, lock, motion, derived glass. All logic
   lives in `desktop/shell/`. Budget (ADR 0014): at most 450 changed lines of hook hunks
-  in at most 33 upstream files (the plan uses 31), and at most 300 lines of C in
+  in at most 33 upstream files (the plan uses 31), and at most 310 lines of C in
   `shell-blur-effect.{c,h}`.
 - mutter's one possible change, redraw-clip expansion for glass, is made only if the
   S2b or S3a measurement shows the need, and only by the owner's decision (ADR 0014,

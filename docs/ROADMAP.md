@@ -222,7 +222,7 @@ changes of S3b land on the only machine.
     repaint loop between neighbouring glass surfaces (Quick Settings over a still
     desktop drew about 58 frames a second): rule e queues nothing for a clip that only
     meets a box's shadow, and the manager forwards damage to the box alone, which takes
-    0003 to its 300-line C budget; G2's load cases, which found the loop and count
+    0003 to its 300-line C budget (310 since the screenshot fix); G2's load cases, which found the loop and count
     re-blurs and extra frames against Reduce Transparency in scenarios A to C, its glass
     stress on the real boxes, and an idle desktop that paints nothing for 10 s with
     Quick Settings or the overview open; the dock's fix for a full repaint about 20 s
@@ -842,7 +842,7 @@ The slice (ADR 0015):
 
 ## S2b: Dynamic glass (Feb 1 – Feb 19, with the Tết week, L)
 
-- Series 0003-blur, a C patch to `ShellBlurEffect` (at most 300 lines):
+- Series 0003-blur, a C patch to `ShellBlurEffect` (at most 310 lines; 300 until 2026-10-26):
   - a saturation property, CSS's matrix in the existing final pass;
   - a corner-radius property;
   - background mode follows the actor's paint opacity;
