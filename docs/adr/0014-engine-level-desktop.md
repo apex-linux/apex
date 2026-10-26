@@ -290,6 +290,7 @@ it, live, and pays only when that changes.
 | Launcher scrim | 40 | 1.6 | as the overview |
 | Lock background | 30 | 1.3 | actor mode over the wallpaper, then the drawn `rgba(8,10,20,.34)` overlay |
 | Lock password field | 20 | none | background |
+| Edge-tiling preview | 20 | 1.6 | background, on a glass actor below the preview and inset to its inner rect: the effect blurs its actor's whole box, and mutter sizes the preview to the tile, clear border included |
 
 - The radius in device px is 2 × σ × scale, since `ClutterBlur` uses σ = radius / 2
   (mutter `clutter/clutter/clutter-blur.c:362`).
