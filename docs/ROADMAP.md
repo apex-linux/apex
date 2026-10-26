@@ -140,7 +140,9 @@ changes of S3b land on the only machine.
       the edge-tiling preview (22) and the launcher's app-grid strip (36);
     - `disabled-features` with the layer's 13 feature names as choices, so `gsettings`
       refuses a misspelt one; `apex-image`'s contracts hold the schema's copies equal.
-  - Left: the blur behind the edge-tiling preview, with S2b's glass.
+  - Done in code on 2026-10-26 with the blur behind the edge-tiling preview (board 22:
+    20 px and saturation 1.6 on the preview's inner rect, not its clear border). The
+    exit waits for the builder VM's session and the owner's sign-offs.
 - **T1 and T2:** done on 2026-10-24: the Ptyxis recipe, the sessions sidebar (board 32),
   the palette reload, and the splits and pane headers (board 33), 19 changed upstream
   lines. The owner signs off the captures.
@@ -229,7 +231,8 @@ changes of S3b land on the only machine.
     and `power A`, with unsafe mode turned on in Looking Glass first and other monitors
     unplugged; and the overview's and launcher's scrims (36/1.5 and 40/1.6) over a clone
     of the desktop, and the popovers' glass on the OSDs, Alt+Tab and the screenshot panel
-    (derived glass, no hook lines). Left: the blur behind the edge-tiling preview;
+    (derived glass, no hook lines), and the edge-tiling preview's blur on a glass actor
+    kept on the preview's inner rect;
   - from S2c: the live radius, measured at 274–304 ms in CI against its 1 s budget, and
     the tiled and fullscreen cases;
   - from S3a: Spotlight (board 38) over the stock providers, opened by the overview's
