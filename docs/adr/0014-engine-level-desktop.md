@@ -84,7 +84,7 @@ under Deviations.
 
 | Component | Mechanism | Signed by | Budget |
 |---|---|---|---|
-| gnome-shell | Fedora f45 SRPM rebuilt in the lane. Theme: the Apex SCSS through the `@import` hook. Behaviour: the Apex layer, in-tree under `js/ui/apex/`. Glass: a `ShellBlurEffect` patch. | Apex RPM key | Hook hunks: at most 450 changed lines in at most 33 upstream files. C: at most 300 changed lines in `src/shell-blur-effect.{c,h}`. |
+| gnome-shell | Fedora f45 SRPM rebuilt in the lane. Theme: the Apex SCSS through the `@import` hook. Behaviour: the Apex layer, in-tree under `js/ui/apex/`. Glass: a `ShellBlurEffect` patch. | Apex RPM key | Hook hunks: at most 450 changed lines in at most 33 upstream files. C: at most 310 changed lines in `src/shell-blur-effect.{c,h}` (300 until 2026-10-26; see §Glass, screenshots). |
 | Dock | ApexDock, part of the Apex layer, a subclass of upstream `Dash` (`js/ui/dash.js:305`) | (gnome-shell) | About 700 to 900 lines of Apex JS; its `dash.js` hooks count in the shell budget |
 | mutter | Fedora binary, pinned to the exact EVR gnome-shell was built against; mirrored unmodified into `[apex]` | Fedora | 0 patches |
 | libadwaita | Fedora SRPM plus one patch: the window radius follows `apex.css` live | Apex RPM key | 1 patch, at most 80 changed lines |
@@ -305,7 +305,7 @@ it, live, and pays only when that changes.
   paint volume by the blur radius, so a window's own damage would re-blur only its
   rectangle and leave the halo around it stale. The glass manager forwards window damage
   (`damaged`, moves and restacks) to the whole scrim in the same frame, and that is what
-  keeps the halo correct; growing the paint volume in C has no room in 0003's 300 lines.
+  keeps the halo correct; growing the paint volume in C has no room in 0003's budget.
   A G2 pixel test proves that a window damaged under the scrim updates the blur, and
   that without the forwarding the halo stays stale.
 - **One scrim per monitor.** Each monitor gets its own scrim, the size of that monitor
@@ -324,6 +324,15 @@ it, live, and pays only when that changes.
 
   The stage-wide scrim missed the 11.1 ms frame at 90 Hz with a mixed-scale
   external display; per monitor it fits. The laptop protocol measures the real cost.
+- **Screenshots.** `Shell.Screenshot` paints through `clutter_stage_paint_to_framebuffer_clipped`,
+  which in mutter 51 has no stage view: the framebuffer's viewport carries the scale and
+  offset. Stock's background mode assumes scale 1 there (`update_actor_box`), so at scale 2
+  every background-mode glass surface came out of a screenshot with twice its corner
+  radius and sigma and a backdrop from the wrong place, while the screen was right.
+  0003 reads the paint context's framebuffer viewport in that branch instead. The owner
+  raised 0003's budget from 300 to 310 lines for it on 2026-10-26. The fix is upstreamable
+  and would give the lines back. G2 checks a glass corner through `Shell.Screenshot`
+  against the same frame on screen.
 - **Glass over glass.** The bar and the dock over a scrim blur the scrim's result, as
   drawn. The scrim is cached, so this costs about 0.3 ms per scrim change.
 - **Shadows.** The `shadows` feature's second layer is an actor above its surface,
