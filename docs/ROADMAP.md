@@ -101,7 +101,8 @@ changes of S3b land on the only machine.
     absorption report and size metrics, and every run records boot times. Provisioning
     installs cosign and cryptsetup, the preflight checks the builder VM's host key, and a
     stale `ci-build` key warns before a run.
-  - Left: the self-hosted runner (owner), two green VM runs, and the archive.
+  - The self-hosted runner is up on the owner's KVM host (2026-10-26), and `vm.yml`'s
+    first run started that day. Left: two green VM runs and the archive.
 - **S1b:** started on 2026-10-23, about two weeks early.
   - Merged:
     - the full Apex schema, its keybindings child schema and Super+Space;
@@ -142,7 +143,8 @@ changes of S3b land on the only machine.
       refuses a misspelt one; `apex-image`'s contracts hold the schema's copies equal.
   - Done in code on 2026-10-26 with the blur behind the edge-tiling preview (board 22:
     20 px and saturation 1.6 on the preview's inner rect, not its clear border). The
-    exit waits for the builder VM's session and the owner's sign-offs.
+    owner signed off its shell boards on 2026-10-26; the exit waits for the builder
+    VM's session.
 - **T1 and T2:** done on 2026-10-24: the Ptyxis recipe, the sessions sidebar (board 32),
   the palette reload, and the splits and pane headers (board 33), 19 changed upstream
   lines. The owner signs off the captures.
@@ -295,7 +297,11 @@ changes of S3b land on the only machine.
   Approved captures become the goldens: `goldens.sh import` commits them to apex-gnome's
   `goldens` branch, which `tests/shots/goldens.lock` pins. signoff.yml captures every push
   to main that touches the shell, daily, and PRs labelled `goldens`, and fails on any pixel
-  that differs outside a named mask; the only one is board 17's Wi-Fi scan spinner.
+  that differs outside a named mask. No board needs one: board 17 is captured after its
+  Wi-Fi scan ends.
+  On 2026-10-26 the owner approved all 15 shell boards (12–17, 19, 20, 22 and 34–39),
+  after the fixes to their notes on 15, 16, 17, 20 and 22. They are the goldens at
+  apex-gnome's `goldens` 5c531c7, and main's sign-off passes all 30 captures.
 - **Debt cleared:**
   - the ARCHITECTURE §5.2 daemon removals and the two-channel leftovers;
   - zbus 6;
