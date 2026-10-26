@@ -300,8 +300,13 @@ it, live, and pays only when that changes.
   desktop as it was, windows included. The layer places a non-reactive
   `Clutter.Clone` of `window_group` under the scrim and blurs it in actor mode. Actor
   mode keeps its result until the actor is dirty (`shell-blur-effect.c:610-611`), so a
-  still desktop costs one blur per overview open. A G2 pixel test proves that a window
-  damaged under the scrim updates the blur.
+  still desktop costs one blur per overview open. Actor mode does not grow the actor's
+  paint volume by the blur radius, so a window's own damage would re-blur only its
+  rectangle and leave the halo around it stale. The glass manager forwards window damage
+  (`damaged`, moves and restacks) to the whole scrim in the same frame, and that is what
+  keeps the halo correct; growing the paint volume in C has no room in 0003's 300 lines.
+  A G2 pixel test proves that a window damaged under the scrim updates the blur, and
+  that without the forwarding the halo stays stale.
 - **Glass over glass.** The bar and the dock over a scrim blur the scrim's result, as
   drawn. The scrim is cached, so this costs about 0.3 ms per scrim change.
 - **Shadows.** The `shadows` feature's second layer is an actor above its surface,

@@ -86,7 +86,7 @@ ordinary updates. The owner can move S4 earlier, to right after S2d (target
 2027-04-05). Then S3a to S3c ship as updates to the daily driver, and the unlock-path
 changes of S3b land on the only machine.
 
-## Progress (2026-10-24)
+## Progress (2026-10-26)
 
 - **S1a:** all of its code is merged, including the last G2 items: python-dbusmock
   fixtures, the fixed clock (`tests/shots/clock.c`), and the enable and disable cycles.
@@ -115,10 +115,12 @@ changes of S3b land on the only machine.
       and 4 known gaps that stock Fedora draws nowhere either. check-theme fails on a
       glyph that draws nothing, and G1 checks that each theme's icon cache lists
       exactly its files;
-    - answer 10's app set, in part: Maps in the image and Music preinstalled from
-      Flathub (its RPM would add GTK3 through grilo), with a contract that every dock
-      favourite is an image app or a preinstall. Dropping gnome-tour and the Firefox
-      preinstall (Firefox on request) is in progress;
+    - answer 10's app set: Maps in the image and Music preinstalled from Flathub (its
+      RPM would add GTK3 through grilo), with a contract that every dock favourite is an
+      image app or a preinstall; gnome-tour and cheese excluded and Firefox only on
+      request, with a check that `exclude.txt` holds every banned package; G1's
+      `mime.sh` resolves each of the owner's default apps with `gio mime` in the image,
+      so a gnome-session update that moves one fails;
     - board 27's Projects and Screenshots emblems, set at login by
       `apex-folder-icons.service` when the folders exist;
     - `apex-session-agent` v0: the crash-guard offer, `apex.css`, and the Ptyxis
@@ -126,7 +128,9 @@ changes of S3b land on the only machine.
     - the Flatpak override that shows `apex.css` to Bazaar;
     - the Apex SCSS for every stock surface so far: popup menus, OSD and banners (16),
       Quick Settings (17), the window switcher (15), modal dialogs (13, 14), and the
-      calendar and notifications (34, with opaque message cards);
+      calendar and notifications (34, with opaque message cards, day numbers drawn as
+      labels so Dark Style recolours them, and the World Clocks and Weather rows as the
+      board's 40 px cards);
     - the open-terminal palette reload (a Ptyxis hunk, measured at under 0.2 s);
     - the bash exit-status fix that lets the terminal show "failed";
     - the search tooltip and the first-login hint (`search-hint-shown`).
@@ -223,14 +227,17 @@ changes of S3b land on the only machine.
     after login (the hidden overview Dash now stays current); and the laptop kit, which
     runs the protocol below and scores it: `just glass-protocol run`, then `power idle`
     and `power A`, with unsafe mode turned on in Looking Glass first and other monitors
-    unplugged. In progress: the scrims and the derived glass;
+    unplugged; and the overview's and launcher's scrims (36/1.5 and 40/1.6) over a clone
+    of the desktop, and the popovers' glass on the OSDs, Alt+Tab and the screenshot panel
+    (derived glass, no hook lines). Left: the blur behind the edge-tiling preview;
   - from S2c: the live radius, measured at 274–304 ms in CI against its 1 s budget, and
     the tiled and fullscreen cases;
   - from S3a: Spotlight (board 38) over the stock providers, opened by the overview's
     search too, Settings rows on their panel's tile, and the overview's thumbnails (board
     35) with the wallpaper in them, captions that clear the next row and the dock, and
-    the launcher's own pill. G2's `spotlight_keys` case drives the keys and the 1 s
-    budgets;
+    the launcher's own pill (with a 1 px minimum on the window picker, so the launcher's
+    0-high workspace never gives the previews a NaN box; G2 fails any case that logs
+    one). G2's `spotlight_keys` case drives the keys and the 1 s budgets;
   - from S3c: the `motion` feature (0016), `quick-settings` (0011) with board 17's
     Wi-Fi submenu, and `shadows`, whose second layer sits above its surface so glass
     never blurs its own shadow; the power-off dialog (0018); and a G2 reduced-motion
@@ -238,20 +245,22 @@ changes of S3b land on the only machine.
     notifications (0012) with board 34's 32 px icon; and G2's idle check, in which an
     idle desktop with every feature on paints nothing for 10 s; and board 34's card
     layout, the icon in its own column beside the header, title and body;
-  - the shell's WCAG AA checks in G2, over the real backdrop with glass, in light, dark,
+  - the shell's WCAG AA checks in G2, over the real backdrop with glass (pinned to Facets,
+    checked as painted, and repeated over GNOME's `#013b88` fallback), in light, dark,
     high contrast and Large Text: every surface passes or is a named upstream gap, and
-    Apex's own actors take upstream's high-contrast palette. In progress: the tokens the
-    checks moved (light dim text, the checked toggles' fill, the search hint, Quick
-    Settings' width);
+    Apex's own actors take upstream's high-contrast palette. The tokens the checks moved
+    are in: light dim text at .72, the 25 % accent shade on checked toggles, today and
+    default buttons, the overview's hint at .68 and dim at .80, the calendar's
+    other-month days, and Quick Settings growing with Large Text;
   - from S4: `apex_ok=1` on every green boot, the `07_apex-menu.cfg` snippet, and pin
     before arm;
   - from S2d: the "Updates Ready" notification, and the held lists in `Update1` and
-    `apexctl status`. In progress: board 14's update card;
+    `apexctl status`, and board 14's update card;
   - from S7: the Apex folders and the nine `Apex-<accent>` folder themes; a slides kind
     for presentations, folder-remote with the network emblem, a flat Trash, and
     `inode-directory` drawn as the accent folder so Spotlight's folders follow the
-    accent too. In progress: the CI job that times an accent change in Files, the file
-    chooser and Spotlight against 1 s.
+    accent too; and the CI job that times an accent change in Files, the file chooser
+    and Spotlight against 1 s (`tests/s7/accent-test.sh`).
 
   Their exit checks stay with their own slices.
 - **GNOME 51.1:** in Fedora 45's updates-testing on 2026-10-24. `just lane-absorb-report`
@@ -261,6 +270,12 @@ changes of S3b land on the only machine.
 - **CI:** apex-gnome's lane jobs reuse a build whose content key is unchanged, so an
   untouched family takes about a minute instead of 14. A weekly run rebuilds every lane
   without the cache, which also covers the buildroot.
+  apex-gnome's CI also runs G2's patched-shell cases on every PR: every a11y case and its
+  `-solid` twin, plus dock, indicators, no-dock, safe-env, layer-disabled and fault (about
+  16 minutes after the lane); the full set runs on push to main and daily (about 27
+  minutes, 1306 checks on its first run; about 9 and 20 minutes once a late probe start
+  counts as normal, with the action mode checked on every case). The a11y pass
+  takes about 18 s, so every case fits G2's shared 150 s limit.
 - **S6 groundwork:** the `next` lane is in `apex-image`. `APEX_FEDORA=46` builds from
   `image/fedora/46.env` (rawhide digests until the branch point, Fedora 46's key) with a
   store of its own, never promotes or publishes, and labels its image `lane=next`.
@@ -274,6 +289,10 @@ changes of S3b land on the only machine.
 - **Sign-offs:** the owner decides on each shell board's captures (boards 12–39) on a
   sign-off page beside the canvas. A decision holds for the captures it was made on, so
   new captures reopen only their own board.
+  Approved captures become the goldens: `goldens.sh import` commits them to apex-gnome's
+  `goldens` branch, which `tests/shots/goldens.lock` pins. signoff.yml captures every push
+  to main that touches the shell, daily, and PRs labelled `goldens`, and fails on any pixel
+  that differs outside a named mask; the only one is board 17's Wi-Fi scan spinner.
 - **Debt cleared:**
   - the ARCHITECTURE §5.2 daemon removals and the two-channel leftovers;
   - zbus 6;
