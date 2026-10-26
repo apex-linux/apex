@@ -329,10 +329,11 @@ it, live, and pays only when that changes.
   offset. Stock's background mode assumes scale 1 there (`update_actor_box`), so at scale 2
   every background-mode glass surface came out of a screenshot with twice its corner
   radius and sigma and a backdrop from the wrong place, while the screen was right.
-  0003 reads the paint context's framebuffer viewport in that branch instead. The owner
-  raised 0003's budget from 300 to 310 lines for it on 2026-10-26. The fix is upstreamable
-  and would give the lines back. G2 checks a glass corner through `Shell.Screenshot`
-  against the same frame on screen.
+  For Apex's glass (`fine`), 0003 reads the paint context's framebuffer viewport in that
+  branch instead. Stock effects keep upstream's path, so the stock unlock blur still
+  equals Fedora's on every pixel. The owner raised 0003's budget from 300 to 310 lines for
+  it on 2026-10-26; the fix uses all 310. It is upstreamable and would give the lines back.
+  G2 checks a glass corner through `Shell.Screenshot` against the same frame on screen.
 - **Glass over glass.** The bar and the dock over a scrim blur the scrim's result, as
   drawn. The scrim is cached, so this costs about 0.3 ms per scrim change.
 - **Shadows.** The `shadows` feature's second layer is an actor above its surface,
