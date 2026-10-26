@@ -186,6 +186,19 @@ These are behaviour decisions, kept from the old spec and the owner's decision s
   barrier. The dock reserves no strut and hides under fullscreen.
 - It stays visible in the overview and the app grid, whose own dash is hidden.
 - Ctrl+Alt+Tab reaches it. "Launch Using Discrete Graphics Card" stays in the menu.
+- Unpinning is stock's: a favourite dragged off the dock springs back, and a drop on
+  Show Apps ("Unpin" while hovered) removes it. Trash takes no drops.
+
+**Multiple monitors.**
+
+- The bar and the dock sit on the primary monitor only, as stock's bar does, and
+  follow a new primary chosen in Settings or after a hotplug. Other monitors get no Apex
+  chrome of their own.
+- Only a window maximised on the primary hides the dock and turns the bar solid.
+  Moving a window between monitors updates both at once.
+- The overview and the launcher are stock's per monitor, with the workspace view on
+  each. One glass scrim spans every monitor, in the launcher's style while the launcher
+  shows.
 
 **Windows.**
 
