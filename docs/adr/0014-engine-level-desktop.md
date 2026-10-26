@@ -308,6 +308,22 @@ it, live, and pays only when that changes.
   keeps the halo correct; growing the paint volume in C has no room in 0003's 300 lines.
   A G2 pixel test proves that a window damaged under the scrim updates the blur, and
   that without the forwarding the halo stays stale.
+- **One scrim per monitor.** Each monitor gets its own scrim, the size of that monitor
+  and laid out in its first frame, over a clone of `window_group` moved by the
+  monitor's origin. Each blurs at its monitor's resource scale. The scrims are rebuilt
+  on `monitors-changed`. One stage-wide scrim would blur at the highest scale, so a
+  scale-1 external display would cost four times its pixels, and it would also blur
+  the stage corners no monitor shows. Modelled cost per scrim re-blur
+  (`0014-blurcost.py`):
+
+  | Layout | One stage-wide scrim | A scrim per monitor |
+  |---|---|---|
+  | The panel alone, scale 2 | 4.71 ms | 4.71 ms |
+  | The panel and a 1920×1080 display, both at scale 2 | 7.84 ms | 6.59 ms |
+  | The panel at 2 and a 1920×1080 display at 1 | 13.18 ms | 6.60 ms |
+
+  The stage-wide scrim missed the 11.1 ms frame at 90 Hz with a mixed-scale
+  external display; per monitor it fits. The laptop protocol measures the real cost.
 - **Glass over glass.** The bar and the dock over a scrim blur the scrim's result, as
   drawn. The scrim is cached, so this costs about 0.3 ms per scrim change.
 - **Shadows.** The `shadows` feature's second layer is an actor above its surface,
