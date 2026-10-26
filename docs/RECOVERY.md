@@ -506,9 +506,20 @@ To stop automatic bootloader updates while you find out what went wrong:
 `sudo systemctl mask bootloader-update.service`; undo it with `sudo systemctl unmask
 bootloader-update.service`.
 
-bootupd never regenerates the static `/boot/grub2/grub.cfg`; if it is lost or lacks the
-`# apex-bootcount v1` marker, copy it back from your backup
-(`<BACKUP_DIR>/grub.cfg`, INSTALL.md §9) until `apexctl boot repair-grub` exists (M2).
+bootupd never regenerates the static `/boot/grub2/grub.cfg`. If it is lost, damaged or
+lacks the `# apex-bootcount v1` marker, rebuild it from the booted image's static configs:
+
+```sh
+sudo apexctl boot repair-grub --check   # a diff; exit 1 on drift, 0 when it matches
+sudo apexctl boot repair-grub           # keeps grub.cfg.apex-bak, writes grub.cfg
+```
+
+It rebuilds the file byte for byte as bootupd's install writes it, and touches nothing
+else: not `grubenv`, `bootuuid.cfg` or the ESP. It refuses, writing nothing, when the
+result would lack the boot-counter marker. Exit 3 means there was nothing to do. From a
+live USB (§4), mount the installed system and add `--sysroot DIR`; it reads the static
+configs from the deployment the default boot entry starts. Unmount `DIR/boot` before
+rebooting. Your backup (`<BACKUP_DIR>/grub.cfg`, INSTALL.md §9) stays the last resort.
 
 ## 6. Key and account compromise
 
