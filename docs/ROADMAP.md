@@ -86,7 +86,7 @@ ordinary updates. The owner can move S4 earlier, to right after S2d (target
 2027-04-05). Then S3a to S3c ship as updates to the daily driver, and the unlock-path
 changes of S3b land on the only machine.
 
-## Progress (2026-10-24)
+## Progress (2026-10-26)
 
 - **S1a:** all of its code is merged, including the last G2 items: python-dbusmock
   fixtures, the fixed clock (`tests/shots/clock.c`), and the enable and disable cycles.
@@ -228,7 +228,8 @@ changes of S3b land on the only machine.
     runs the protocol below and scores it: `just glass-protocol run`, then `power idle`
     and `power A`, with unsafe mode turned on in Looking Glass first and other monitors
     unplugged; and the overview's and launcher's scrims (36/1.5 and 40/1.6) over a clone
-    of the desktop. In progress: the derived glass;
+    of the desktop, and the popovers' glass on the OSDs, Alt+Tab and the screenshot panel
+    (derived glass, no hook lines). Left: the blur behind the edge-tiling preview;
   - from S2c: the live radius, measured at 274–304 ms in CI against its 1 s budget, and
     the tiled and fullscreen cases;
   - from S3a: Spotlight (board 38) over the stock providers, opened by the overview's
@@ -247,9 +248,10 @@ changes of S3b land on the only machine.
   - the shell's WCAG AA checks in G2, over the real backdrop with glass (pinned to Facets,
     checked as painted, and repeated over GNOME's `#013b88` fallback), in light, dark,
     high contrast and Large Text: every surface passes or is a named upstream gap, and
-    Apex's own actors take upstream's high-contrast palette. In progress: the tokens the
-    checks moved (light dim text, the checked toggles' fill, the search hint, Quick
-    Settings' width);
+    Apex's own actors take upstream's high-contrast palette. The tokens the checks moved
+    are in: light dim text at .72, the 25 % accent shade on checked toggles, today and
+    default buttons, the overview's hint at .68 and dim at .80, the calendar's
+    other-month days, and Quick Settings growing with Large Text;
   - from S4: `apex_ok=1` on every green boot, the `07_apex-menu.cfg` snippet, and pin
     before arm;
   - from S2d: the "Updates Ready" notification, and the held lists in `Update1` and
