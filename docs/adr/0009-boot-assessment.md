@@ -129,7 +129,7 @@ counted-rollback path. When the file is absent or names another digest, nothing 
   the shell's plymouth line, and the `-` keeps any exit status from failing the shell.
 - **Boot counting follows the static config installed at `bootc install`.** bootupd does
   not regenerate it later, so the marker check makes a missing snippet visible, and
-  `apexctl boot repair-grub` (M2) can reinstall it.
+  `apexctl boot repair-grub` rebuilds it as bootupd's install does (apex-system#31).
 - **Upstream contribution.** The download-only fix is reported to greenboot-rs upstream.
   Apex does not depend on it.
 - **Testing.** Every row of the decision table is tested in unit tests and in a boot

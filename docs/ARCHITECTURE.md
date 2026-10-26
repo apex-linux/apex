@@ -498,7 +498,9 @@ third-party clauses.
   `fbx64.efi`. The `grub.cfg` that `grub2-efi-x64` lists there is a `%ghost`
   ([`grub.macros`](https://src.fedoraproject.org/rpms/grub2/blob/f45/f/grub.macros)), so
   bootupd never copies one from the package; it writes its own static one.
-  - `bootc install` copies all of it, writes the static `grub.cfg`, deletes only the
+  - `bootc install` copies all of it, writes the static `grub.cfg` (which nothing
+    regenerates later; `apexctl boot repair-grub` rebuilds it the same way, RECOVERY
+    §5.4), deletes only the
     firmware entries that carry the image's name (`/etc/system-release`) and creates one
     with `efibootmgr --create`, which puts it first in `BootOrder`.
   - `bootupctl update` writes only the files whose content differs between the version
