@@ -227,7 +227,8 @@ changes of S3b land on the only machine.
     after login (the hidden overview Dash now stays current); and the laptop kit, which
     runs the protocol below and scores it: `just glass-protocol run`, then `power idle`
     and `power A`, with unsafe mode turned on in Looking Glass first and other monitors
-    unplugged. In progress: the scrims and the derived glass;
+    unplugged; and the overview's and launcher's scrims (36/1.5 and 40/1.6) over a clone
+    of the desktop. In progress: the derived glass;
   - from S2c: the live radius, measured at 274–304 ms in CI against its 1 s budget, and
     the tiled and fullscreen cases;
   - from S3a: Spotlight (board 38) over the stock providers, opened by the overview's
