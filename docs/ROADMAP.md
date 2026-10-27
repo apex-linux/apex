@@ -90,7 +90,8 @@ changes of S3b land on the only machine.
 
 - **S1a:** all of its code is merged, including the last G2 items: python-dbusmock
   fixtures, the fixed clock (`tests/shots/clock.c`), and the enable and disable cycles.
-  The exit waits for a green G2 in the builder VM.
+  Exit met on 2026-10-27: G2 passed twice in the builder VM (`vm.yml` run 6, 2166 checks
+  each, 0 failed, and the comparison of the two runs).
 - **M:** started on 2026-10-23, three days early.
   - Done: the design reset, the `apex-linux` names, the seams, and the split into seven
     public repositories. Every repository's CI is green, and `apex-image`'s contracts
@@ -114,8 +115,22 @@ changes of S3b land on the only machine.
 
     The next two runs (2026-10-27) failed before building: the host had restarted and
     the builder VM was not running. `runner.sh once` now takes no job until the VM's
-    sshd answers (apex-image#98), from the owner's next `just runner install`. Left: two
-    green VM runs and the archive.
+    sshd answers (apex-image#98), from the owner's next `just runner install`.
+
+    Run 5 built the image and ran G2: 2067 passed and 3 failed, in both runs. The three
+    failures:
+    - motion exited 139 again, from two bugs. Ours: the layer's teardown queued panel
+      relayouts that ran off the stage. Upstream gnome-shell 51.0's: its plugin read a
+      disposed global when mutter destroyed still-connected clients. The second is
+      fixed by patch 0019, and G2 now checks every case's shutdown.
+    - the Fedora comparisons: the image's full dock pushed the panel and dock masks past
+      the 5 % cap. They now compare a dock-off Apex desktop with only the panel masked.
+
+    Run 6 (2026-10-27) passed G2 twice with nothing failed. Its G4, the first in the
+    builder VM, passed all 20 separate-boot rows through the greeter login, then stopped
+    in the warning-only boot metrics: they grepped for a "GNOME Shell started" line that
+    a real 51.0 session never logs. Left: G4 through to its pass, two green VM runs, and
+    the archive.
 - **S1b:** started on 2026-10-23, about two weeks early.
   - Merged:
     - the full Apex schema, its keybindings child schema and Super+Space;
