@@ -86,7 +86,7 @@ ordinary updates. The owner can move S4 earlier, to right after S2d (target
 2027-04-05). Then S3a to S3c ship as updates to the daily driver, and the unlock-path
 changes of S3b land on the only machine.
 
-## Progress (2026-10-26)
+## Progress (2026-10-27)
 
 - **S1a:** all of its code is merged, including the last G2 items: python-dbusmock
   fixtures, the fixed clock (`tests/shots/clock.c`), and the enable and disable cycles.
@@ -101,8 +101,21 @@ changes of S3b land on the only machine.
     absorption report and size metrics, and every run records boot times. Provisioning
     installs cosign and cryptsetup, the preflight checks the builder VM's host key, and a
     stale `ci-build` key warns before a run.
-  - The self-hosted runner is up on the owner's KVM host (2026-10-26), and `vm.yml`'s
-    first run started that day. Left: two green VM runs and the archive.
+  - The self-hosted runner is up on the owner's KVM host (2026-10-26). `vm.yml`'s first
+    two runs that day found what only the builder VM shows, all fixed in `apex-gnome`
+    the same night:
+    - accounts-daemon cannot start in G2's bus, so parental controls hid every app;
+      G2 now mocks accountsservice and checks parental controls are ready;
+    - the motion case crashed at exit (139), because the layer's features outlived
+      their actors; they now disable as the stage goes, and G2 fails any access to a
+      disposed object from an Apex frame;
+    - Large Text cut the input chip's "EN" to "E…";
+    - G2's run comparison read measured times, and a late probe failed its case.
+
+    The next two runs (2026-10-27) failed before building: the host had restarted and
+    the builder VM was not running. `runner.sh once` now takes no job until the VM's
+    sshd answers (apex-image#98), from the owner's next `just runner install`. Left: two
+    green VM runs and the archive.
 - **S1b:** started on 2026-10-23, about two weeks early.
   - Merged:
     - the full Apex schema, its keybindings child schema and Super+Space;
@@ -296,12 +309,28 @@ changes of S3b land on the only machine.
   new captures reopen only their own board.
   Approved captures become the goldens: `goldens.sh import` commits them to apex-gnome's
   `goldens` branch, which `tests/shots/goldens.lock` pins. signoff.yml captures every push
-  to main that touches the shell, daily, and PRs labelled `goldens`, and fails on any pixel
-  that differs outside a named mask. No board needs one: board 17 is captured after its
-  Wi-Fi scan ends.
+  to main that touches the shell, daily, every PR that changes what the captures render,
+  and PRs labelled `goldens`, and fails on any pixel that differs outside a named mask. No
+  board needs one: board 17 is captured after its Wi-Fi scan ends.
   On 2026-10-26 the owner approved all 15 shell boards (12–17, 19, 20, 22 and 34–39),
-  after the fixes to their notes on 15, 16, 17, 20 and 22. They are the goldens at
-  apex-gnome's `goldens` 5c531c7, and main's sign-off passes all 30 captures.
+  after the fixes to their notes on 15, 16, 17, 20 and 22. The Large Text fix then moved
+  board 39's "EN" chip by one device pixel, and the owner approved it again on
+  2026-10-27. The goldens are at apex-gnome's `goldens` 9e042d9, and main's sign-off
+  passes all 30 captures.
+- **G2 metrics, 2026-10-27:** G2 now also measures the launcher, the overview and
+  notifications (boards 34–36), the overview's window previews, every Apex key binding
+  (pressed, with no binding overwritten), the bar's text and glyphs against WCAG AA
+  over every G2 backdrop, and the bar turning solid over a maximised window.
+  `apex-image`'s contracts hold G2's copies of the override's keys to `apex-desktop`'s.
+  - Four values differ from boards 34–36 as the owner approved them: the thumbnails
+    (116×70, not 112×70), the window captions (25 px under the preview, without the app
+    icon), the launcher's grid pitch, and the Do Not Disturb row (label first). G2
+    asserts the approved values, and the README of `apex-gnome`'s `tests/shots` lists
+    them.
+  - One named gap: in light, the inactive workspace dots (opacity .45) reach 2.22 to
+    2.86:1 against the 3:1 that WCAG 1.4.11 asks; dark passes. The owner decides
+    whether to raise them (.61 passes every backdrop), which would reopen 13 boards'
+    light captures.
 - **Debt cleared:**
   - the ARCHITECTURE §5.2 daemon removals and the two-channel leftovers;
   - zbus 6;
