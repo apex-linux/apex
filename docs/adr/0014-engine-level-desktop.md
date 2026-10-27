@@ -146,10 +146,13 @@ per concern, so a rebase conflict names its feature.
 | 0016-motion | `js/ui/environment.js`, `js/ui/windowManager.js`, `js/ui/overview.js`, `js/ui/overviewControls.js`, `js/ui/boxpointer.js` | The EASE curve for every `ease()` that asks for it; the drawn durations |
 | 0017-polkit | `js/ui/components/polkitAgent.js` | One behaviour hook after `AuthenticationDialog._init`: board 13's shield, the "Administrator" subtitle and the Details expander (action id and vendor). The fingerprint hint is upstream's info message, restyled |
 | 0018-end-session | `js/ui/endSessionDialog.js` | One behaviour hook after `_updateButtons`: board 14's icon circle, Restart beside Power Off through stock's `ConfirmedReboot`, and the button row's gap and widths. The countdown keeps stock's translated text |
+| 0019-plugin-shutdown | `src/gnome-shell-plugin.c` | Not a hook: an upstream gnome-shell 51.0 bug fix (2026-10-27), dropped once upstream has it. At exit, mutter unmanages the windows of still-connected clients after the shell has disposed its global; the plugin then read a `ShellWM` through that NULL global and unref'd an uninitialised pointer (G2's motion case exited 139, as Fedora's own build does). The plugin keeps a weak pointer to the global, and with no `ShellWM` each window effect completes straight to mutter. It counts in the hook budget (91 of its lines), not the C budget, which covers `shell-blur-effect.{c,h}` only |
 
 The plan touches 31 upstream files besides the two C files, which leaves two in
 reserve. Estimate: 250 to 330 lines of hunks, about 250 lines of C, 5,000 to 6,000
 lines of Apex JS, and about 1,500 lines of SCSS.
+In use on 2026-10-27, 0019 included: 254 lines of hunks in 29 upstream files (the
+count in `apex-gnome`'s `packaging/pkgs/gnome-shell/README.md`).
 
 Rebase cost:
 
