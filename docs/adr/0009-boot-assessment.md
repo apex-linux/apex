@@ -65,6 +65,14 @@ order reported by `bootc status` (which deployment is the default), the check re
 whether a user may be logged in. When logind cannot answer, Apex assumes a user may be
 logged in and never reboots.
 
+A starved boot gets more tries, all within the checks' share of the budget (160 s from
+the start of the assessment):
+- `bootc status` is bounded at 35 s per call. A timeout or a busy lock is retried 5 s
+  apart while a try can still end within that share.
+- Only then is `apex-updated` asked for the booted digest. A digest or entry 0 still
+  unknown after that means no automatic reboot.
+- A `Ping` that missed its budget gets a second one, if it fits.
+
 | Situation | Decision | Action |
 |---|---|---|
 | All required checks green | Green | armed: `apex_ok=1`, unset `apex_target` and `apex_counter`, clear the intent; not armed: unset a stray `apex_counter` if there is one, otherwise write nothing |
