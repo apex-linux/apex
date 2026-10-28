@@ -147,12 +147,14 @@ per concern, so a rebase conflict names its feature.
 | 0017-polkit | `js/ui/components/polkitAgent.js` | One behaviour hook after `AuthenticationDialog._init`: board 13's shield, the "Administrator" subtitle and the Details expander (action id and vendor). The fingerprint hint is upstream's info message, restyled |
 | 0018-end-session | `js/ui/endSessionDialog.js` | One behaviour hook after `_updateButtons`: board 14's icon circle, Restart beside Power Off through stock's `ConfirmedReboot`, and the button row's gap and widths. The countdown keeps stock's translated text |
 | 0019-plugin-shutdown | `src/gnome-shell-plugin.c` | Not a hook: an upstream gnome-shell 51.0 bug fix (2026-10-27), dropped once upstream has it. At exit, mutter unmanages the windows of still-connected clients after the shell has disposed its global; the plugin then read a `ShellWM` through that NULL global and unref'd an uninitialised pointer (G2's motion case exited 139, as Fedora's own build does). The plugin keeps a weak pointer to the global, and with no `ShellWM` each window effect completes straight to mutter. It counts in the hook budget (91 of its lines), not the C budget, which covers `shell-blur-effect.{c,h}` only |
+| 0020-screencast-greeter | `js/ui/screenshot.js` | Not a hook: an upstream gnome-shell 51 bug fix (2026-10-28), dropped once upstream has it. `ScreenshotUI` creates its screencast proxy in every session mode, so D-Bus starts `org.gnome.Shell.Screencast` in the greeter and in initial setup, which cannot screencast. There the service rebuilds GStreamer's plugin registry on every start, because the greeter's home is on gdm's tmpfs. In G4's nested guest that cost up to 96 s of one core during the boot assessment. Where the session mode has no `allowScreencast`, the proxy no longer auto-starts the service. 4 lines |
 
 The plan touches 31 upstream files besides the two C files, which leaves two in
-reserve. Estimate: 250 to 330 lines of hunks, about 250 lines of C, 5,000 to 6,000
-lines of Apex JS, and about 1,500 lines of SCSS.
-In use on 2026-10-27, 0019 included: 254 lines of hunks in 29 upstream files (the
-count in `apex-gnome`'s `packaging/pkgs/gnome-shell/README.md`).
+reserve; 0020's `screenshot.js` takes one of them. Estimate: 250 to 330 lines of
+hunks, about 250 lines of C, 5,000 to 6,000 lines of Apex JS, and about 1,500 lines
+of SCSS.
+In use on 2026-10-28, 0019 and 0020 included: 258 lines of hunks in 30 upstream files
+(the count in `apex-gnome`'s `packaging/pkgs/gnome-shell/README.md`).
 
 Rebase cost:
 
