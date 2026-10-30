@@ -263,6 +263,30 @@ changes of S3b land on the only machine.
   row that needs a layer feature passes with a note while the pinned `apex-gnome` does
   not list it, and fails when it is listed but never enabled; the stock polkit row
   fails if the safe login enabled the feature.
+- **S3c:** its exit is met. Its features are the ones pulled forward below, and
+  `apex-image` pins `apex-gnome` 84d0a54, which carries them.
+  - The power-profile indicator stays out of the status pill, and a click on Power Mode
+    switches from Balanced to the last profile and a second click back, still lit: G2
+    checks both in the `default`, `default-scale1` and `dark-style` cases, and
+    `tests/layer` checks the pill.
+  - G2's `motion` case asserts `CUBIC_BEZIER` with (.2,.8)(.2,1) on maximise (300 ms)
+    and on the overview transition (200 ms).
+  - In G2's `idle` case, with every layer feature on, the stage paints no frame over
+    10 s on the desktop, with Quick Settings open, both again with Reduce Transparency,
+    and in the overview; no actor queues a relayout on the desktop or in the overview.
+    The case counts the stage's paints instead of using `CLUTTER_PAINT=damage-region`,
+    under which mutter 51 repaints the whole view each frame; a failure names each
+    frame's damage from the redraw clip.
+  - The owner approved boards 14, 17 and 34 on 2026-10-26, on captures with every
+    feature on, the shadows included. Main's sign-off at 84d0a54, after
+    apex-gnome#170's shadow fix, passes all 30 captures against the approved goldens,
+    so every golden the shadows change is one the owner approved.
+
+  G2's cases and `tests/layer` run on every push to main and daily (green on 84d0a54
+  through 2026-10-30), and G2 passed twice in the builder VM in run 6 and in every
+  later run that got that far. Left: the owner sees notifications and Quick Settings as
+  drawn, the drawn easing and the two-layer shadows on the daily driver, in S4's two
+  weeks of use.
 - **K1 step 5:** done on 2026-10-24, the day the COPR shipped `kernel-cachyos`
   7.3.0-4.cachyos1 for Fedora 45. NVIDIA 615.78.08 builds on it unmodified, with the
   same warnings as on 7.2, and `kernel-spec.patch` still applies at fuzz 0. The full
@@ -344,7 +368,8 @@ changes of S3b land on the only machine.
     for presentations, folder-remote with the network emblem, a flat Trash, and
     `inode-directory` drawn as the accent folder so Spotlight's folders follow the
     accent too; and the CI job that times an accent change in Files, the file chooser
-    and Spotlight against 1 s (`tests/s7/accent-test.sh`).
+    and Spotlight against 1 s (`tests/s7/accent-test.sh`). It runs on every PR, every
+    push to main and daily.
 
   Their exit checks stay with their own slices.
 - **GNOME 51.1:** in Fedora 45's updates-testing on 2026-10-24. `just lane-absorb-report`

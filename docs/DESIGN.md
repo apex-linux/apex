@@ -197,8 +197,9 @@ These are behaviour decisions, kept from the old spec and the owner's decision s
 - Only a window maximised on the primary hides the dock and turns the bar solid.
   Moving a window between monitors updates both at once.
 - The overview and the launcher are stock's per monitor, with the workspace view on
-  each. One glass scrim spans every monitor, in the launcher's style while the launcher
-  shows.
+  each. Each monitor has its own glass scrim, the size of that monitor and blurred at
+  its resource scale, in the launcher's style while the launcher shows. The scrims are
+  rebuilt when the monitors change.
 
 **Windows.**
 
