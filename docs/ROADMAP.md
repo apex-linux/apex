@@ -86,12 +86,15 @@ ordinary updates. The owner can move S4 earlier, to right after S2d (target
 2027-04-05). Then S3a to S3c ship as updates to the daily driver, and the unlock-path
 changes of S3b land on the only machine.
 
-## Progress (2026-10-27)
+## Progress (2026-10-30)
 
 - **S1a:** all of its code is merged, including the last G2 items: python-dbusmock
   fixtures, the fixed clock (`tests/shots/clock.c`), and the enable and disable cycles.
-  Exit met on 2026-10-27: G2 passed twice in the builder VM (`vm.yml` run 6, 2166 checks
-  each, 0 failed, and the comparison of the two runs).
+  G2's part of the exit was met on 2026-10-27: G2 passed twice in the builder VM
+  (`vm.yml` run 6, 2166 checks each, 0 failed, and the comparison of the two runs). The
+  exit's G4 rows (install, counted rollback, login, lock and unlock) and the crash
+  guard's row are recorded with G4's first full pass, which M's runs are working
+  towards.
 - **M:** started on 2026-10-23, three days early.
   - Done: the design reset, the `apex-linux` names, the seams, and the split into seven
     public repositories. Every repository's CI is green, and `apex-image`'s contracts
@@ -129,8 +132,56 @@ changes of S3b land on the only machine.
     Run 6 (2026-10-27) passed G2 twice with nothing failed. Its G4, the first in the
     builder VM, passed all 20 separate-boot rows through the greeter login, then stopped
     in the warning-only boot metrics: they grepped for a "GNOME Shell started" line that
-    a real 51.0 session never logs. Left: G4 through to its pass, two green VM runs, and
-    the archive.
+    a real 51.0 session never logs.
+
+    Runs 7 to 16 (2026-10-27 to 10-30) each took G4 further. G2 passed twice in every
+    run that got that far (2204 checks from run 11, 0 failed). Fixes:
+    - **Runs 7 and 8 (counted rollback):** the armed boot never decided. In the nested
+      guest `bootc status` timed out on its single try. One cause was the greeter: it
+      started the Screencast service, which rebuilt GStreamer's plugin registry on
+      every start (up to 96 s of a core).
+      - The assessment now retries `bootc status` and `Ping` within the checks' share
+        of its budget (apex-system#32, [ADR 0009](adr/0009-boot-assessment.md)).
+      - gnome-shell patch 0020 stops the greeter starting Screencast
+        ([ADR 0014](adr/0014-engine-level-desktop.md)).
+      - Run 11 then decided each armed boot in about 28 s, with userspace up in 24.7 s
+        (57 to 100 s before).
+    - **Run 11 (login):** the login row still asserted that no Apex user unit runs,
+      which predates `apex-session-agent`. It now checks the session's contract: the
+      agent is the only active Apex unit and never restarted, and the folder-icons unit
+      ran once and succeeded (apex-image#104).
+      - The same run showed both units also starting in GDM's greeter, a session of a
+        dynamic system user. They now need a user-class session (apex-desktop#30,
+        apex-system#33), and G4 checks that the greeter starts no Apex unit
+        (apex-image#106).
+    - **Run 13 (Esc on the lock):** the lock's prompt, rebuilt at a wake, took the
+      waking key as an empty answer and threw. It is now rebuilt only after the lock's
+      own teardown, and stays insensitive until PAM asks (apex-gnome#175). A failed lock
+      row now saves a screendump and the first JS error (apex-image#107).
+    - **Runs 9 and 14 and the 10-28 daily run (no verdict):** the runner lost the host
+      when the laptop slept or shut down. `runner.sh` now holds logind's sleep, idle and
+      lid inhibitors while a job runs (apex-image#109), from the owner's next
+      `just runner install`.
+    - **Run 16 (blank and wake):** G4 passed every row through Esc on the lock, then
+      failed the blank-and-wake row, from two causes:
+      - every real lock sets gnome-session idle, and upstream then cancels the unlock
+        dialog's prompt before the screen blanks, so the Apex lock fell back to
+        upstream's two stages;
+      - the guest's VMware mouse dropped the harness's pointer move, so nothing woke
+        the screen.
+
+      Both fixes are under way:
+      - `apex-gnome`: the lock keeps its prompt through the idle status, tears it down
+        at the blank and rebuilds it at the wake;
+      - `apex-image`: the guest drops `vmport`, and the row's journal checks start at
+        each step.
+
+      A trace of the remaining rows also found the polkit wrong-password row expecting
+      a log line polkitd writes only when a request ends. It now checks PAM's line for
+      each attempt, and polkitd's verdict moves to the Esc row.
+
+    Left: G4 through to its pass, two green VM runs (before GNOME 51.1 reaches F45 at
+    GA), and the archive.
 - **S1b:** started on 2026-10-23, about two weeks early.
   - Merged:
     - the full Apex schema, its keybindings child schema and Super+Space;
