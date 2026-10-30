@@ -477,12 +477,13 @@ External dates, checked 2026-09-28.
 |---|---|---|
 | 2026-10-10 | GNOME 51.1. It reaches F45 around GA. It is the first shell and mutter update the lane absorbs (S1b exit). | https://release.gnome.org/calendar/ |
 | About 2026-10-18 or -25 | Linux 7.3 (7.3-rc5 came out on 2026-09-27). The COPR built 7.2.0 about 103 h after its release. 7.2 goes EOL about 16 days after 7.3.0, as 7.1 did. K1 sees this bump; S1c starts on 7.3.y. | https://www.kernel.org/releases.json; COPR build list API |
-| 2026-11-03, the last target (10-20 and 10-27 were No-Go; checked 2026-10-23) | Fedora 45 GA. Within 7 days, delete the updates-testing admission (review §4). From `FEDORA_GA_DATE` plus 7 days, every build fails while `updates-testing-allowlist.txt` has entries (the dated check in `image/Containerfile`'s repos stage). If GA slips, move `FEDORA_GA_DATE` first. | https://fedorapeople.org/groups/schedule/f-45/f-45-key-tasks.html (fetched 2026-09-28: final target 2026-10-20, then 10-27 and 11-03) |
+| 2026-11-03, the current target, else 2026-11-10, target #3 (10-20 and 10-27 were No-Go; checked 2026-10-30) | Fedora 45 GA. Within 7 days, delete the updates-testing admission (review §4). From `FEDORA_GA_DATE` plus 7 days, every build fails while `updates-testing-allowlist.txt` has entries (the dated check in `image/Containerfile`'s repos stage). If GA slips, move `FEDORA_GA_DATE` first. | https://fedorapeople.org/groups/schedule/f-45/f-45-key-tasks.html (fetched 2026-09-28: final target 2026-10-20, then 10-27 and 11-03; fetched 2026-10-30: target #3 2026-11-10) |
 | Late December 2026 to early January 2027 | Linux 7.4: the first kernel major bump through the lane, with owner review. 7.3 goes EOL about two weeks later. | estimate from the 7.1 to 7.3 cadence |
 | 2027-02-09 | Fedora 46 branch point, 10 weeks before the 2027-04-20 target. The builder VM starts an unattended `FEDORA=46` compose that publishes nothing (S6 prep). | https://fedorapeople.org/groups/schedule/f-46/f-46-key-tasks.html (fetched 2026-09-28) |
 | February to March 2027 | GNOME 52 beta and 52.0. The 52 schedule is not published; by the 51 cycle (beta 2026-08-01, 51.0 2026-09-12) the beta lands in early February and 52.0 in mid-March. F45 stays on GNOME 51. | https://release.gnome.org/calendar/ |
 | 2027-04-20 | Fedora 46 GA target. | as above |
-| 2027-11-24 | Fedora 45 EOL. `apex:46` must be on the laptop before it. The dated check on the COPR key (expires 2028-01-23) also starts failing that day, 60 days ahead. | https://fedorapeople.org/groups/schedule/f-45/f-45-key-tasks.html (fetched 2026-09-28); ADR 0015 |
+| 2027-11-24 | The dated check on the COPR key (expires 2028-01-23) starts failing, 60 days ahead. | ADR 0015 |
+| 2027-12-08 | Fedora 45 EOL (2027-11-24 until the schedule moved with GA). `apex:46` must be on the laptop before it. | https://fedorapeople.org/groups/schedule/f-45/f-45-key-tasks.html (fetched 2026-10-30) |
 
 ## Standing work
 
@@ -1288,7 +1289,7 @@ GNOME 52 with the rest of the series.
 
 ## S6: Fedora 46 and GNOME 52 (Jun 28 – Jul 23, 2027, L)
 
-The port waits for S4. Fedora 45 is supported to 2027-11-24 and stays on GNOME 51, so
+The port waits for S4. Fedora 45 is supported to 2027-12-08 and stays on GNOME 51, so
 porting after 52.0 saves a second rebase against the betas. From the F46 branch point
 (about 2027-02-09), the builder VM runs an unattended `FEDORA=46` compose that publishes
 nothing and reports what breaks.

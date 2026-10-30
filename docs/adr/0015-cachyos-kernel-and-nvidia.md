@@ -192,6 +192,11 @@ ADR 0005's objections, checked again:
   `/usr/src/kernels/<uname-r>`).
 - The kernel and the kmod are built with the same Fedora GCC. The job fails when the
   GCC major in the kernel's `CONFIG_CC_VERSION_TEXT` differs from the container's.
+- The modules carry BTF (2026-10-30, apex-kernel#17). kbuild builds an external
+  module's BTF against the kernel tree's `vmlinux`, which `kernel-cachyos-devel` does
+  not ship. The kmod build therefore installs `dwarves` and copies in the `vmlinux` the
+  pair job keeps in `OUT/debug/`. `check.sh` fails any NVIDIA module without a `.BTF`
+  section.
 - akmods, akmod-nvidia, dkms, dkms-nvidia, kmodtool and kernel-devel are excluded from
   the image. Nothing compiles modules on the laptop.
 - negativo17 follows NVIDIA's newest branch: 615, a new feature branch, today. It does
