@@ -89,7 +89,7 @@ under Deviations.
 | mutter | Fedora binary, pinned to the exact EVR gnome-shell was built against; mirrored unmodified into `[apex]` | Fedora | 0 patches |
 | libadwaita | Fedora SRPM plus one patch: the window radius follows `apex.css` live | Apex RPM key | 1 patch, at most 80 changed lines |
 | GTK 4 | stock | Fedora | 0 |
-| gnome-control-center | Fedora SRPM plus 3 patches: the Apex Desktop panel; coloured sidebar tiles in the design's order; the Software Updates row and page | Apex RPM key | At most 150 changed lines in upstream files |
+| gnome-control-center | Fedora SRPM plus 5 patches: the Apex Desktop panel; coloured sidebar tiles in the design's order; the Software Updates row and page; the active wallpaper's name and note in Appearance; Power's "Graphics and Display" group | Apex RPM key | At most 150 changed lines in upstream files, in hook hunks. The Apex code is added files under `panels/apex/` and does not count. In use on 2026-10-24: 37 lines in 8 upstream files. |
 | nautilus | Fedora SRPM plus up to 7 patches for seven features: the disk-usage footer; the item-count bar; a 72 px grid zoom level; the details pane; the recent strip; the search chips; the view toggle group. Features that need no upstream line hang off one window hook and get no patch file | Apex RPM key | At most 400 changed lines in upstream files. The Apex widgets are added files under `src/apex/` and do not count. |
 | gdm | stock. Its greeter runs the rebuilt shell in the gdm mode: Apex CSS, stock JS. | Fedora | 0 |
 | Plymouth | stock, plus the `apex` script theme and the `apex-twostep` fallback theme (data files) | Fedora | 0 |
@@ -514,8 +514,8 @@ Reduce Transparency always turns glass off.
   `.Keybindings`, holds only keys with no upstream home. The dock's keys live there
   now. Every other row of the Apex Desktop panel binds a stock GNOME key.
 - The Apex Desktop panel is the one home for Apex settings. Stock panels gain no rows
-  (decision 27). One stock panel changes behaviour: System's Software Updates row opens
-  the Apex updates page.
+  (decision 27), except Power's "Graphics and Display" group (board 24). One stock
+  panel changes behaviour: System's Software Updates row opens the Apex updates page.
 - "Apex Tweaks" is a `.desktop` entry for `gnome-control-center apex`. There is no
   separate Updates app.
 
