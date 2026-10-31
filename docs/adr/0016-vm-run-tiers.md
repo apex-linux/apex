@@ -1,10 +1,10 @@
 # ADR 0016: VM runs confirm, they don't discover
 
 Status: accepted (2026-10-30). It amends ARCHITECTURE §4 (`vm.yml`) and §11 (when G4
-runs). It is implemented in apex-image on the integration branch `train/r18` (G4 first,
-the qualify-only tier, `vm.yml`'s paths and summary, `ci-build`'s plan words). Two parts
-wait for the owner: the signed-RPM cache comes with `train/r19`, and the hosted tier and
-the keeper need the owner's decisions below.
+runs). Train `r18` brought it to apex-image's `main` (2026-10-30, d5f8d79): G4 first,
+the qualify-only tier, `vm.yml`'s paths and summary, `ci-build`'s plan words. The new
+`ci-build` is live once the owner runs `just vm-ci-install`. The signed-RPM cache moves
+to `train/r20`, and the hosted tier and the keeper need the owner's decisions below.
 
 ## Context
 
@@ -78,7 +78,7 @@ Rules:
   files the build left behind. It gives a timing table per stage and the furthest G4
   row reached. The failing G2 cases' logs and the diagnosis join the run's logs, and
   no private key from the guest does.
-- **Signed RPMs are reused by content key** (`train/r19`). Each component's RPMs are
+- **Signed RPMs are reused by content key** (`train/r20`). Each component's RPMs are
   cached under their own content key after signing. Before reuse, the cache is checked
   against `SHA256SUMS` and the Apex RPM key, and any mismatch rebuilds.
 - **Nothing is weakened.** G2 still runs twice with the full case set and the 300 s
