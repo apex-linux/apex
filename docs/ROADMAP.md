@@ -86,7 +86,7 @@ ordinary updates. The owner can move S4 earlier, to right after S2d (target
 2027-04-05). Then S3a to S3c ship as updates to the daily driver, and the unlock-path
 changes of S3b land on the only machine.
 
-## Progress (2026-10-30)
+## Progress (2026-10-31)
 
 - **S1a:** all of its code is merged, including the last G2 items: python-dbusmock
   fixtures, the fixed clock (`tests/shots/clock.c`), and the enable and disable cycles.
@@ -179,6 +179,62 @@ changes of S3b land on the only machine.
       A trace of the remaining rows also found the polkit wrong-password row expecting
       a log line polkitd writes only when a request ends. It now checks PAM's line for
       each attempt, and polkitd's verdict moves to the Esc row.
+
+    Runs 17 and 18 (2026-10-30) left two G4 rows failing, lock suspend and blank and
+    wake. G4 stops at its first failure, so the rows after them (Reduce Motion, the
+    polkit rows, the crash guard and safe mode) have passed only one by one, in run 18's
+    advisory `local-diag`:
+    - **Run 17 (lock suspend):** every G4 row passed through blank and wake, the lock's
+      idle fix included (apex-gnome#179). The lock-suspend row then lost the guest: QEMU
+      reported it suspended and accepted the wake, and SSH never answered again.
+      - A repro on a hosted KVM runner (apex-image#127) showed that deep S3 cannot work
+        with the VM's firmware. edk2-ovmf 20260812, the build run 17's guest ran,
+        asserts at `MemoryServices.c(203)` on every S3 resume, and the hosted guests
+        cold boot.
+      - Run 17's guest did not cold boot, though, and later shut down cleanly. Its own
+        cause is not known: the VM runs kept no firmware log, which apex-image#132 adds.
+      - The laptop sleeps in s2idle, so the gating row is to suspend to idle and wake on
+        a key, with deep S3 left as a `local-diag` unit.
+    - **Run 18 (blank and wake):** the first train. G2 passed twice (2204 checks, 0
+      failed). G4 failed blank and wake, which run 17 had passed: under the lock, the
+      display never came back on. Every `local-diag` unit passed except S3 suspend.
+
+      Both remaining rows come back to the guest's display device. virtio-gpu is the
+      suspect for the dark screen, although 20 blank-and-wake cycles on the hosted
+      runner came back on it. On the same runner it hung after s2idle every time, where
+      std VGA resumed. The fixes are under way for train r19:
+      - G4's guest runs std VGA (apex-image#139);
+      - the suspend row sleeps in s2idle and wakes on a key, and deep S3 becomes the
+        `local-diag` unit `lock-suspend-s3` (apex-image#135);
+      - the suspend row waits for the resume and asserts the wake (apex-image#132);
+      - the blank-and-wake row names a display that stays off (apex-image#137).
+
+    The VM runs had become the bottleneck. Runs 1 to 16 gave 11 verdicts, and a run took
+    110 minutes at the median. G4 stops at its first failing row, so each of the 6 runs
+    whose G4 ran showed one G4 bug. Since train r18 reached `main` (2026-10-30), VM runs
+    confirm what cheaper tiers have already checked
+    ([ADR 0016](adr/0016-vm-run-tiers.md)):
+    - Hosted CI checks what it can without the builder VM: the QEMU flags, the user
+      units, G4's journal markers against real-guest fixtures, and the built image's
+      provenance. Since 2026-10-31 it also checks that every package in `base.txt` and
+      `gnome.txt` resolves (apex-image#151), and that the code G4 sends into the guest
+      parses (apex-image#152).
+    - PRs that change the image or the gates merge into a train, which reaches `main`
+      as one push and one run.
+    - In a gate run, G4 runs first when it is due, and G2 still runs after a G4
+      failure, so one run reports both verdicts. After a G4 failure, `local-diag` runs
+      every G4 unit on its own in the same run.
+    - After a G4 failure, a harness-only fix can rerun G4 on the image already built,
+      without the rebuild and G2. That qualify-only run is advisory: it records nothing
+      and never promotes.
+    - Since 2026-10-31 the daily run skips when another `vm.yml` run is queued, waiting,
+      pending or in progress, or when `main`'s head had a build with a verdict in the
+      last 20 hours (apex-image#140).
+
+    G2 itself is next: 62 minutes in run 18 (3735 s), as in the earlier runs. Two cuts
+    are approved, and neither has landed yet. First, each settle is to wait for a real
+    frame instead of a fixed 500 ms tail. Then each of G2's two runs is to run the glass
+    stress case alongside its other cases, apart from the cases that measure time.
 
     Left: G4 through to its pass, two green VM runs (before GNOME 51.1 reaches F45 at
     GA), and the archive.
