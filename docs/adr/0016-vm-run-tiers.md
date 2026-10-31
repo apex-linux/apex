@@ -62,8 +62,12 @@ Rules:
 - **Only paths that change the image or the gates queue a run.** These are
   `components.lock`, `image/**`, the lane and its Cargo files, `tools/components.sh`,
   the build scripts of `tools/builder-vm`, and `qualify.sh`, its allowed failures,
-  `image.sh` and `lib.sh`. `tools/runner/**`, `ci-build.sh` (live only after the owner
-  installs it) and documentation queue nothing.
+  `image.sh`, `oci-artifact.sh`, `ci-host.sh` and `lib.sh`. `tools/runner/**`,
+  `ci-build.sh` (live only after the owner installs it) and documentation queue nothing.
+  A selftest check (`vm-paths-check.sh`, apex-image#146) walks every file the build
+  and the gates source, run or read, starting from `vm.yml`'s steps. It fails on a file
+  that no path covers, unless an exact allow line gives the reason. The first walk found
+  `oci-artifact.sh` and `ci-host.sh` missing.
 - **The daily run asks first.** A hosted `daily-due` job with only `actions: read`
   decides whether the scheduled run builds (apex-image#140). It skips, with a notice,
   when another `vm.yml` run is queued, waiting, pending or in progress. It also skips
