@@ -63,7 +63,13 @@ Rules:
   `components.lock`, `image/**`, the lane and its Cargo files, `tools/components.sh`,
   the build scripts of `tools/builder-vm`, and `qualify.sh`, its allowed failures,
   `image.sh` and `lib.sh`. `tools/runner/**`, `ci-build.sh` (live only after the owner
-  installs it) and documentation queue nothing. The daily run is unchanged.
+  installs it) and documentation queue nothing.
+- **The daily run asks first.** A hosted `daily-due` job with only `actions: read`
+  decides whether the scheduled run builds (apex-image#140). It skips, with a notice,
+  when another `vm.yml` run is queued, waiting, pending or in progress. It also skips
+  when `main`'s head had a build in the last 20 hours that gave a verdict: it passed, or
+  it failed after G2 or G4 ran, which its step "A gate gave its verdict" records. A lost
+  runner, a refusal or a failed lookup builds.
 - **Trains.** PRs that touch those paths merge into an integration branch,
   `train/rNN`. The lead merges the train to `main` as one push, which queues one T3
   run. No such PR merges to `main` on its own.
