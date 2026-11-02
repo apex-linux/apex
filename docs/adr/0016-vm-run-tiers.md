@@ -3,8 +3,9 @@
 Status: accepted (2026-10-30). It amends ARCHITECTURE §4 (`vm.yml`) and §11 (when G4
 runs). Train `r18` brought it to apex-image's `main` (2026-10-30, d5f8d79): G4 first,
 the qualify-only tier, `vm.yml`'s paths and summary, `ci-build`'s plan words. The new
-`ci-build` is live once the owner runs `just vm-ci-install`. The signed-RPM cache moves
-to `train/r20`, and the hosted tier and the keeper need the owner's decisions below.
+`ci-build` is live once the owner runs `just vm-ci-install`. The signed-RPM cache and
+the isolated component builds (A3) joined `train/r20` on 2026-11-02 (apex-image#134) and
+reach `main` with it. The hosted tier and the keeper need the owner's decisions below.
 
 ## Context
 
@@ -88,9 +89,25 @@ Rules:
   files the build left behind. It gives a timing table per stage and the furthest G4
   row reached. The failing G2 cases' logs and the diagnosis join the run's logs, and
   no private key from the guest does.
-- **Signed RPMs are reused by content key** (`train/r20`). Each component's RPMs are
-  cached under their own content key after signing. Before reuse, the cache is checked
-  against `SHA256SUMS` and the Apex RPM key, and any mismatch rebuilds.
+- **Components build in isolation, and their signed RPMs are reused by content key**
+  (A3, `train/r20`).
+  - Each component builds in a container that sees only its own checkout, with `.git`
+    read-only, and its own output directory, emptied first.
+  - The host signs that output only when it holds nothing but plain RPMs and key files.
+    The lane builds only from clones that are still as fetched.
+  - For a pinned component whose clone `components.sh verify` still finds clean at its
+    pin, `build-image.sh` caches the signed RPMs outside every container's mounts.
+  - An entry is named by the component's content key, the fedora:45 digest, the lane
+    tool, the Apex key and the build environment. A host-written index binds it.
+  - Each reuse re-verifies the entry against its index, its inputs, its age, its
+    contents, plain files and its stated key, and every signature against the committed
+    `RPM-GPG-KEY-apex`. Any mismatch rebuilds.
+  - Nothing is stored that is degraded, built from another key, untested (libfprint),
+    built while fedora:45 moved, or built from a changed clone.
+  - Each component keeps at most 3 entries within a 30 GiB free-space floor, and a run
+    never prunes an entry it uses. A component without a valid content key, and every
+    dev-override build, is always built.
+  - THREAT-MODEL, "Component builds and the RPM cache", has the controls.
 - **Nothing is weakened.** G2 still runs twice with the full case set and the 300 s
   glass stress in every T3. Promotion still needs G2 and G4 on the same image ID with
   the lane lock unchanged.
@@ -115,6 +132,9 @@ Rules:
   the rebuild and G2's 62 to 70 minutes.
 - A T3 run that fails G4 still reports G2, and reports every G4 unit after the login.
 - The laptop's queue holds one run per train, not one per merge.
+- A component whose content key is unchanged costs a cache check, not a build. A
+  tampered, swapped, linked, unsigned, stale or mismatched entry costs a rebuild, never
+  an image.
 - The record invariant now lives in two places, `build-image.sh` and `qualify.sh`.
   `just vm-qualify` still records a G4 pass with no G2, as before. That is a manual
   step, outside `vm.yml`.

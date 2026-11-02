@@ -34,10 +34,49 @@ are named by the document that implements them.
 |---|---|---|
 | T1 | Theft or loss of the powered-off laptop | LUKS2 with a passphrase and a recovery key (ADR 0010) |
 | T2 | Code running as the desktop user (browser, npm, an agent) tries to escalate through apex-updated, polkit or sudo | The polkit action table; the daemon reads no user files and exposes no writable properties; bootc argv comes from enums only; fingerprint is kept out of `system-auth` (ADR 0006, ADR 0008) |
-| T3 | Compromise of one upstream input (a crate, an npm package, a GitHub Action, the CachyOS source, the COPR SRPM or negativo17's packages) that tries to steal secrets or signing keys, or persist | GitHub-hosted jobs run only each repository's `ci.yml`: actions pinned by SHA, a read-only token, and no secret in any job. apex-image's `vm.yml` runs on a self-hosted runner: no `pull_request` trigger, a runner group that accepts only `vm.yml` on `main`, a throwaway rootless container per job whose only secret is its one-job registration, and a way into the builder VM through one forced command that builds a commit of `main`; no signing key or store leaves the VM (`tools/runner/`). `cargo deny`; every image build scans its root filesystem for private keys (`image/checks/secrets.sh`). Apex's RPMs are signed with the Apex RPM key in the builder VM after their build container exits, and no build container mounts the key's GnuPG home; the compose's `[apex]` accepts only that key's and Fedora's signatures (`gpgcheck=1`), and G1 checks that every Apex package carries that key's signature (packaging/README.md, "Signing"). The kernel and NVIDIA inputs (S1c, ADR 0015 §2 to §5): the COPR SRPM and negativo17's SRPM and binaries are checked against their pinned keys, locked by NEVR and sha256, and mirrored at first sight, so the compose never contacts negativo17.org; the CachyOS tag passes `git verify-tag` and must match the SRPM's Source0; the kernel is rebuilt from the signed SRPM, so COPR's build hosts leave the chain; each bump writes a report with the config and BORE-patch diffs, and a config change, a new kernel line or a new driver waits for the owner; the per-build module key lives on a tmpfs and is shredded with its job; from W3, the Apex Secure Boot key reaches only an isolated step that signs `vmlinuz` |
+| T3 | Compromise of one upstream input (a crate, an npm package, a GitHub Action, the CachyOS source, the COPR SRPM or negativo17's packages) that tries to steal secrets or signing keys, or persist | GitHub-hosted jobs run only each repository's `ci.yml`: actions pinned by SHA, a read-only token, and no secret in any job. apex-image's `vm.yml` runs on a self-hosted runner: no `pull_request` trigger, a runner group that accepts only `vm.yml` on `main`, a throwaway rootless container per job whose only secret is its one-job registration, and a way into the builder VM through one forced command that builds a commit of `main`; no signing key or store leaves the VM (`tools/runner/`). `cargo deny`; every image build scans its root filesystem for private keys (`image/checks/secrets.sh`). Apex's RPMs are signed with the Apex RPM key in the builder VM after their build container exits, and no build container mounts the key's GnuPG home or another component's files ("Component builds and the RPM cache" below); the compose's `[apex]` accepts only that key's and Fedora's signatures (`gpgcheck=1`), and G1 checks that every Apex package carries that key's signature (packaging/README.md, "Signing"). The kernel and NVIDIA inputs (S1c, ADR 0015 §2 to §5): the COPR SRPM and negativo17's SRPM and binaries are checked against their pinned keys, locked by NEVR and sha256, and mirrored at first sight, so the compose never contacts negativo17.org; the CachyOS tag passes `git verify-tag` and must match the SRPM's Source0; the kernel is rebuilt from the signed SRPM, so COPR's build hosts leave the chain; each bump writes a report with the config and BORE-patch diffs, and a config change, a new kernel line or a new driver waits for the owner; the per-build module key lives on a tmpfs and is shredded with its job; from W3, the Apex Secure Boot key reaches only an isolated step that signs `vmlinuz` |
 | T4 | A compromised GitHub token or workflow tries to push, sign or retag images | Separate testing and release repositories and keys; the `release` environment requires manual approval; versions must increase; a staleness warning; the offline backup key for recovery (ADR 0012) |
 | T5 | An attacker on the network or at the registry | Signature enforcement through a strict policy file under `/usr` (ADR 0012) |
 | T6 | Leakage of biometric data during diagnostics | Diagnostics only in tmpfs; a CI guard against image and template files; redaction of hardware dumps (ADR 0006) |
+
+## Component builds and the RPM cache
+
+This part of T3 covers the builder VM's own builds (ADR 0016, A3).
+
+- **One container per component.** Each component builds as root in its own fedora:45
+  container.
+  - To give its content key, the container sees only its pinned checkout, read-only.
+  - To build, it sees the checkout with `.git` read-only and its own output directory,
+    emptied first.
+  - No container mounts the rest of `_build`. So one component can't alter another's
+    sources or RPMs, or apex-gnome's clone, whose G2 script runs on the host.
+- **The host checks before it signs.** It signs a build's output only when the output
+  holds nothing but plain, singly linked, plainly named RPMs and key files, and it
+  writes `SHA256SUMS` afresh.
+- **Clones stay as fetched.** Before the lane builds, the kernel and recipe clones must
+  still be as fetched. `components.sh fetch` runs git only on a plain single repository
+  whose config holds nothing but what fetch writes.
+- **The cache.** For pinned components only, the builder VM caches signed RPMs in
+  `~/apex-rpm-cache`, outside every container's mounts. The cache is as safe as the
+  build user's own files.
+  - An entry is named by a hash of everything its RPMs were built from: the
+    component's content key, the fedora:45 digest, the lane tool, the Apex RPM key and
+    the build environment.
+  - Beside it, the host keeps an index of the entry's digests, each RPM's NEVRA and its
+    creation time.
+  - A set is stored only when `components.sh verify` finds the component's clone still
+    clean at its pin, with nothing but fetch's config.
+- **Checks before every reuse,** in this order:
+  - the entry against its index;
+  - the inputs, byte-equal;
+  - the age, under 7 days (from the index);
+  - `CONTENTS` and `SHA256SUMS`;
+  - plain files only;
+  - the stated key (for libfprint, also its NVR and passed tests);
+  - every RPM's signature against the committed `RPM-GPG-KEY-apex`, in a scratch rpmdb.
+- **What a bad entry costs.** A tampered, swapped, linked, unsigned, stale or mismatched
+  entry costs a rebuild, never an image. A dev-override build neither reads nor writes
+  the cache.
 
 ## Accepted risks and out of scope
 
