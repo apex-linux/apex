@@ -824,6 +824,28 @@ early; the Apex folder and file icons it shows already ship in `apex-desktop`.
   27, 28 and 29, light and dark, for the owner's sign-off; with the schema missing,
   Files starts with the details pane closed and the strip shown.
 
+## E: Apex Code (E0 after batch-1; E1–E3 to be dated from E0)
+
+GNOME Builder rebuilt in the lane with the Apex Code series ([ADR 0017](adr/0017-apex-code-on-builder.md)).
+Boards 40 and 41 are the first sketch; they are redrawn on Builder's libadwaita structure
+after E0. The series lives in `apex-gnome` (`packaging/pkgs/gnome-builder/`), with no ADR
+0014 budget. The owner asked for it on 2026-11-03.
+
+- **E0, a measured spike, after batch-1:** RSS idle and while typing for Builder, VSCodium
+  and Zed, with apex-gnome open and the language servers counted apart; input latency and
+  cold start; Builder's AT-SPI tree; a toolbox runtime on bootc running rust-analyzer,
+  typescript-language-server and a Python server; whether ACP fits. Its report sets E1–E3's
+  budgets and dates.
+- **E1:** the recipe with `degraded=code`, the Apex Code name and icon, toolbox as the
+  default runtime, the language servers on; the image side (packages, G1).
+- **E2:** the view rail (project, search, git), the fuzzy file and command palette, the
+  status strip, a git view that diffs and commits, and the terminal panel sharing the Apex
+  terminal's shell integration (running, done, failed).
+- **E3:** inline diagnostics and code actions, multibuffers, the ACP agent panel, and the
+  latency budget held by a test.
+- **Exits:** a G2 app capture job like Ptyxis's and Files', with captures beside the
+  redrawn boards for the owner's sign-off; the E0 budgets held.
+
 ## C: The Apex Settings (C1 Oct 26 – Nov 13, C2 Nov 16 – Dec 4, L each)
 
 gnome-control-center is rebuilt in the lane with the Apex Settings series, as boards 11,
