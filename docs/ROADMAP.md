@@ -824,14 +824,20 @@ early; the Apex folder and file icons it shows already ship in `apex-desktop`.
   27, 28 and 29, light and dark, for the owner's sign-off; with the schema missing,
   Files starts with the details pane closed and the strip shown.
 
-## E: Apex Code (E0 after batch-1; E1–E3 to be dated from E0)
+## E: Apex Code (E1 Dec 15, E2 Feb 9 2027, E3 Apr 6 2027)
 
 GNOME Builder rebuilt in the lane with the Apex Code series ([ADR 0017](adr/0017-apex-code-on-builder.md)).
 Boards 40 and 41 are the first sketch; they are redrawn on Builder's libadwaita structure
 after E0. The series lives in `apex-gnome` (`packaging/pkgs/gnome-builder/`), with no ADR
 0014 budget. The owner asked for it on 2026-11-03.
 
-- **E0, a measured spike, after batch-1:** RSS idle and while typing for Builder, VSCodium
+- **E0 done (2026-11-03,** [report](reviews/2026-11-03-e0-apex-code.md)**):** in a cloud
+  container, Builder idles at 345 MiB RSS against VSCodium's 1224, starts in 1.83 s and draws
+  a key in 21.6 ms. Its findings (a 0.76 s typing stall, language servers respawned for a
+  project outside `$HOME`, ~48 MiB per toolbox server, the podman storage path, 8 unnamed
+  controls) are E1 and E2 work, and its budget table is what E1–E3 hold. The owner reruns
+  it on the laptop by 2026-11-17, with Zed, and those numbers replace the container's.
+- **E0, as briefed:** RSS idle and while typing for Builder, VSCodium
   and Zed, with apex-gnome open and the language servers counted apart; input latency and
   cold start; Builder's AT-SPI tree; a toolbox runtime on bootc running rust-analyzer,
   typescript-language-server and a Python server; whether ACP fits. Its report sets E1–E3's
