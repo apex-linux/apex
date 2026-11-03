@@ -315,6 +315,11 @@ ADR 0005's objections, checked again:
   `packaging/pkgs/kernel/nvidia.env` pins their NEVRs and sha256. The compose never
   contacts negativo17.org. The key fingerprint above was fetched over HTTPS; it is
   checked against a second source before it is pinned.
+  **Owner exception (2026-11-03):** no second source exists for this key (keys.openpgp.org,
+  keyserver.ubuntu.com and Fedora's distribution-gpg-keys have none; apex-kernel#18 lists
+  the searches). The owner trusts it on first use: the RSA 4096 key
+  `0C5D 0F47 0484 AE2F C40A 9B65 97F3 0089 93E8 909B`, which expires 2029-08-31 and has
+  been pinned in `nvidia.env` since 2026-09-28. A changed fingerprint still fails closed.
 - `nvidia-kmod-common`'s `%post` runs `nvidia-boot-update post`. Without
   `/run/ostree-booted` it edits `/etc/default/grub` and runs `grub2-mkconfig`, or edits
   `/etc/kernel/cmdline`, whichever exists in the compose root. K1 records what it does
