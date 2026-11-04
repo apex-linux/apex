@@ -150,8 +150,12 @@ These are behaviour decisions, kept from the old spec and the owner's decision s
   open, or when Translucent Top Bar is off.
 - The Activities pill holds the diamond and the workspace dots, then the focused app's
   name, or "Desktop" when nothing has focus.
-- The centred clock is followed by an accent dot when unread notifications exist and Do
-  Not Disturb is off.
+- The centred clock is followed by a dot in the bar's foreground (`$apex_bar_fg`) when unread
+  notifications exist and Do Not Disturb is off. Not the accent: no accent reaches 3:1 over
+  every wallpaper (owner, 2026-11-04).
+- The recording pill is filled `#8d151d` (light) or `#e54543` (dark), and the sharing and
+  privacy pill `#7e2d00` or `#d95613`. Their content is white in light and `#16161a` in dark,
+  so each fill reaches 3:1 against the bar and its content 4.5:1 (owner, 2026-11-04).
 - Search button (Super+Space). The status pill shows network, volume and battery only.
   The privacy, recording, unsafe-mode, input-source and accessibility indicators still
   show (decision 26), as board 39 draws them:
