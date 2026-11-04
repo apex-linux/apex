@@ -338,6 +338,9 @@ it, live, and pays only when that changes.
   branch instead. Stock effects keep upstream's path, so the stock unlock blur still
   equals Fedora's on every pixel. The owner raised 0003's budget from 300 to 310 lines for
   it on 2026-10-26; the fix uses all 310. It is upstreamable and would give the lines back.
+  On 2026-11-04 the owner raised it again, to 368 lines, for two fixes G2 now asserts:
+  the blur box past the stage edge no longer reads unpainted pixels (apex-gnome#286), and
+  fine mode's per-view textures no longer leave a seam across two monitors (apex-gnome#289).
   G2 checks a glass corner through `Shell.Screenshot` against the same frame on screen.
 - **Glass over glass.** The bar and the dock over a scrim blur the scrim's result, as
   drawn. The scrim is cached, so this costs about 0.3 ms per scrim change.
