@@ -112,13 +112,30 @@ Rules:
   glass stress in every T3. Promotion still needs G2 and G4 on the same image ID with
   the lane lock unchanged.
 
+## Amendment, 2026-11-05: the gates run on hosted runners
+
+The owner decided this after T3 runs took 2.5 to 4 hours on the owner's host and gave
+their verdict only after a train had landed. The spike in apex-image#127 found `/dev/kvm`
+writable on standard hosted runners, and G4's lock rows replayed there.
+
+- **`gates.yml`** in apex-image runs on GitHub-hosted runners for every train PR before
+  it merges, and for main and the daily schedule. Its build job signs the RPMs with an
+  ephemeral test key generated in the job; the key never leaves it. G1 runs, then G2's
+  two runs in parallel and G4 in parallel shards, each shard its own VM. Dependent rows,
+  from install through fallback and acknowledge, stay in one shard. The target is 80
+  minutes or less, and the owner's hardware is not involved.
+- **Test-key images never ship.** They carry a test-key label, and publish, promote and
+  cosign refuse them: G1's test-key mode fails closed.
+- **The owner's host is the release signer.** `vm.yml` builds main's SHA with the real
+  RPM key in the builder VM, on dispatch or nightly. It promotes only when its content key
+  equals the content key of a green `gates.yml` run for the same SHA. It no longer gates
+  merges.
+- **Phase 4's exit** becomes two green `gates.yml` runs on main, plus one signed builder
+  build whose content key matches.
+
 ## Waiting for the owner
 
-- **T4.** A spike on a standard hosted runner (apex-image#127, a draft that never
-  merges) found `/dev/kvm` writable. Stock `fedora-bootc:45` booted 3 times out of 3,
-  installing in 0.75 to 1.3 minutes and booting in about 0.4 minutes. T4 needs a
-  hosted test-key mode for G1 that fails closed, and that changes THREAT-MODEL T3.
-- **The keeper** (apex-image#129, held, off unless `vars.APEX_VM_KEEPER` is `on`). It
+- **The keeper** (apex-image#129, merged in r21 and owner-approved on 2026-11-03, on only while `vars.APEX_VM_KEEPER` is `on`). It
   is an hourly hosted workflow. It re-dispatches `vm.yml` after a run that gave no
   verdict, never replays a known verdict, and keeps a "VM status" issue. It needs
   `actions: write` on apex-image, which changes THREAT-MODEL T3.
