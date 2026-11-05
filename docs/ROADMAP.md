@@ -236,8 +236,10 @@ changes of S3b land on the only machine.
     frame instead of a fixed 500 ms tail. Then each of G2's two runs is to run the glass
     stress case alongside its other cases, apart from the cases that measure time.
 
-    Left: G4 through to its pass, two green VM runs (before GNOME 51.1 reaches F45 at
-    GA), and the archive.
+    Left (owner, 2026-11-05: the gates move off the owner's host, ADR 0016's amendment):
+    two green hosted `gates.yml` runs on main, one signed builder build whose content key
+    matches, and the archive. G4's first full pass came on 2026-11-04 (all 42 rows, run
+    41818411905).
 - **S1b:** started on 2026-10-23, about two weeks early.
   - Merged:
     - the full Apex schema, its keybindings child schema and Super+Space;
