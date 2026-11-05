@@ -464,8 +464,24 @@ changes of S3b land on the only machine.
   On 2026-10-26 the owner approved all 15 shell boards (12–17, 19, 20, 22 and 34–39),
   after the fixes to their notes on 15, 16, 17, 20 and 22. The Large Text fix then moved
   board 39's "EN" chip by one device pixel, and the owner approved it again on
-  2026-10-27. The goldens are at apex-gnome's `goldens` 9e042d9, and main's sign-off
-  passes all 30 captures.
+  2026-10-27.
+  Two batches followed. Batch 1 (apex-gnome#267, approved 2026-11-03) re-approved 12
+  shell boards (12–15, 17, 19, 20, 22, 34–36 and 38). Batch 2
+  (apex-gnome#284, approved 2026-11-05) re-approved 12 shell boards (14–17, 19, 22,
+  34–39) and added the first app goldens: Settings (boards 11, 18, 23, 24 and 26), Files
+  (27–29), the terminal (32, 33) and Apex Symbolic (31's five sheets), 30 decisions in
+  all, light and dark. The goldens are at apex-gnome's `goldens` f8e534d, and the batch's
+  own `goldens.sh check` passes all 65 captures. Board 31's `everywhere` sheet changes
+  again when apex-gnome's G2 pin of apex-desktop picks up the Apex Code glyph
+  (apex-desktop#38), and goes back to the owner then.
+- **Translations, 2026-11-05:** Apex's own strings ship in English and Vietnamese. Each
+  series has its own gettext domain (`apex-shell`, `apex-control-center`,
+  `apex-nautilus`, `apex-ptyxis`; apex-gnome#290, #288, #293 and #296), so translations
+  cost none of the patch budgets. `lint/i18n.sh` checks each domain's template against
+  the sources, untranslated entries, format strings and POTFILES, and each series has a
+  Vietnamese runtime test. Ptyxis looks up Apex's strings with libc `dgettext`, so its
+  window mixes Vietnamese Apex parts with Ptyxis's own strings, as the owner accepted;
+  the terminal's Vietnamese name is "Dòng lệnh".
 - **G2 metrics, 2026-10-27:** G2 now also measures the launcher, the overview and
   notifications (boards 34–36), the overview's window previews, every Apex key binding
   (pressed, with no binding overwritten), the bar's text and glyphs against WCAG AA
