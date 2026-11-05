@@ -860,8 +860,13 @@ after E0. The series lives in `apex-gnome` (`packaging/pkgs/gnome-builder/`), wi
   cold start; Builder's AT-SPI tree; a toolbox runtime on bootc running rust-analyzer,
   typescript-language-server and a Python server; whether ACP fits. Its report sets E1–E3's
   budgets and dates.
-- **E1:** the recipe with `degraded=code`, the Apex Code name and icon, toolbox as the
-  default runtime, the language servers on; the image side (packages, G1).
+- **E1 done in apex-gnome (2026-11-05,** [report](reviews/2026-11-05-e1-apex-code.md)**):**
+  the recipe (apex-gnome#299) and its lane case (#300), the Apex Code name, toolbox as the
+  default runtime with pylsp answering in it, E0's two toolbox bugs fixed, and the editor
+  and E0's eight buttons named. In CI it starts in 925 ms and idles at 293/192 MiB RSS/PSS,
+  against 1.9 s and 360/270. The icon is apex-desktop#38. The image side
+  (apex-image#182: the family, `degraded=code`, G1) lands with train r24. The typing stall's
+  cause is found; its fix and a shared `podman exec` per toolbox are E2's.
 - **E2:** the view rail (project, search, git), the fuzzy file and command palette, the
   status strip, a git view that diffs and commits, and the terminal panel sharing the Apex
   terminal's shell integration (running, done, failed).
